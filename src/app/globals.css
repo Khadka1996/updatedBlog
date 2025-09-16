@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.ads-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.ad-left, .ad-right {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.content-container {
+  flex: 3;
+  padding: 10px;
+}
+
+.modal-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
