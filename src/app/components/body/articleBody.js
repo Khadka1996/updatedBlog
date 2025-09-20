@@ -5,7 +5,7 @@ import Link from 'next/link';
 const BlogPage = async ({ searchParams }) => {
   try {
     // Fetch blog data from backend API
-    const res = await fetch('http://116.203.117.20:5000/api/blogs/latest', {
+    const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
       cache: 'no-store', // Ensure fresh data (optional, added for immediate updates)
     });
 
@@ -41,7 +41,7 @@ const BlogPage = async ({ searchParams }) => {
                 {blog.image && (
                   <div className="relative h-32 sm:h-36 w-full">
                     <Image
-                      src={`http://116.203.117.20:5000/uploads/${blog.image}`}
+                      src={`https://api.everestkit.com/uploads/${blog.image}`}
                       alt={blog.title || 'Blog image'}
                       fill
                       className="object-cover"

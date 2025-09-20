@@ -59,7 +59,7 @@ export const getServerSideProps = async (context) => {
   let blogData = null;
 
   try {
-    const response = await axios.get(`http://116.203.117.20:5000/api/blogs/${id}`);
+    const response = await axios.get(`https://api.everestkit.com/api/blogs/${id}`);
     blogData = response.data.data || null;
 
     if (!blogData) {

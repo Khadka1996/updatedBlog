@@ -14,7 +14,7 @@ const BlogPage = async ({ searchParams = {} }) => {
 
   try {
     // Build API URL with pagination and search parameters
-    const apiUrl = new URL('http://116.203.117.20:5000/api/blogs');
+    const apiUrl = new URL('https://api.everestkit.com/api/blogs');
     apiUrl.searchParams.set('page', page);
     apiUrl.searchParams.set('limit', ITEMS_PER_PAGE);
     if (searchQuery) {
@@ -105,7 +105,7 @@ const BlogCard = ({ blog }) => (
     {blog.image && (
       <div className="relative h-48 w-full">
         <img
-          src={`http://116.203.117.20:5000/uploads/${blog.image}`}
+          src={`https://api.everestkit.com/uploads/${blog.image}`}
           alt={blog.title}
           className="w-full h-48 object-cover"
         />

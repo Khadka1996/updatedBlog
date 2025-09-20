@@ -10,7 +10,7 @@ import { notFound } from 'next/navigation';
 
 async function getBlogData(id) {
   try {
-    const res = await fetch(`http://116.203.117.20:5000/api/blogs/${id}`, {
+    const res = await fetch(`https://api.everestkit.com/api/blogs/${id}`, {
       next: { revalidate: 60 },
     });
 

@@ -3,9 +3,9 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: '116.203.117.20',
-        port: '5000',
+        protocol: 'https',
+        hostname: 'api.everestkit.com',
+        port: '',
         pathname: '/uploads/**',
       },
     ],
@@ -14,11 +14,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://116.203.117.20:5000/api/:path*',
+        destination: 'https://api.everestkit.com/api/:path*',
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://116.203.117.20:5000/uploads/:path*',
+        destination: 'https://api.everestkit.com/uploads/:path*',
       },
     ]
   },
