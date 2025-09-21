@@ -103,11 +103,14 @@ const BlogPage = async ({ searchParams = {} }) => {
 const BlogCard = ({ blog }) => (
   <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
     {blog.image && (
-      <div className="relative h-48 w-full">
-        <img
+      <div className="relative h-48 w-full"> {/* Fixed height container */}
+        <Image
           src={`https://api.everestkit.com/uploads/${blog.image}`}
-          alt={blog.title}
-          className="w-full h-48 object-cover"
+          alt={blog.title || 'Blog image'}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority={false} // Set to true for above-the-fold images if needed
         />
       </div>
     )}
@@ -154,6 +157,7 @@ const BlogCard = ({ blog }) => (
     </div>
   </article>
 );
+
 
 // Pagination Component
 const Pagination = ({ page, totalPages, searchQuery }) => {
