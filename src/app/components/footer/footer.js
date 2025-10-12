@@ -20,22 +20,47 @@ const Footer = () => {
             </p>
           </div>
 
+
+     
           {/* Quick Links */}
-          <div className="col-span-1">
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              {["About Us", "Services", "Contact Us", "Privacy Policy"].map((link, idx) => (
-                <li key={idx}>
-                  <a
-                    href={`/${link.toLowerCase().replace(/\s/g, "")}`}
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+         <div className="col-span-1">
+  <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+  <ul className="space-y-2">
+    <li>
+      <a
+        href="/about"
+        className="text-gray-400 hover:text-white transition-colors"
+      >
+        About Us
+      </a>
+    </li>
+    <li>
+      <a
+        href="/services"
+        className="text-gray-400 hover:text-white transition-colors"
+      >
+        Services
+      </a>
+    </li>
+    <li>
+      <a
+        href="/contact"
+        className="text-gray-400 hover:text-white transition-colors"
+      >
+        Contact Us
+      </a>
+    </li>
+    <li>
+      <a
+        href="/privacy"
+        className="text-gray-400 hover:text-white transition-colors"
+      >
+        Privacy Policy
+      </a>
+    </li>
+  </ul>
+</div>
+
 
           {/* Social Media Links */}
           <div className="col-span-1">

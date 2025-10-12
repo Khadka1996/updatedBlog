@@ -253,10 +253,7 @@ const AboutUs = () => {
                         <FaFacebook />
 
                       </a>
-                      <a href={member.twitter} className='text-[#25609A] hover:text-[#52aa4d]'>
-                        <FaFacebook />
 
-                      </a>
                     </div>
                   </div>
                 </div>
