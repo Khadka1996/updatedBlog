@@ -1,3 +1,4 @@
+// frontend/src/app/register/page.js
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -292,7 +293,7 @@ const Register = () => {
             label={
               <Typography variant="body2" component="span">
                 I agree to the{' '}
-                <Link href="/terms" color="primary" sx={{ fontWeight: 500 }}>
+                <Link href="/terms-and-conditions" color="primary" sx={{ fontWeight: 500 }}>
                   Terms and Conditions
                 </Link>
               </Typography>

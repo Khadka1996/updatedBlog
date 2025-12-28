@@ -1,3 +1,4 @@
+// frontend/src/app/privacy-policy/page.js
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -51,6 +52,7 @@ const PrivacyPolicy = () => {
     { id: 'your-rights', title: 'Your Privacy Rights', icon: <FaShieldAlt /> },
     { id: 'security', title: 'Security of Your Information', icon: <FaShieldAlt /> },
     { id: 'children-privacy', title: 'Childrens Privacy', icon: <FaShieldAlt /> },
+    { id: 'adsense-cookies', title: 'Google AdSense & Cookies', icon: <FaCookie /> },
     { id: 'changes', title: 'Changes to This Privacy Policy', icon: <FaShieldAlt /> },
     { id: 'contact', title: 'Contact Us', icon: <FaQuestionCircle /> },
   ];
@@ -273,7 +275,7 @@ const PrivacyPolicy = () => {
                 <h3 className="text-xl font-medium text-[#25609A] mb-3">Service Providers</h3>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   We share data with third-party vendors (e.g., payment processors, hosting services) who
-                  comply with Nepal's privacy laws and are contractually obligated to protect your data.
+                  comply with Nepal&apos;s privacy laws and are contractually obligated to protect your data.
                 </p>
 
                 <h3 className="text-xl font-medium text-[#25609A] mb-3">Legal Requirements</h3>
@@ -335,7 +337,7 @@ const PrivacyPolicy = () => {
                   </li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed mt-4">
-                  To exercise these rights, contact us as outlined in the "Contact Us" section. Complaints
+                  To exercise these rights, contact us as outlined in the `Contact Us` section. Complaints
                   regarding data misuse can be filed with the district court within three months, as per
                   Section 29 of the Individual Privacy Act, 2018.
                 </p>
@@ -365,7 +367,7 @@ const PrivacyPolicy = () => {
                 id="children-privacy"
                 className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300"
               >
-                <h2 className="text-2xl font-semibold text-[#25609A] mb-4">Children's Privacy</h2>
+                <h2 className="text-2xl font-semibold text-[#25609A] mb-4">Children&apos;s Privacy</h2>
                 <p className="text-gray-700 leading-relaxed">
                   Our services are not intended for children under 16, as per the{' '}
                   <strong>Individual Privacy Act, 2018</strong>. We do not knowingly collect personal data
@@ -373,6 +375,50 @@ const PrivacyPolicy = () => {
                   immediately upon discovery.
                 </p>
               </div>
+
+              <div
+              id="adsense-cookies"
+              className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 border-l-4 border-[#52aa4d]"
+            >
+              <h2 className="text-2xl font-semibold text-[#25609A] mb-4 flex items-center">
+                <FaCookie className="mr-3 text-[#52aa4d]" /> Google AdSense & Cookies
+              </h2>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Our website uses Google AdSense, a service for including advertisements by Google Inc. (`Google`). Google AdSense uses `cookies`, which are text files placed on your computer, to help analyze how users use the site.
+              </p>
+              
+              <h3 className="text-xl font-medium text-[#25609A] mb-3">Information Collected by Google</h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Google uses cookies to serve ads based on your prior visits to our website or other websites. Google&apos;s use of advertising cookies enables it and its partners to serve ads to you based on your visit to our sites and/or other sites on the Internet.
+              </p>
+              
+              <h3 className="text-xl font-medium text-[#25609A] mb-3">Opting Out</h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                You may opt out of personalized advertising by visiting{' '}
+                <a 
+                  href="https://www.google.com/settings/ads" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[#52aa4d] hover:underline"
+                >
+                  Google&apo;s Ads Settings
+                </a>
+                . Alternatively, you can opt out of third-party vendor use of cookies for personalized advertising by visiting{' '}
+                <a 
+                  href="https://www.aboutads.info" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[#52aa4d] hover:underline"
+                >
+                  www.aboutads.info
+                </a>.
+              </p>
+              
+              <h3 className="text-xl font-medium text-[#25609A] mb-3">Third-Party Vendors</h3>
+              <p className="text-gray-700 leading-relaxed">
+                Third-party vendors, including Google, use cookies to serve ads based on a user&apos;s prior visits to our website or other websites. We have no control over these third-party cookies.
+              </p>
+            </div>
 
               {/* Changes Section */}
               <div
@@ -382,7 +428,7 @@ const PrivacyPolicy = () => {
                 <h2 className="text-2xl font-semibold text-[#25609A] mb-4">Changes to This Privacy Policy</h2>
                 <p className="text-gray-700 leading-relaxed">
                   We may update this Privacy Policy to reflect changes in our practices or legal
-                  requirements. Updates will be posted on this page with a revised "Last Updated" date. We
+                  requirements. Updates will be posted on this page with a revised `Last Updated date. We
                   encourage you to review this policy periodically.
                 </p>
               </div>
@@ -434,7 +480,7 @@ const PrivacyPolicy = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-[#25609A]">Privacy Inquiry</h2>
-                  <p className="text-gray-600 mt-2">We'll respond to your inquiry promptly.</p>
+                  <p className="text-gray-600 mt-2">We&pos;ll respond to your inquiry promptly.</p>
                 </div>
                 <button
                   onClick={closeModal}

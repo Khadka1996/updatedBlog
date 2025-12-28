@@ -1,4 +1,4 @@
 // config.js
-const API_URL = "http://116.203.117.20:5000";
+const API_URL = "https://api.everestkit.com";
 
 export default API_URL;

@@ -2,7 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import WhatsAppButton from './components/WhatsAppButton.js';
-
+import MobileFooterNav from './components/footer/footerMobile';
 const inter = Inter({ subsets: ["latin"] });
 
 // Define your base URL
@@ -147,7 +147,9 @@ export default function RootLayout({ children }) {
         {children}
         
         {/* Additional scripts that need to load after the page is interactive */}
+     
       <WhatsAppButton />
+       <MobileFooterNav />
       </body>
     </html>
   );

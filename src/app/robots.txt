@@ -1,0 +1,40 @@
+// app/robots.txt/route.ts
+export async function GET() {
+  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com';
+  
+  const robots = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /*?*
+Disallow: /*.json$
+Disallow: /*.xml$
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+
+User-agent: Yandex
+Allow: /
+Disallow: /admin/
+
+Sitemap: ${baseUrl}/sitemap.xml
+Sitemap: ${baseUrl}/sitemap
+
+# Crawl-delay: 10
+# Host: ${baseUrl.replace(/https?:\/\//, '')}
+`;
+
+  return new Response(robots, {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'public, max-age=3600',
+    },
+  });
+}

@@ -9,7 +9,7 @@ export default function AIAssistantWidget() {
   const [isTyping, setIsTyping] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [messages, setMessages] = useState([]); // Start with empty messages
+  const [messages, setMessages] = useState([]);
   
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -23,12 +23,10 @@ export default function AIAssistantWidget() {
   // Play sound and show welcome message when chat opens
   useEffect(() => {
     if (isOpen && !isMinimized) {
-      // Play sound
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log("Audio play failed:", e));
       }
       
-      // Show welcome message with delay
       setTimeout(() => {
         setShowWelcome(true);
         setMessages([{
@@ -38,7 +36,6 @@ export default function AIAssistantWidget() {
           timestamp: new Date()
         }]);
         
-        // Hide welcome message after 5 seconds
         setTimeout(() => {
           setShowWelcome(false);
         }, 5000);
@@ -50,20 +47,17 @@ export default function AIAssistantWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Handle opening the chat
   const handleOpenChat = () => {
     setIsMinimized(false);
     setIsOpen(true);
   };
 
-  // Handle minimizing the chat
   const handleMinimize = () => {
     setIsMinimized(true);
     setShowWelcome(false);
     setTimeout(() => setIsOpen(false), 300);
   };
 
-  // Handle WhatsApp redirection
   const handleWhatsAppRedirect = () => {
     const phoneNumber = '9779815817938';
     const message = 'Hello! I would like to chat with you.';
@@ -71,27 +65,24 @@ export default function AIAssistantWidget() {
     window.open(url, '_blank');
   };
 
-  // Check if message indicates positive response
   const isPositiveResponse = (message) => {
     const positiveWords = ['yes', 'ok', 'okay', 'sure', 'yeah', 'yep', 'ya', 'alright', 'definitely', 'absolutely'];
     return positiveWords.includes(message.toLowerCase().trim());
   };
 
-  // Simulate bot response
   const simulateBotResponse = (userMessage) => {
     setIsTyping(true);
     
     setTimeout(() => {
       let botResponse;
       
-      // Check if user responded positively
       if (isPositiveResponse(userMessage)) {
         botResponse = {
           id: messages.length + 1,
           text: "Great! I'm redirecting you to WhatsApp now to continue our conversation.",
           sender: 'bot',
           timestamp: new Date(),
-          action: 'redirect' // Flag to trigger WhatsApp redirect
+          action: 'redirect'
         };
       } else {
         botResponse = {
@@ -105,7 +96,6 @@ export default function AIAssistantWidget() {
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
       
-      // If it's a positive response, redirect to WhatsApp after a short delay
       if (botResponse.action === 'redirect') {
         setTimeout(() => {
           handleWhatsAppRedirect();
@@ -114,7 +104,6 @@ export default function AIAssistantWidget() {
     }, 1500);
   };
 
-  // Handle user sending a message
   const handleSendMessage = () => {
     if (currentMessage.trim() === '') return;
     
@@ -131,7 +120,6 @@ export default function AIAssistantWidget() {
     simulateBotResponse(currentMessage);
   };
 
-  // Handle key press (Enter to send)
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSendMessage();
@@ -139,8 +127,8 @@ export default function AIAssistantWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* Audio element for the sound */}
+    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50">
+      {/* Audio element */}
       <audio 
         ref={audioRef} 
         src="/notification.wav" 
@@ -150,7 +138,7 @@ export default function AIAssistantWidget() {
       {/* 3D AI Assistant Button */}
       {!isOpen && (
         <div 
-          className="relative w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-300 flex items-center justify-center"
+          className="relative w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-300 flex items-center justify-center"
           onClick={handleOpenChat}
           style={{
             transformStyle: 'preserve-3d',
@@ -163,13 +151,13 @@ export default function AIAssistantWidget() {
           <div className="absolute inset-0 border-2 border-white/30 rounded-full"></div>
           
           {/* Main icon */}
-          <FaRobot className="w-8 h-8 text-white" />
+          <FaRobot className="w-6 h-6 md:w-8 md:h-8 text-white" />
           
           {/* Pulsing animation */}
           <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20"></div>
           
           {/* Notification badge */}
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+          <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-red-500 rounded-full flex items-center justify-center">
             <span className="text-white text-xs">1</span>
           </div>
         </div>
@@ -180,17 +168,21 @@ export default function AIAssistantWidget() {
         <div 
           ref={chatContainerRef}
           className={`bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${isMinimized ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
-          style={{ width: '320px', height: '400px', display: 'flex', flexDirection: 'column' }}
+          style={{ 
+            width: '320px', 
+            height: '400px',
+            maxHeight: 'calc(100vh - 180px)', // Prevent going too high
+            display: 'flex', 
+            flexDirection: 'column'
+          }}
         >
-          {/* Header - Always visible */}
+          {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-700 p-4 flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                {/* 3D Avatar */}
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
                   <FaRobot className="w-6 h-6 text-white" />
                 </div>
-                {/* Online indicator */}
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
               </div>
               <div>
@@ -206,9 +198,8 @@ export default function AIAssistantWidget() {
             </button>
           </div>
 
-          {/* Messages Container - Flexible height */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50" style={{ maxHeight: 'calc(400px - 160px)' }}>
-            
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -243,7 +234,7 @@ export default function AIAssistantWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area - Fixed at bottom */}
+          {/* Input Area */}
           <div className="p-4 border-t border-gray-200 bg-white">
             <div className="flex space-x-2 mb-2">
               <input
@@ -264,7 +255,7 @@ export default function AIAssistantWidget() {
               </button>
             </div>
             
-            {/* WhatsApp CTA Button - Always visible at bottom */}
+            {/* WhatsApp CTA Button */}
             <button
               onClick={handleWhatsAppRedirect}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full py-2 px-4 flex items-center justify-center space-x-2 hover:from-green-600 hover:to-green-700 transition-all shadow-md text-sm"
@@ -275,20 +266,6 @@ export default function AIAssistantWidget() {
           </div>
         </div>
       )}
-
-      {/* Custom animations */}
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        .animate-ping {
-          animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        @keyframes ping {
-          75%, 100% { transform: scale(2); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }

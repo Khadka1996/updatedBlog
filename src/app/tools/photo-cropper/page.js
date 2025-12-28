@@ -346,7 +346,7 @@ export default function HighQualityCropper() {
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
             <p className="mb-6 max-w-2xl mx-auto">
-              Let's discuss how we can help you achieve your digital goals and take your business to the next level.
+              Let&apos;s discuss how we can help you achieve your digital goals and take your business to the next level.
             </p>
             <a 
               href="/contact" 
