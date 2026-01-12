@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import { useRouter } from 'next/navigation';
@@ -14,39 +14,37 @@ import {
   Card,
   CardMedia,
   Chip,
-  Divider,
   Stack,
   Alert,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
 } from '@mui/material';
 import {
-  Image as ImageIcon,
-  YouTube,
-  Title,
-  Subtitles,
-  Save,
-  LocalOffer,
+  CloudUpload,
   Close,
-  Delete
+  Delete,
+  Save,
+  Image as ImageIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
-  loading: () => <CircularProgress size={24} />
+  loading: () => (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+      <CircularProgress />
+    </Box>
+  ),
 });
 
 const Editor = ({ onSave, existingBlog, onDelete }) => {
   const router = useRouter();
-  const [token, setToken] = useState('');
-  
-  // Form state
+
+  // Form states
   const [title, setTitle] = useState(existingBlog?.title || '');
   const [subheading, setSubheading] = useState(existingBlog?.subheading || '');
   const [content, setContent] = useState(existingBlog?.content || '');
@@ -56,197 +54,178 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
   const [tags, setTags] = useState(existingBlog?.tags || []);
   const [tagInput, setTagInput] = useState('');
 
-  // UI state
+  // UI states
   const [loading, setLoading] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
   const [error, setError] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  
+  const [dragActive, setDragActive] = useState(false);
+
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token') || '';
-    setToken(storedToken);
-  }, []);
+  // Word count
+  const wordCount = useMemo(() => {
+    const text = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text ? text.split(' ').length : 0;
+  }, [content]);
 
-  // Quill editor configuration
-  const modules = useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      ['blockquote', 'code-block'],
-      ['link', 'image', 'video'],
-      ['clean']
-    ],
-    clipboard: {
-      matchVisual: false
-    }
-  }), []);
+  // Quill configuration - rich toolbar
+  const modules = useMemo(
+    () => ({
+      toolbar: [
+        [{ header: [1, 2, 3, 4, false] }],
+        [{ font: [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'video'],
+        ['clean'],
+      ],
+    }),
+    []
+  );
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = useCallback((file) => {
     if (!file) return;
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Only JPEG, PNG, or WebP images are allowed');
+      setError('Only JPEG, PNG, or WebP images allowed');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
+      setError('Image must be smaller than 5MB');
       return;
     }
 
     setImageFile(file);
     setExistingImage(null);
     setError(null);
+  }, []);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files?.[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
   };
 
   const handleRemoveImage = () => {
     setImageFile(null);
     setExistingImage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
-  const isValidYouTubeLink = (link) => {
-    if (!link) return true;
-    const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
-    return regex.test(link);
-  };
-
-  const youtubeEmbedId = useMemo(() => {
-    if (!youtubeLink) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = youtubeLink.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  }, [youtubeLink]);
 
   const handleAddTag = () => {
-    const trimmedTag = tagInput.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
+    const trimmed = tagInput.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags((prev) => [...prev, trimmed]);
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags((prev) => prev.filter((t) => t !== tagToRemove));
   };
 
   const handleSave = async () => {
+    if (!title.trim()) return setError('Title is required');
+    if (!content.trim()) return setError('Content is required');
+    if (!imageFile && !existingImage) return setError('Featured image is required');
+
     setLoading(true);
     setError(null);
 
-    if (!title.trim()) {
-      setError('Title is required');
-      setLoading(false);
-      return;
-    }
-
-    if (!content.trim()) {
-      setError('Content is required');
-      setLoading(false);
-      return;
-    }
-
-    if (youtubeLink && !isValidYouTubeLink(youtubeLink)) {
-      setError('Invalid YouTube URL format');
-      setLoading(false);
-      return;
-    }
-
-    if (!imageFile && !existingImage) {
-      setError('Featured image is required');
-      setLoading(false);
-      return;
-    }
-
     const formData = new FormData();
-    formData.append('title', title);
+    formData.append('title', title.trim());
     formData.append('content', content);
-    if (subheading) formData.append('subheading', subheading);
-    if (youtubeLink) formData.append('youtubeLink', youtubeLink);
-    if (tags.length > 0) formData.append('tags', tags.join(','));
+    if (subheading.trim()) formData.append('subheading', subheading.trim());
+    if (youtubeLink.trim()) formData.append('youtubeLink', youtubeLink.trim());
+    if (tags.length) formData.append('tags', tags.join(','));
     if (imageFile) formData.append('image', imageFile);
 
     try {
-      const config = {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        },
-        timeout: 10000,
-      };
+      const url = existingBlog ? `/api/blogs/${existingBlog._id}` : '/api/blogs';
 
-      const response = existingBlog
-        ? await axios.patch(`/api/blogs/${existingBlog._id}`, formData, config)
-        : await axios.post('/api/blogs', formData, config);
+      const res = await fetch(url, {
+        method: existingBlog ? 'PATCH' : 'POST',
+        credentials: 'include',
+        body: formData,
+      });
 
-      if (response.data.success) {
-        if (!existingBlog) {
-          setTitle('');
-          setSubheading('');
-          setContent('');
-          setImageFile(null);
-          setExistingImage(null);
-          setYoutubeLink('');
-          setTags([]);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }
-        
-        onSave(response.data.data);
-        toast.success(`Blog ${existingBlog ? 'updated' : 'created'} successfully!`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`);
       }
+
+      toast.success(existingBlog ? 'Blog updated successfully' : 'Blog published successfully!');
+
+      if (!existingBlog) {
+        // Reset for new post
+        setTitle('');
+        setSubheading('');
+        setContent('');
+        setImageFile(null);
+        setExistingImage(null);
+        setYoutubeLink('');
+        setTags([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+
+      onSave?.(data.data || data);
     } catch (err) {
-      let errorMessage = 'An error occurred while saving the blog';
-      
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          errorMessage = err.response.data.error || err.message;
-          
-          if (err.response.status === 401) {
-            router.push('/login');
-            return;
-          } else if (err.response.status === 413) {
-            errorMessage = 'File size too large (max 5MB)';
-          }
-        } else if (err.request) {
-          errorMessage = 'Network error - please check your connection';
-        }
+      const message =
+        err.message.includes('401') || err.message.includes('Unauthorized')
+          ? 'Session expired. Please login again.'
+          : err.message || 'Failed to save blog';
+
+      setError(message);
+      toast.error(message);
+
+      if (message.includes('Session expired')) {
+        setTimeout(() => router.push('/login'), 1800);
       }
-      
-      setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
+    if (!existingBlog?._id) return;
+
     setLoading(true);
+
     try {
-      const config = {
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        }
-      };
-      
-      await axios.delete(`/api/blogs/${existingBlog._id}`, config);
-      onDelete();
+      const res = await fetch(`/api/blogs/${existingBlog._id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Delete failed');
+      }
+
       toast.success('Blog deleted successfully');
+      onDelete?.();
     } catch (err) {
-      const errorMessage = axios.isAxiosError(err) 
-        ? err.response?.data?.error || 'Failed to delete blog'
-        : 'Failed to delete blog';
-      
-      setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(err.message || 'Failed to delete blog');
     } finally {
       setLoading(false);
       setDeleteConfirmOpen(false);
@@ -254,309 +233,296 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
   };
 
   const imagePreviewUrl = useMemo(() => {
-    if (imageFile) return URL.createObjectURL(imageFile);
-    if (existingImage) return `/uploads/${existingImage}`;
-    return null;
+    return imageFile ? URL.createObjectURL(imageFile) : existingImage ? `/uploads/${existingImage}` : null;
   }, [imageFile, existingImage]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ 
-        p: 4, 
-        borderRadius: 4,
-        position: 'relative'
-      }}>
-        <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 5, pb: 10 }}>
+      <Paper
+        elevation={4}
+        sx={{
+          p: { xs: 3, md: 5 },
+          borderRadius: 3,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
           {existingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity="error" sx={{ mb: 4 }} onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
 
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-          <Button 
-            variant={!previewMode ? "contained" : "outlined"} 
-            onClick={() => setPreviewMode(false)}
-            startIcon={<Save />}
-          >
-            Editor
-          </Button>
-          <Button 
-            variant={previewMode ? "contained" : "outlined"} 
-            onClick={() => setPreviewMode(true)}
-            disabled={!title || !content}
-          >
-            Preview
-          </Button>
-          {existingBlog && (
-            <Button
+        <Stack spacing={4}>
+          {/* Title + Subheading */}
+          <Box>
+            <TextField
+              fullWidth
+              label="Blog Title *"
               variant="outlined"
-              color="error"
-              onClick={() => setDeleteConfirmOpen(true)}
-              startIcon={<Delete />}
-              sx={{ ml: 'auto' }}
-            >
-              Delete
-            </Button>
-          )}
-        </Stack>
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </Box>
 
-        {!previewMode ? (
-          <>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Blog Title
-              </Typography>
+          <Box>
+            <TextField
+              fullWidth
+              label="Subheading (optional)"
+              variant="outlined"
+              value={subheading}
+              onChange={(e) => setSubheading(e.target.value)}
+              disabled={loading}
+            />
+          </Box>
+
+          {/* Tags */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom fontWeight={500}>
+              Tags
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
               <TextField
-                fullWidth
-                variant="outlined"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter blog title..."
+                size="small"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Type tag and press Enter..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                sx={{ minWidth: 200 }}
                 disabled={loading}
               />
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Subheading
-              </Typography>
-              <TextField
-                fullWidth
+              <Button
                 variant="outlined"
-                value={subheading}
-                onChange={(e) => setSubheading(e.target.value)}
-                placeholder="Enter subheading..."
-                disabled={loading}
-              />
-            </Box>
+                size="small"
+                onClick={handleAddTag}
+                disabled={!tagInput.trim() || loading}
+              >
+                Add Tag
+              </Button>
+            </Stack>
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Tags
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <TextField
-                  variant="outlined"
-                  size="small"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  placeholder="Add tags..."
-                  disabled={loading}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                  sx={{ width: 200 }}
-                />
-                <Button 
-                  variant="outlined" 
-                  onClick={handleAddTag}
-                  disabled={!tagInput.trim() || loading}
-                >
-                  Add
-                </Button>
-              </Stack>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                {tags.map(tag => (
+            {tags.length > 0 && (
+              <Stack direction="row" spacing={1} mt={2} flexWrap="wrap" gap={1}>
+                {tags.map((tag) => (
                   <Chip
                     key={tag}
                     label={tag}
                     onDelete={() => handleRemoveTag(tag)}
                     variant="outlined"
+                    color="primary"
                   />
                 ))}
               </Stack>
-            </Box>
+            )}
+          </Box>
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Featured Image
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<ImageIcon />}
-                  disabled={loading}
-                >
-                  Upload Image
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    hidden
-                    ref={fileInputRef}
-                  />
-                </Button>
-                {(imageFile || existingImage) && (
-                  <IconButton onClick={handleRemoveImage} disabled={loading}>
-                    <Close />
-                  </IconButton>
-                )}
-              </Stack>
-              {imagePreviewUrl && (
-                <Box sx={{ mt: 2, maxWidth: 500 }}>
-                  <Card>
+          {/* Featured Image - Drag & Drop */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom fontWeight={500}>
+              Featured Image *
+            </Typography>
+
+            <Box
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              sx={{
+                border: '2px dashed',
+                borderColor: dragActive ? 'primary.main' : 'grey.400',
+                borderRadius: 3,
+                p: 6,
+                textAlign: 'center',
+                backgroundColor: dragActive ? 'action.hover' : 'action.selected',
+                transition: 'all 0.2s',
+                cursor: 'pointer',
+                position: 'relative',
+              }}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+              />
+
+              {!imagePreviewUrl ? (
+                <>
+                  <CloudUpload sx={{ fontSize: 48, color: 'action.active', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Drag & drop image here
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    or <strong>click to browse</strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" mt={1} component="div">
+                    JPG, PNG, WebP • Max 5MB
+                  </Typography>
+                </>
+              ) : (
+                <Box sx={{ position: 'relative', maxWidth: 480, mx: 'auto' }}>
+                  <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
                     <CardMedia
                       component="img"
                       image={imagePreviewUrl}
-                      alt="Preview"
+                      alt="Featured preview"
+                      sx={{
+                        maxHeight: 420,
+                        objectFit: 'cover',
+                      }}
                     />
                   </Card>
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      bgcolor: 'background.paper',
+                      boxShadow: 2,
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
                 </Box>
               )}
             </Box>
+          </Box>
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                YouTube Video URL
-              </Typography>
-              <TextField
-                fullWidth
-                variant="outlined"
-                value={youtubeLink}
-                onChange={(e) => setYoutubeLink(e.target.value)}
-                placeholder="Paste YouTube video URL..."
-                disabled={loading}
-              />
-            </Box>
-
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Blog Content
-              </Typography>
-              <Box sx={{ height: 400, borderRadius: 1, overflow: 'hidden' }}>
-                <ReactQuill
-                  value={content}
-                  onChange={setContent}
-                  modules={modules}
-                  theme="snow"
-                  style={{ height: '100%' }}
-                  readOnly={loading}
-                />
-              </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleSave}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : <Save />}
-                sx={{ minWidth: 180 }}
-              >
-                {loading ? (
-                  existingBlog ? 'Updating...' : 'Publishing...'
-                ) : (
-                  existingBlog ? 'Update Blog' : 'Publish Blog'
-                )}
-              </Button>
-            </Box>
-          </>
-        ) : (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h2" sx={{ mb: 2 }}>{title}</Typography>
-            {subheading && (
-              <Typography variant="h5" color="text.secondary" sx={{ mb: 3 }}>
-                {subheading}
-              </Typography>
-            )}
-            
-            {tags.length > 0 && (
-              <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap' }}>
-                {tags.map(tag => (
-                  <Chip key={tag} label={tag} variant="outlined" sx={{ mb: 1 }} />
-                ))}
-              </Stack>
-            )}
-            
-            {imagePreviewUrl && (
-              <Box sx={{ mb: 4 }}>
-                <Card>
-                  <CardMedia
-                    component="img"
-                    image={imagePreviewUrl}
-                    alt="Featured"
-                  />
-                </Card>
-              </Box>
-            )}
-
-            {youtubeEmbedId && (
-              <Box sx={{ mb: 4 }}>
-                <iframe
-                  width="100%"
-                  height="500"
-                  src={`https://www.youtube.com/embed/${youtubeEmbedId}`}
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ borderRadius: '8px' }}
-                />
-              </Box>
-            )}
-
-            <Divider sx={{ my: 3 }} />
-
-            <Box 
-              className="ql-editor" 
-              dangerouslySetInnerHTML={{ __html: content }}
-              sx={{
-                '& h1': { typography: 'h3', mb: 2 },
-                '& h2': { typography: 'h4', mb: 2 },
-                '& p': { typography: 'body1', mb: 2 },
-                '& img': { 
-                  maxWidth: '100%', 
-                  height: 'auto', 
-                  borderRadius: 2,
-                  my: 2
-                },
-                '& blockquote': { 
-                  borderLeft: '4px solid',
-                  borderColor: 'primary.main',
-                  pl: 2,
-                  py: 1,
-                  my: 2,
-                  backgroundColor: 'action.hover'
-                }
-              }}
+          {/* YouTube Link */}
+          <Box>
+            <TextField
+              fullWidth
+              label="YouTube Video URL (optional)"
+              variant="outlined"
+              value={youtubeLink}
+              onChange={(e) => setYoutubeLink(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              disabled={loading}
             />
           </Box>
-        )}
+
+          {/* Rich Text Editor */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom fontWeight={500}>
+              Content *
+            </Typography>
+
+            <Paper
+              variant="outlined"
+              sx={{
+                overflow: 'hidden',
+                borderRadius: 2,
+                '& .ql-toolbar': {
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                },
+                '& .ql-container': {
+                  minHeight: '50vh',
+                  maxHeight: '75vh',
+                  overflowY: 'auto',
+                  border: 'none',
+                },
+                '& .ql-editor': {
+                  px: 4,
+                  py: 3,
+                  fontSize: '1.08rem',
+                  lineHeight: 1.75,
+                },
+              }}
+            >
+              <ReactQuill
+                theme="snow"
+                value={content}
+                onChange={setContent}
+                modules={modules}
+                placeholder="Start writing your story..."
+                readOnly={loading}
+              />
+            </Paper>
+
+            {/* Word count */}
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              {wordCount} words • {content.length} characters
+            </Typography>
+          </Box>
+
+          {/* Action Buttons */}
+          <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+            {existingBlog && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Delete />}
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={loading}
+              >
+                Delete Post
+              </Button>
+            )}
+
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={loading ? <CircularProgress size={22} color="inherit" /> : <Save />}
+              onClick={handleSave}
+              disabled={loading}
+              sx={{ minWidth: 160 }}
+            >
+              {loading ? 'Saving...' : existingBlog ? 'Update Post' : 'Publish Post'}
+            </Button>
+          </Stack>
+        </Stack>
       </Paper>
 
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-      >
+      {/* Delete Confirmation */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
         <DialogTitle>Delete Blog Post</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this blog post? This action cannot be undone.
+            Are you sure you want to delete this post? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleDelete} 
+          <Button
+            onClick={handleDelete}
             color="error"
+            variant="contained"
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : <Delete />}
           >
-            {loading ? 'Deleting...' : 'Delete'}
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-      <ToastContainer 
+      <ToastContainer
         position="bottom-right"
-        autoClose={5000}
+        autoClose={4500}
         hideProgressBar={false}
         newestOnTop
         closeOnClick
@@ -564,6 +530,7 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        theme="colored"
       />
     </Container>
   );

@@ -1,4 +1,4 @@
-// app/blog/BlogSearch.js
+// app/src/app/blog/BlogSearch.js
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -52,7 +52,7 @@ const BlogSearch = () => {
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-[#194da6] focus:border-[#194da6] sm:text-sm transition-colors duration-300"
           placeholder="Search articles..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}

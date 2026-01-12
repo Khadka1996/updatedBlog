@@ -4,8 +4,9 @@ import React from 'react';
 import axios from 'axios';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import BlogArticle from '@/app/blog/BlogArticle';
+import BlogArticle from '@/app/blog/article/ArticlePage';
 import '@/app/globals.css';
+import MobileFooterNav from '@/app/components/footer/footerMobile';
 
 const ServerBlogPage = ({ initialData, error, currentUrl }) => {
   const router = useRouter();
@@ -82,7 +83,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl }) => {
   };
 
   const cleanedContent = truncateText(stripHtmlTags(content), 160);
-  const imageUri = image ? `https://api.everestkit.com/uploads/${image}` : 'https://everestkit.com/default-blog-image.jpg';
+  const imageUri = image ? `http://localhost:5000/uploads/${image}` : 'https://everestkit.com/default-blog-image.jpg';
   const siteUrl = currentUrl || `https://everestkit.com${router.asPath}`;
 
   return (
@@ -121,6 +122,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl }) => {
       </Head>
       
       <BlogArticle initialData={initialData} />
+      <MobileFooterNav/>
       
       <Footer />
     </>
@@ -144,7 +146,7 @@ export const getServerSideProps = async (context) => {
 
   try {
     const response = await axios.get(
-      `https://api.everestkit.com/api/blogs/${id}`,
+      `http://localhost:5000/api/blogs/${id}`,
       {
         timeout: 10000,
         headers: {

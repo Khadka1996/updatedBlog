@@ -1,10 +1,10 @@
-// app/blog/page.js
 import React, { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { FaArrowRight, FaArrowDown, FaHeart, FaEye, FaComments } from 'react-icons/fa';
 import BlogSearch from './BlogSearch';
 import BlogSkeleton from './BlogSkeleton';
-import LikeButton from './LikeButton';
+import BlogCard from './BlogCard';
+import API_URL from '../config.js'
 
 const ITEMS_PER_PAGE = 12;
 
@@ -14,7 +14,7 @@ const BlogPage = async ({ searchParams = {} }) => {
 
   try {
     // Build API URL with pagination and search parameters
-    const apiUrl = new URL('https://api.everestkit.com/api/blogs');
+    const apiUrl = new URL('/api/blogs', API_URL);
     apiUrl.searchParams.set('page', page);
     apiUrl.searchParams.set('limit', ITEMS_PER_PAGE);
     if (searchQuery) {
@@ -34,64 +34,74 @@ const BlogPage = async ({ searchParams = {} }) => {
     const totalPages = Math.ceil(blogData.total / ITEMS_PER_PAGE);
 
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BlogSearch />
+      <div>
+       
 
-        {/* Search results header */}
-        {searchQuery && (
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Search Results for: <span className="text-blue-600">"{searchQuery}"</span>
-            </h2>
-            <p className="text-gray-500 mt-2">
-              Found {blogData.count} article{blogData.count !== 1 ? 's' : ''}
-            </p>
+        {/* Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Search Bar */}
+          <div className="mt-8">
+            <BlogSearch />
           </div>
-        )}
 
-        <Suspense fallback={<BlogSkeleton count={ITEMS_PER_PAGE} />}>
-          {blogs.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
-                {searchQuery
-                  ? `No articles found for "${searchQuery}"`
-                  : 'No articles available. Check back later!'}
+          {/* Search Results Header */}
+          {searchQuery && (
+            <div className="mb-8 text-center mt-8">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Search Results for: <span className="text-[#194da6]">{searchQuery}</span>
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Found {blogData.count} articles
               </p>
-              {searchQuery && (
-                <Link
-                  href="/blog"
-                  className="mt-4 inline-block px-4 py-2 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors"
-                >
-                  Clear Search
-                </Link>
-              )}
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {blogs.map((blog) => (
-                  <BlogCard key={blog._id} blog={blog} />
-                ))}
-              </div>
-              {blogs.length > 0 && (
-                <Pagination page={page} totalPages={totalPages} searchQuery={searchQuery} />
-              )}
-            </>
           )}
-        </Suspense>
+
+          <Suspense fallback={<BlogSkeleton count={ITEMS_PER_PAGE} />}>
+            {blogs.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-600 text-lg">
+                  {searchQuery
+                    ? `No articles found for "${searchQuery}"`
+                    : 'No articles available. Check back later!'}
+                </p>
+                {searchQuery && (
+                  <Link
+                    href="/blog"
+                    className="group mt-6 inline-flex items-center px-6 py-3 bg-[#194da6] text-white font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <span>Clear Search</span>
+                    <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <>
+                <div id="blog" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+                  {blogs.map((blog) => (
+                    <BlogCard key={blog._id} blog={blog} />
+                  ))}
+                </div>
+                {blogs.length > 0 && (
+                  <Pagination page={page} totalPages={totalPages} searchQuery={searchQuery} />
+                )}
+              </>
+            )}
+          </Suspense>
+        </div>
       </div>
     );
   } catch (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Content</h2>
-          <p className="text-gray-500">We couldn't load the blog posts. Please try again later.</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center py-6">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4">Error Loading Content</h2>
+          <p className="text-gray-600 mb-6">We could not load the blog posts.</p>
           <Link
             href="/blog"
-            className="mt-4 px-4 py-2 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors inline-block"
+            className="group inline-flex items-center px-6 py-3 bg-[#194da6] text-white font-semibold rounded-full hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
           >
-            Retry
+            <span>Retry</span>
+            <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>
       </div>
@@ -99,67 +109,7 @@ const BlogPage = async ({ searchParams = {} }) => {
   }
 };
 
-// Blog Card Component
-const BlogCard = ({ blog }) => (
-  <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
-    {blog.image && (
-      <div className="relative h-48 w-full"> {/* Fixed height container */}
-        <Image
-          src={`https://api.everestkit.com/uploads/${blog.image}`}
-          alt={blog.title || 'Blog image'}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={false} // Set to true for above-the-fold images if needed
-        />
-      </div>
-    )}
-    <div className="p-6 flex-grow flex flex-col">
-      <h2 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">
-        {blog.title}
-      </h2>
-      <div className="flex items-center justify-between text-sm text-gray-500 mt-auto pt-4">
-        <span>
-          {new Date(blog.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })}
-        </span>
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-            {blog.viewCount || 0}
-          </span>
-          <LikeButton blogId={blog._id} initialCount={blog.likeCount || 0} />
-        </div>
-      </div>
-      <Link
-        href={`/blog/${blog._id}`}
-        className="mt-4 inline-block px-4 py-2 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors text-center"
-        aria-label={`Read more about ${blog.title}`}
-      >
-        Read More
-      </Link>
-    </div>
-  </article>
-);
-
-
-// Pagination Component
+// Pagination Component (Server Component)
 const Pagination = ({ page, totalPages, searchQuery }) => {
   const getPageUrl = (pageNum) => {
     const params = new URLSearchParams();
@@ -208,22 +158,25 @@ const Pagination = ({ page, totalPages, searchQuery }) => {
         {page > 1 && (
           <Link
             href={getPageUrl(page - 1)}
-            className="px-4 py-2 border rounded-md hover:bg-gray-100"
+            className="group inline-flex items-center px-4 py-2 bg-blue-50 text-[#194da6] font-semibold rounded-full hover:bg-[#194da6] hover:text-white transition-all duration-300"
           >
-            Previous
+            <FaArrowRight className="mr-2 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
+            <span>Previous</span>
           </Link>
         )}
         {getPageNumbers().map((pageNum, index) =>
           pageNum === '...' ? (
-            <span key={`ellipsis-${index}`} className="px-4 py-2">
+            <span key={`ellipsis-${index}`} className="px-4 py-2 text-gray-600">
               ...
             </span>
           ) : (
             <Link
               key={pageNum}
               href={getPageUrl(pageNum)}
-              className={`px-4 py-2 border rounded-md ${
-                page === pageNum ? 'bg-[#4A8E45] text-white' : 'hover:bg-gray-100'
+              className={`px-4 py-2 rounded-full font-semibold transition-all duration-300 ${
+                page === pageNum
+                  ? 'bg-[#194da6] text-white'
+                  : 'bg-blue-50 text-[#194da6] hover:bg-[#194da6] hover:text-white'
               }`}
             >
               {pageNum}
@@ -233,9 +186,10 @@ const Pagination = ({ page, totalPages, searchQuery }) => {
         {page < totalPages && (
           <Link
             href={getPageUrl(page + 1)}
-            className="px-4 py-2 border rounded-md hover:bg-gray-100"
+            className="group inline-flex items-center px-4 py-2 bg-blue-50 text-[#194da6] font-semibold rounded-full hover:bg-[#194da6] hover:text-white transition-all duration-300"
           >
-            Next
+            <span>Next</span>
+            <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         )}
       </div>

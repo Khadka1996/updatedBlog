@@ -5,7 +5,7 @@ import Link from 'next/link';
 const BlogPage = async ({ searchParams }) => {
   try {
     // Fetch blog data from backend API
-    const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
+    const res = await fetch('http://localhost:5000/api/blogs/latest', {
       cache: 'no-store', // Ensure fresh data (optional, added for immediate updates)
     });
 
@@ -41,7 +41,7 @@ const BlogPage = async ({ searchParams }) => {
                 {blog.image && (
                   <div className="relative h-32 sm:h-36 w-full">
                     <Image
-                      src={`https://api.everestkit.com/uploads/${blog.image}`}
+                      src={`http://localhost:5000/uploads/${blog.image}`}
                       alt={blog.title || 'Blog image'}
                       fill
                       className="object-cover"
@@ -110,7 +110,7 @@ const BlogPage = async ({ searchParams }) => {
 
                   {/* Read More Button */}
                   <Link
-                    href={`/blog/${blog._id}`}
+                    href={`/blogs/${blog._id}`}
                     className="mt-3 inline-block px-3 py-1.5 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors text-center text-xs sm:text-sm"
                     aria-label={`Read more about ${blog.title || 'this article'}`}
                   >
@@ -141,7 +141,7 @@ const BlogPage = async ({ searchParams }) => {
             Error Loading Content
           </h2>
           <p className="text-gray-500 text-base sm:text-lg">
-            We couldn't load the blog posts. Please try again later.
+            We couldn&apos;t load the blog posts. Please try again later.
           </p>
           <Link
             href="/blog"

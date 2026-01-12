@@ -1,6 +1,6 @@
-// frontend/src/app/register/page.js
 'use client';
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Container,
@@ -16,373 +16,336 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
+  Box,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import dynamic from 'next/dynamic';
 
-// Dynamically import PasswordStrengthBar to avoid SSR issues
-const PasswordStrengthBar = dynamic(() => import('react-password-strength-bar'), {
-  ssr: false, // Disable server-side rendering for this component
-});
-
-const Register = () => {
+export default function Register() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     showPassword: false,
+    showConfirmPassword: false,
     acceptTerms: false,
   });
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const [passwordScore, setPasswordScore] = useState(0);
-  const [isClient, setIsClient] = useState(false);
 
-  // Ensure client-side rendering for components that depend on browser APIs
-  useEffect(() => {
-    setIsClient(true); // Set to true only on client
-    return () => {
-      setError(null);
-      setErrors({});
-    };
-  }, []);
-
-  // Validate form inputs
   const validate = () => {
     const newErrors = {};
 
+    // Username validation
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
     } else if (formData.username.length > 30) {
       newErrors.username = 'Username cannot exceed 30 characters';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
     }
 
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      newErrors.email = 'Valid email is required';
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
 
-    if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (passwordScore < 2) {
-      newErrors.password = 'Please choose a stronger password';
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one capital letter';
+    } else if (!/(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one number';
     }
 
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    // Terms validation
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'You must accept the terms';
+      newErrors.acceptTerms = 'You must accept the terms and conditions';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
+    const { name, value, checked, type } = e.target;
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
+
+    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Handle password strength score changes
-  const handlePasswordStrengthChange = (score) => {
-    setPasswordScore(score);
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      const response = await fetch('/api/users/register', {
+      const res = await fetch('/api/users/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
+          username: formData.username.trim(),
+          email: formData.email.toLowerCase().trim(),
           password: formData.password,
         }),
-        signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
+      const data = await res.json();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      if (!res.ok) {
+        throw new Error(data.message || 'Registration failed');
       }
 
+      // ✅ SUCCESS - REDIRECT TO LOGIN
       setSuccess(true);
+      
       setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 1500);
+
     } catch (err) {
-      let errorMessage = 'Registration failed';
-      if (err.name === 'AbortError') {
-        errorMessage = 'Request timed out - server not responding';
-      } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = 'Cannot connect to server';
-      } else {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
+      console.error('Registration error:', err);
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const togglePasswordVisibility = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field === 'password' ? 'showPassword' : 'showConfirmPassword']: 
+        !prev[field === 'password' ? 'showPassword' : 'showConfirmPassword']
+    }));
+  };
+
   return (
-    <Container
-      maxWidth="sm"
-      sx={{
-        py: 4,
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          padding: { xs: 3, sm: 4 },
-          borderRadius: 2,
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.1)',
-          width: '100%',
-        }}
-      >
-        <Typography
-          variant="h4"
-          component="h1"
+    <>
+      <Container maxWidth="sm">
+        <Box
           sx={{
-            mb: 3,
-            fontWeight: 600,
-            textAlign: 'center',
-            color: 'primary.main',
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            py: 4,
           }}
         >
-          Create Your Account
-        </Typography>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <TextField
-            label="Username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            error={!!errors.username}
-            helperText={errors.username}
-            fullWidth
-            margin="normal"
-            required
-            autoComplete="username"
-            inputProps={{
-              minLength: 3,
-              maxLength: 30,
-              'data-testid': 'username-input',
+          <Paper
+            elevation={12}
+            sx={{
+              p: { xs: 3, sm: 5 },
+              borderRadius: 3,
+              width: '100%',
+              maxWidth: 480,
+              background: 'linear-gradient(145deg, #ffffff, #f8fffe)',
+              boxShadow: '0 20px 40px rgba(0,131,132,0.1)',
             }}
-          />
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              textAlign="center"
+              color="#008384"
+              mb={1}
+            >
+              Join Us
+            </Typography>
+            <Typography variant="body2" color="text.secondary" textAlign="center" mb={4}>
+              Create your account and start your journey
+            </Typography>
 
-          <TextField
-            label="Email Address"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
-            fullWidth
-            margin="normal"
-            required
-            autoComplete="email"
-            inputProps={{
-              'data-testid': 'email-input',
-            }}
-          />
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              {/* Form fields remain the same */}
+              <TextField
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                error={!!errors.username}
+                helperText={errors.username || '3-30 characters, letters, numbers, underscores only'}
+                fullWidth
+                margin="normal"
+                required
+                autoFocus
+              />
 
-          <TextField
-            label="Password"
-            name="password"
-            type={formData.showPassword ? 'text' : 'password'}
-            value={formData.password}
-            onChange={handleChange}
-            error={!!errors.password}
-            helperText={errors.password || 'Minimum 8 characters with uppercase and number'}
-            fullWidth
-            margin="normal"
-            required
-            autoComplete="new-password"
-            inputProps={{
-              'data-testid': 'password-input',
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        showPassword: !prev.showPassword,
-                      }))
-                    }
-                    edge="end"
-                    data-testid="toggle-password"
-                  >
-                    {formData.showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+              <TextField
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
+                fullWidth
+                margin="normal"
+                required
+              />
 
-          {isClient && formData.password && (
-            <PasswordStrengthBar
-              password={formData.password}
-              minLength={8}
-              onChangeScore={handlePasswordStrengthChange}
-              style={{
-                marginBottom: 16,
-                marginTop: 4,
-              }}
-              scoreWords={['Very Weak', 'Weak', 'Okay', 'Good', 'Strong']}
-              shortScoreWord="Too short"
-            />
-          )}
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="acceptTerms"
-                checked={formData.acceptTerms}
-                onChange={(e) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    acceptTerms: e.target.checked,
-                  }));
-                  if (errors.acceptTerms) {
-                    setErrors((prev) => ({ ...prev, acceptTerms: undefined }));
-                  }
-                }}
-                color="primary"
-                sx={{
-                  color: errors.acceptTerms ? 'error.main' : undefined,
-                }}
-                inputProps={{
-                  'data-testid': 'terms-checkbox',
+              <TextField
+                label="Password"
+                name="password"
+                type={formData.showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                error={!!errors.password}
+                helperText={errors.password || 'Minimum 6 characters with one capital letter and one number'}
+                fullWidth
+                margin="normal"
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => togglePasswordVisibility('password')}
+                        edge="end"
+                      >
+                        {formData.showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
                 }}
               />
-            }
-            label={
-              <Typography variant="body2" component="span">
-                I agree to the{' '}
-                <Link href="/terms-and-conditions" color="primary" sx={{ fontWeight: 500 }}>
-                  Terms and Conditions
+
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                type={formData.showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword}
+                fullWidth
+                margin="normal"
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                        edge="end"
+                      >
+                        {formData.showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="acceptTerms"
+                    checked={formData.acceptTerms}
+                    onChange={handleChange}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    I agree to the{' '}
+                    <Link href="/terms" underline="hover" color="#008384" fontWeight={500}>
+                      Terms of Service
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" underline="hover" color="#008384" fontWeight={500}>
+                      Privacy Policy
+                    </Link>
+                  </Typography>
+                }
+                sx={{ mt: 2, alignItems: 'flex-start' }}
+              />
+              {errors.acceptTerms && (
+                <Typography color="error" variant="caption" display="block" sx={{ mt: 1 }}>
+                  {errors.acceptTerms}
+                </Typography>
+              )}
+
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                disabled={loading || success}
+                sx={{
+                  mt: 3,
+                  py: 1.8,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderRadius: 3,
+                  backgroundColor: '#008384',
+                  '&:hover': {
+                    backgroundColor: '#006666',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 10px 20px rgba(0,131,132,0.3)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={28} color="inherit" />
+                ) : success ? (
+                  'Account Created!'
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+
+              <Typography textAlign="center" mt={3} color="text.secondary">
+                Already have an account?{' '}
+                <Link href="/login" color="#008384" fontWeight={600} underline="none">
+                  Sign In
                 </Link>
               </Typography>
-            }
-            sx={{
-              mb: errors.acceptTerms ? 0.5 : 2,
-              mt: 1,
-              alignItems: 'flex-start',
-            }}
-          />
-          {errors.acceptTerms && (
-            <Typography color="error" variant="body2" sx={{ mb: 2 }}>
-              {errors.acceptTerms}
-            </Typography>
-          )}
+            </Box>
+          </Paper>
+        </Box>
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            disabled={loading || success}
-            sx={{
-              py: 1.5,
-              mb: 2,
-              borderRadius: 2,
-              fontWeight: 600,
-              letterSpacing: 0.5,
-              '&:hover': {
-                transform: 'translateY(-1px)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-            data-testid="register-button"
-          >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : success ? (
-              '✓ Registration Successful!'
-            ) : (
-              'Create Account'
-            )}
-          </Button>
+        {/* Success Alert */}
+        <Snackbar open={success} autoHideDuration={4000}>
+          <Alert severity="success" variant="filled">
+            Registration successful! Redirecting to login...
+          </Alert>
+        </Snackbar>
 
-          <Typography
-            variant="body1"
-            sx={{
-              textAlign: 'center',
-              mt: 2,
-            }}
-          >
-            Already have an account?{' '}
-            <Link href="/login" color="primary" sx={{ fontWeight: 500 }}>
-              Sign In
-            </Link>
-          </Typography>
-        </form>
-      </Paper>
-
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{ mt: 8 }}
-      >
-        <Alert
-          severity="error"
-          sx={{ width: '100%' }}
-          variant="filled"
-          onClose={() => setError(null)}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={() => setSuccess(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{ mt: 8 }}
-      >
-        <Alert severity="success" sx={{ width: '100%' }} variant="filled">
-          Registration successful! Redirecting to login...
-        </Alert>
-      </Snackbar>
-    </Container>
+        {/* Error Alert */}
+        <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
+          <Alert severity="error" variant="filled" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </>
   );
-};
-
-export default Register;
+}

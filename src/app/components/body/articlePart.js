@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 async function getTopArticle() {
   try {
-    const res = await fetch('https://api.everestkit.com/api/blogs/top-viewed', {
+    const res = await fetch('http://localhost:5000/api/blogs/top-viewed', {
       next: { revalidate: 300 }, // Revalidate every 5 minutes
     });
 
@@ -38,7 +38,7 @@ function TopArticleCard({ article }) {
             {article.image ? (
               <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden shadow-lg">
                 <Image
-                  src={`https://api.everestkit.com/uploads/${article.image}`}
+                  src={`http://localhost:5000/uploads/${article.image}`}
                   alt={article.title || 'Top article image'}
                   fill
                   className="object-cover hover:scale-105 transition-transform duration-700"
@@ -138,7 +138,7 @@ function TopArticleCard({ article }) {
             </div>
 
             <Link
-              href={`/blog/${article._id}`}
+              href={`/blogs/${article._id}`}
               className="inline-flex items-center px-6 py-3 bg-white text-[#25609A] rounded-lg hover:bg-gray-100 transition-colors font-semibold text-sm w-fit group"
             >
               Read Full Article

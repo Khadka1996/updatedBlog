@@ -1,37 +1,59 @@
-'use client';
+// src/app/components/SessionLoader.js
 
-import { motion } from 'framer-motion';
-import CircularProgress from '@mui/material/CircularProgress';
+"use client";
 
-const SessionLoader = () => {
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+export default function SessionLoader() {
+  const [dots, setDots] = useState("");
+
+  // Animated Loading Text
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex items-center justify-center h-screen bg-transparent">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="text-center relative"
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white">
+
+      {/* Two Color Chasing Loader */}
+      <div className="relative w-20 h-20">
+        {/* Blue Circle */}
+        <motion.div
+          className="absolute top-0 left-0 w-full h-full rounded-full border-[6px]"
+          style={{
+            borderColor: "#6A9B52",
+            borderRightColor: "transparent",
+            borderBottomColor: "transparent",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        />
+
+        {/* Green Circle */}
+        <motion.div
+          className="absolute top-0 left-0 w-full h-full rounded-full border-[6px]"
+          style={{
+            borderColor: "#50A84D",
+            borderLeftColor: "transparent",
+            borderTopColor: "transparent",
+          }}
+          animate={{ rotate: -360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        />
+      </div>
+
+      {/* Loading Text */}
+      <p
+        className="mt-5 text-lg font-semibold"
+        style={{ color: "#1B4EA3" }}
       >
-        {/* Glow pulse background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-28 h-28 rounded-full bg-indigo-500 opacity-30 animate-ping" />
-        </div>
-
-        {/* Spinner */}
-        <CircularProgress size={70} thickness={5} style={{ color: '#6366F1' }} />
-
-        {/* Animated text */}
-        <motion.p
-          className="mt-5 text-gray-700 font-medium text-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
-          Loading..
-        </motion.p>
-      </motion.div>
+        Loading{dots}
+      </p>
     </div>
   );
-};
-
-export default SessionLoader;
+}
