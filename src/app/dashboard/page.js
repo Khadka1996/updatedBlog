@@ -1,58 +1,70 @@
 'use client'
 // pages/index.js (or app/page.js for Next.js 13+ app router)
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState('last30days');
-  
-  // Sample data - in a real app this would come from an API
-  const metricsData = {
-    totalVisitors: { current: 142589, previous: 118322 },
-    avgTimeOnSite: { current: 225, previous: 190 }, // in seconds
-    bounceRate: { current: 52, previous: 58 },
-    revenue: { current: 3842, previous: 2950 }
-  };
-  
-  const trafficData = [
-    { week: 'Week 1', visitors: 32000, revenue: 800 },
-    { week: 'Week 2', visitors: 28500, revenue: 720 },
-    { week: 'Week 3', visitors: 35000, revenue: 920 },
-    { week: 'Week 4', visitors: 35500, revenue: 950 },
-    { week: 'Week 5', visitors: 40000, revenue: 1100 },
-    { week: 'Week 6', visitors: 38000, revenue: 1050 },
-    { week: 'Week 7', visitors: 42000, revenue: 1200 },
-    { week: 'Week 8', visitors: 45000, revenue: 1300 }
-  ];
-  
-  const topContent = [
-    { title: '10 Best Lightweight Tents for Everest Base Camp', views: 28450 },
-    { title: 'How to Layer Clothes for Extreme Cold Weather', views: 22100 },
-    { title: 'Winter Hiking Boots Review 2024', views: 18955 },
-    { title: 'Essential Gear for High-Altitude Trekking', views: 15620 },
-    { title: 'Acclimatization Strategies for Mountaineers', views: 13200 }
-  ];
-  
-  const trafficSources = [
-    { source: 'Organic Search', percentage: 45, color: 'bg-blue-500' },
-    { source: 'Social Media', percentage: 30, color: 'bg-green-500' },
-    { source: 'Direct', percentage: 15, color: 'bg-yellow-500' },
-    { source: 'Email Newsletter', percentage: 10, color: 'bg-purple-500' }
-  ];
+  const [loading, setLoading] = useState(true);
+  const [metricsData, setMetricsData] = useState({
+    totalPosts: 0,
+    totalViews: 0,
+    totalComments: 0,
+    totalLikes: 0,
+  });
+  const [trafficData, setTrafficData] = useState([]);
+  const [topContent, setTopContent] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
-  const calculateChange = (current, previous) => {
-    return ((current - previous) / previous * 100).toFixed(1);
-  };
+  const formatNumber = (num) => new Intl.NumberFormat().format(num);
 
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat().format(num);
-  };
+  useEffect(() => {
+    let isMounted = true;
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
-  };
+    async function loadDashboard() {
+      try {
+        setLoading(true);
+
+        // Fetch all blogs (increase limit to cover entire collection)
+        const blogsRes = await fetch('/api/blogs?limit=10000');
+        const blogsJson = await blogsRes.json();
+
+        const blogs = (blogsJson && blogsJson.data) || [];
+
+        // Compute metrics
+        const totalPosts = blogsJson.total || blogs.length;
+        const totalViews = blogs.reduce((s, b) => s + (b.viewCount || 0), 0);
+        const totalComments = blogs.reduce((s, b) => s + ((b.comments && b.comments.length) || 0), 0);
+        const totalLikes = blogs.reduce((s, b) => s + ((b.likes && b.likes.length) || 0), 0);
+
+        // Top content by views
+        const sortedByViews = [...blogs].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+        const top = sortedByViews.slice(0, 5).map((t) => ({ title: t.title, views: t.viewCount || 0 }));
+
+        // Traffic data - use latest 8 posts' views as a simple trend
+        const latest = (await (await fetch('/api/blogs/latest')).json()).data || [];
+        const traffic = latest.map((item, i) => ({ week: `Post ${i + 1}`, visitors: item.viewCount || 0, revenue: 0 }));
+
+        // Recent activity - show latest articles
+        const recent = latest.map((item) => ({ title: item.title, time: item.createdAt }));
+
+        if (!isMounted) return;
+
+        setMetricsData({ totalPosts, totalViews, totalComments, totalLikes });
+        setTopContent(top);
+        setTrafficData(traffic);
+        setRecentActivity(recent);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadDashboard();
+
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,61 +97,33 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* KPI Cards */}
+        {/* KPI Cards (real data) */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* Total Visitors Card */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Total Visitors</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                {formatNumber(metricsData.totalVisitors.current)}
-              </dd>
-              <div className={`mt-1 text-sm ${metricsData.totalVisitors.current >= metricsData.totalVisitors.previous ? 'text-green-600' : 'text-red-600'}`}>
-                {calculateChange(metricsData.totalVisitors.current, metricsData.totalVisitors.previous) > 0 ? '↑' : '↓'} 
-                {calculateChange(metricsData.totalVisitors.current, metricsData.totalVisitors.previous)}% from previous period
-              </div>
+              <dt className="text-sm font-medium text-gray-500 truncate">Total Posts</dt>
+              <dd className="mt-1 text-3xl font-semibold text-gray-900">{formatNumber(metricsData.totalPosts)}</dd>
             </div>
           </div>
 
-          {/* Avg Time on Site Card */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Avg. Time on Site</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                {formatTime(metricsData.avgTimeOnSite.current)}
-              </dd>
-              <div className={`mt-1 text-sm ${metricsData.avgTimeOnSite.current >= metricsData.avgTimeOnSite.previous ? 'text-green-600' : 'text-red-600'}`}>
-                {calculateChange(metricsData.avgTimeOnSite.current, metricsData.avgTimeOnSite.previous) > 0 ? '↑' : '↓'} 
-                {calculateChange(metricsData.avgTimeOnSite.current, metricsData.avgTimeOnSite.previous)}% from previous period
-              </div>
+              <dt className="text-sm font-medium text-gray-500 truncate">Total Views</dt>
+              <dd className="mt-1 text-3xl font-semibold text-gray-900">{formatNumber(metricsData.totalViews)}</dd>
             </div>
           </div>
 
-          {/* Bounce Rate Card */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Bounce Rate</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                {metricsData.bounceRate.current}%
-              </dd>
-              <div className={`mt-1 text-sm ${metricsData.bounceRate.current <= metricsData.bounceRate.previous ? 'text-green-600' : 'text-red-600'}`}>
-                {calculateChange(metricsData.bounceRate.current, metricsData.bounceRate.previous) > 0 ? '↑' : '↓'} 
-                {Math.abs(calculateChange(metricsData.bounceRate.current, metricsData.bounceRate.previous))}% from previous period
-              </div>
+              <dt className="text-sm font-medium text-gray-500 truncate">Comments</dt>
+              <dd className="mt-1 text-3xl font-semibold text-gray-900">{formatNumber(metricsData.totalComments)}</dd>
             </div>
           </div>
 
-          {/* Revenue Card */}
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">Revenue</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                ${formatNumber(metricsData.revenue.current)}
-              </dd>
-              <div className={`mt-1 text-sm ${metricsData.revenue.current >= metricsData.revenue.previous ? 'text-green-600' : 'text-red-600'}`}>
-                {calculateChange(metricsData.revenue.current, metricsData.revenue.previous) > 0 ? '↑' : '↓'} 
-                {calculateChange(metricsData.revenue.current, metricsData.revenue.previous)}% from previous period
-              </div>
+              <dt className="text-sm font-medium text-gray-500 truncate">Likes</dt>
+              <dd className="mt-1 text-3xl font-semibold text-gray-900">{formatNumber(metricsData.totalLikes)}</dd>
             </div>
           </div>
         </div>
@@ -181,27 +165,26 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Traffic Sources Chart */}
+          {/* Recent Activity */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Traffic Sources</h2>
-            <div className="h-80">
-              {/* This would be a chart component in a real app */}
-              <div className="flex flex-col space-y-4 mt-4">
-                {trafficSources.map((source, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700">{source.source}</span>
-                      <span className="text-sm text-gray-700">{source.percentage}%</span>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
+            <div className="h-80 overflow-y-auto">
+              <ul className="divide-y divide-gray-200">
+                {recentActivity.length === 0 && !loading && (
+                  <li className="py-3 text-sm text-gray-500">No recent activity</li>
+                )}
+                {recentActivity.map((act, idx) => (
+                  <li key={idx} className="py-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 h-6 w-6 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-600">{idx+1}</div>
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-800 truncate">{act.title}</p>
+                        <p className="text-xs text-gray-500">{new Date(act.time).toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className={`${source.color} h-2.5 rounded-full`} 
-                        style={{ width: `${source.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           </div>
         </div>

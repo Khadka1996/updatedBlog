@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import { useRouter } from 'next/navigation';
@@ -62,31 +62,26 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
 
   const fileInputRef = useRef(null);
 
-  // Word count
-  const wordCount = useMemo(() => {
-    const text = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    return text ? text.split(' ').length : 0;
-  }, [content]);
+  // Quill configuration - ENHANCED with more tools
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ font: [] }],
+      [{ size: ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ color: [] }, { background: [] }],
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ align: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      ['blockquote', 'code-block'],
+      ['link', 'image', 'video'],
+      [{ direction: 'rtl' }],
+      ['clean'],
+    ],
+  };
 
-  // Quill configuration - rich toolbar
-  const modules = useMemo(
-    () => ({
-      toolbar: [
-        [{ header: [1, 2, 3, 4, false] }],
-        [{ font: [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ color: [] }, { background: [] }],
-        [{ align: [] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['blockquote', 'code-block'],
-        ['link', 'image', 'video'],
-        ['clean'],
-      ],
-    }),
-    []
-  );
-
-  const handleImageUpload = useCallback((file) => {
+  const handleImageUpload = (file) => {
     if (!file) return;
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -103,7 +98,7 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
     setImageFile(file);
     setExistingImage(null);
     setError(null);
-  }, []);
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -232,9 +227,7 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
     }
   };
 
-  const imagePreviewUrl = useMemo(() => {
-    return imageFile ? URL.createObjectURL(imageFile) : existingImage ? `/uploads/${existingImage}` : null;
-  }, [imageFile, existingImage]);
+  const imagePreviewUrl = imageFile ? URL.createObjectURL(imageFile) : existingImage ? `/uploads/${existingImage}` : null;
 
   return (
     <Container maxWidth="lg" sx={{ py: 5, pb: 10 }}>
@@ -258,7 +251,7 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
         )}
 
         <Stack spacing={4}>
-          {/* Title + Subheading */}
+          {/* Title */}
           <Box>
             <TextField
               fullWidth
@@ -462,11 +455,6 @@ const Editor = ({ onSave, existingBlog, onDelete }) => {
                 readOnly={loading}
               />
             </Paper>
-
-            {/* Word count */}
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {wordCount} words • {content.length} characters
-            </Typography>
           </Box>
 
           {/* Action Buttons */}

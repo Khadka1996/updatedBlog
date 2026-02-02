@@ -1,8 +1,15 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
+import { toolsAdsConfig } from '@/config/tools-adsense.config'
+import AdsInit from '@/app/components/ads/AdsInit';
 
 const BlogPage = async ({ searchParams }) => {
+  const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
+  const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
+  const adBottomSlot = process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT;
+
   try {
     // Fetch blog data from backend API
     const res = await fetch('http://localhost:5000/api/blogs/latest', {
@@ -15,6 +22,39 @@ const BlogPage = async ({ searchParams }) => {
 
     const blogData = await res.json();
     const blogs = blogData.data || [];
+
+    const renderAdPlaceholder = () => (
+      <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center min-h-[200px] sm:min-h-[250px]">
+        <div className="text-center">
+          <p className="text-gray-500 text-sm sm:text-base font-semibold mb-1">Advertisement Space</p>
+          <p className="text-xs text-gray-400">Position: Bottom</p>
+          {!adsEnabled && <p className="text-xs text-red-400 mt-1">Ads disabled</p>}
+          {!publisherId && <p className="text-xs text-red-400 mt-1">Publisher ID not configured</p>}
+        </div>
+      </div>
+    );
+
+    const renderAdUnit = () => {
+      if (!adsEnabled || !publisherId || !adBottomSlot) {
+        return renderAdPlaceholder();
+      }
+
+      return (
+        <div className="ad-wrapper min-h-[200px] sm:min-h-[250px]">
+          <ins 
+            className="adsbygoogle"
+            style={{ 
+              display: 'block',
+              width: '100%',
+              height: '100%'
+            }}
+            data-ad-client={publisherId}
+            data-ad-slot={adBottomSlot}
+            data-ad-format="horizontal"
+          />
+        </div>
+      );
+    };
 
     return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,104 +71,110 @@ const BlogPage = async ({ searchParams }) => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {blogs.map((blog) => (
-              <article
-                key={blog._id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
-              >
-                {/* Blog Image with responsive height */}
-                {blog.image && (
-                  <div className="relative h-32 sm:h-36 w-full">
-                    <Image
-                      src={`http://localhost:5000/uploads/${blog.image}`}
-                      alt={blog.title || 'Blog image'}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      priority={blogs.indexOf(blog) < 4}
-                    />
-                  </div>
-                )}
-
-                {/* Blog Content */}
-                <div className="p-4 flex-grow flex flex-col">
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                    {blog.title || 'Untitled'}
-                  </h2>
-
-                  {/* Stats */}
-                  <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mt-auto pt-3">
-                    <span>
-                      {new Date(blog.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <span className="flex items-center">
-                        <svg
-                          className="w-3 h-3 sm:w-4 sm:h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        {blog.viewCount || 0}
-                      </span>
-                      <span className="flex items-center">
-                        <svg
-                          className="w-3 h-3 sm:w-4 sm:h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
-                        {blog.likeCount || blog.likes?.length || 0}
-                      </span>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {blogs.map((blog) => (
+                <article
+                  key={blog._id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
+                >
+                  {/* Blog Image with responsive height */}
+                  {blog.image && (
+                    <div className="relative h-32 sm:h-36 w-full">
+                      <Image
+                        src={`http://localhost:5000/uploads/${blog.image}`}
+                        alt={blog.title || 'Blog image'}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        priority={blogs.indexOf(blog) < 4}
+                      />
                     </div>
+                  )}
+
+                  {/* Blog Content */}
+                  <div className="p-4 flex-grow flex flex-col">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+                      {blog.title || 'Untitled'}
+                    </h2>
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mt-auto pt-3">
+                      <span>
+                        {new Date(blog.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <span className="flex items-center">
+                          <svg
+                            className="w-3 h-3 sm:w-4 sm:h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          {blog.viewCount || 0}
+                        </span>
+                        <span className="flex items-center">
+                          <svg
+                            className="w-3 h-3 sm:w-4 sm:h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                          </svg>
+                          {blog.likeCount || blog.likes?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Read More Button */}
+                    <Link
+                      href={`/blogs/${blog._id}`}
+                      className="mt-3 inline-block px-3 py-1.5 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors text-center text-xs sm:text-sm"
+                      aria-label={`Read more about ${blog.title || 'this article'}`}
+                    >
+                      Read More
+                    </Link>
                   </div>
-
-                  {/* Read More Button */}
-                  <Link
-                    href={`/blogs/${blog._id}`}
-                    className="mt-3 inline-block px-3 py-1.5 bg-[#51A94C] text-white rounded-md hover:bg-[#4A8E45] transition-colors text-center text-xs sm:text-sm"
-                    aria-label={`Read more about ${blog.title || 'this article'}`}
-                  >
-                    Read More
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-
-        {/* Google Ads Integration */}
-        {blogs.length > 0 && (
-          <div className="mt-8 sm:mt-12">
-            <div className="bg-gray-100 p-4 rounded-lg min-h-[200px] sm:min-h-[250px] flex items-center justify-center">
-              <p className="text-gray-500 text-sm sm:text-base">Advertisement Space</p>
+                </article>
+              ))}
             </div>
-          </div>
+
+            {/* Google Ads Integration */}
+            <div className="mt-8 sm:mt-12">
+                {adsEnabled && publisherId && (
+                  <Script
+                    async
+                    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
+                    strategy="afterInteractive"
+                  />
+                )}
+                {renderAdUnit()}
+                {adsEnabled && publisherId && <AdsInit />}
+            </div>
+          </>
         )}
       </div>
     );

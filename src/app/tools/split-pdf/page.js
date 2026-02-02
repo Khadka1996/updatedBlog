@@ -5,6 +5,8 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import API_URL from '@/app/config';
 
 export default function SplitPDF() {
   const [file, setFile] = useState(null);
@@ -118,7 +120,7 @@ export default function SplitPDF() {
       formData.append('ranges', pageRanges.filter(r => r.trim()).join(';'));
       formData.append('splitMode', 'custom');
 
-      const response = await fetch('/api/pdf/split', {
+      const response = await fetch(`${API_URL}/api/pdf/split`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -184,15 +186,17 @@ export default function SplitPDF() {
           <meta name="description" content="Extract pages from PDF documents" />
           {/* Google AdSense Script */}
         </Head>
-       <Script 
+      {toolsAdsConfig.isConfigured() && (
+            <Script 
             id="adsbygoogle-init"
             strategy="afterInteractive"
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+            src={toolsAdsConfig.getScriptUrl()}
             // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
             crossOrigin="anonymous"
             onLoad={() => setAdsLoaded(true)}
             onError={(e) => console.error('AdSense script failed to load', e)}
-          />
+        />
+      )}
       <div className="mx-3 md:mx-10 lg:mx-18">
 
            <div className="flex items-center mb-6">
@@ -204,8 +208,8 @@ export default function SplitPDF() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-              data-ad-slot="YOUR_TOP_AD_SLOT" // Replace with your actual top ad unit slot ID
+              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+              data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>
@@ -298,8 +302,8 @@ export default function SplitPDF() {
                     <ins
                       className="adsbygoogle"
                       style={{ display: 'block' }}
-                      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-                      data-ad-slot="YOUR_MIDDLE_AD_SLOT" // Replace with your actual middle ad unit slot ID
+                      data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+                      data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
                       data-ad-format="auto"
                       data-full-width-responsive="true"
                     ></ins>
@@ -354,8 +358,8 @@ export default function SplitPDF() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT" // Replace with your actual bottom ad unit slot ID
+              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

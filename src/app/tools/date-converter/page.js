@@ -1,790 +1,611 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaSyncAlt, FaCopy, FaGlobeAsia, FaExclamationTriangle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import NepaliDate from 'nepali-date';
-import Footer from '@/app/components/footer/footer';
-import NavBar from '@/app/components/header/navbar';
+
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link'
+import Script from 'next/script'
+import { toolsAdsConfig } from '@/config/tools-adsense.config'
+import NepaliDate from 'nepali-date'
+import {
+  FaCalendarAlt,
+  FaCopy,
+  FaGlobeAsia,
+  FaExclamationTriangle,
+  FaChevronLeft,
+  FaChevronRight
+} from 'react-icons/fa'
+
+const nepaliMonths = [
+  { value: 1, name: 'Baisakh' }, { value: 2, name: 'Jestha' }, { value: 3, name: 'Asar' },
+  { value: 4, name: 'Shrawan' }, { value: 5, name: 'Bhadra' }, { value: 6, name: 'Aswin' },
+  { value: 7, name: 'Kartik' }, { value: 8, name: 'Mangsir' }, { value: 9, name: 'Poush' },
+  { value: 10, name: 'Magh' }, { value: 11, name: 'Falgun' }, { value: 12, name: 'Chaitra' }
+]
+
+const englishMonths = [
+  { value: 1, name: 'January' }, { value: 2, name: 'February' }, { value: 3, name: 'March' },
+  { value: 4, name: 'April' }, { value: 5, name: 'May' }, { value: 6, name: 'June' },
+  { value: 7, name: 'July' }, { value: 8, name: 'August' }, { value: 9, name: 'September' },
+  { value: 10, name: 'October' }, { value: 11, name: 'November' }, { value: 12, name: 'December' }
+]
 
 export default function NepaliDateConverter() {
-  const [nepaliDate, setNepaliDate] = useState({ year: 2080, month: 1, day: 1 });
-  const [englishDate, setEnglishDate] = useState({ year: 2023, month: 4, day: 14 });
-  const [convertedDate, setConvertedDate] = useState('');
-  const [conversionDirection, setConversionDirection] = useState('nepali-to-english');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState('');
-  const [currentNepaliDate, setCurrentNepaliDate] = useState('');
-  const [calendarView, setCalendarView] = useState('english');
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedDateInfo, setSelectedDateInfo] = useState(null);
-  const [daysInMonth, setDaysInMonth] = useState(30); // Default days in month
+  const todayAD = useMemo(() => new Date(), [])
+  const todayBS = useMemo(() => new NepaliDate(), [])
 
-  // Nepali months data
-  const nepaliMonths = [
-    { value: 1, name: 'Baishakh' },
-    { value: 2, name: 'Jestha' },
-    { value: 3, name: 'Ashadh' },
-    { value: 4, name: 'Shrawan' },
-    { value: 5, name: 'Bhadra' },
-    { value: 6, name: 'Ashwin' },
-    { value: 7, name: 'Kartik' },
-    { value: 8, name: 'Mangsir' },
-    { value: 9, name: 'Poush' },
-    { value: 10, name: 'Magh' },
-    { value: 11, name: 'Falgun' },
-    { value: 12, name: 'Chaitra' },
-  ];
+  const [direction, setDirection] = useState('bs-to-ad') // 'bs-to-ad' | 'ad-to-bs'
+  const [calendarView, setCalendarView] = useState('ad') // 'ad' | 'bs'
 
-  // English months
-  const englishMonths = [
-    { value: 1, name: 'January' },
-    { value: 2, name: 'February' },
-    { value: 3, name: 'March' },
-    { value: 4, name: 'April' },
-    { value: 5, name: 'May' },
-    { value: 6, name: 'June' },
-    { value: 7, name: 'July' },
-    { value: 8, name: 'August' },
-    { value: 9, name: 'September' },
-    { value: 10, name: 'October' },
-    { value: 11, name: 'November' },
-    { value: 12, name: 'December' },
-  ];
+  const [bsDate, setBsDate] = useState({
+    year: todayBS.getYear().toString(),
+    month: (todayBS.getMonth() + 1).toString(),
+    day: todayBS.getDate().toString()
+  })
 
-  // Get current Nepali date
-  useEffect(() => {
-    const now = new NepaliDate();
-    setCurrentNepaliDate(now.format('YYYY-MM-DD'));
-    
-    // Set initial values to current date
-    const currentYear = now.getYear();
-    const currentMonth = now.getMonth() + 1;
-    const currentDay = now.getDate();
-    
-    setNepaliDate({
-      year: currentYear,
-      month: currentMonth,
-      day: currentDay
-    });
-    
-    // Update days in month for current Nepali month
-    updateDaysInMonth(currentYear, currentMonth, 'nepali');
-    
-    // Convert Nepali date to English date
-    const englishDateObj = convertNepaliToEnglish(currentYear, currentMonth, currentDay);
-    if (englishDateObj) {
-      setEnglishDate({
-        year: englishDateObj.year,
-        month: englishDateObj.month,
-        day: englishDateObj.day
-      });
-    }
-  }, []);
+  const [adDate, setAdDate] = useState({
+    year: todayAD.getFullYear().toString(),
+    month: (todayAD.getMonth() + 1).toString(),
+    day: todayAD.getDate().toString()
+  })
 
-  // Update days in month when year or month changes
-  useEffect(() => {
-    if (conversionDirection === 'nepali-to-english') {
-      updateDaysInMonth(nepaliDate.year, nepaliDate.month, 'nepali');
-    } else {
-      updateDaysInMonth(englishDate.year, englishDate.month, 'english');
-    }
-  }, [nepaliDate.year, nepaliDate.month, englishDate.year, englishDate.month, conversionDirection]);
+  const [daysInMonth, setDaysInMonth] = useState(30)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState('')
+  const [selectedDay, setSelectedDay] = useState(null)
+  const [quickInput, setQuickInput] = useState('')
+  const [adsLoaded, setAdsLoaded] = useState(false)
 
-  // Update days in month based on calendar type
-  const updateDaysInMonth = (year, month, type) => {
+  // ─── Helpers ───────────────────────────────────────────────────────
+  const getDaysInNepaliMonth = useCallback((y, m) => {
     try {
-      if (type === 'nepali') {
-        // For Nepali calendar, use the nepali-date package to get days in month
-        const daysInMonth = new NepaliDate(year, month - 1, 1).getDaysInMonth();
-        setDaysInMonth(daysInMonth);
-      } else {
-        // For English calendar, calculate days in month
-        const daysInMonth = new Date(year, month, 0).getDate();
-        setDaysInMonth(daysInMonth);
-      }
-    } catch (error) {
-      console.error('Error updating days in month:', error);
-      // Fallback to 30 days if there's an error
-      setDaysInMonth(30);
+      const year = Number(y)
+      const month = Number(m)
+      if (!year || !month) return 30
+      const d = new NepaliDate(year, month - 1, 1)
+      return d.getDaysInMonth?.() ?? 30
+    } catch {
+      return 30
     }
-  };
+  }, [])
 
-  // Convert Nepali date to English date
-  const convertNepaliToEnglish = (year, month, day) => {
+  const bsToAd = useCallback((y, m, d) => {
     try {
-      // Validate the Nepali date
-      if (year < 2000 || year > 2090) {
-        throw new Error('Nepali year must be between 2000 and 2090');
-      }
-      
-      if (month < 1 || month > 12) {
-        throw new Error('Nepali month must be between 1 and 12');
-      }
-      
-      // Get days in month for validation
-      const daysInMonth = new NepaliDate(year, month - 1, 1).getDaysInMonth();
-      if (day < 1 || day > daysInMonth) {
-        throw new Error(`Nepali day must be between 1 and ${daysInMonth} for the selected month`);
-      }
-      
-      const nepaliDate = new NepaliDate(year, month - 1, day); // Month is 0-based
-      const englishDate = nepaliDate.toEnglish();
+      const year = Number(y), month = Number(m), day = Number(d)
+      if (!year || !month || !day) return null
+      const nd = new NepaliDate(year, month - 1, day)
+      const eng = nd.toEnglishDate?.() || nd.toAD?.()
+      return eng instanceof Date && !isNaN(eng) ? eng : null
+    } catch {
+      return null
+    }
+  }, [])
+
+  const adToBs = useCallback((y, m, d) => {
+    try {
+      const year = Number(y), month = Number(m), day = Number(d)
+      if (!year || !month || !day) return null
+      const greg = new Date(year, month - 1, day)
+      if (isNaN(greg.getTime())) return null
+      const nd = new NepaliDate(greg)
       return {
-        year: englishDate.getFullYear(),
-        month: englishDate.getMonth() + 1,
-        day: englishDate.getDate()
-      };
-    } catch (error) {
-      console.error('Error converting Nepali to English date:', error);
-      setError(error.message);
-      return null;
-    }
-  };
-
-  // Convert English date to Nepali date
-  const convertEnglishToNepali = (year, month, day) => {
-    try {
-      // Validate the English date
-      if (year < 1944 || year > 2033) {
-        throw new Error('English year must be between 1944 and 2033');
+        year: nd.getYear().toString(),
+        month: (nd.getMonth() + 1).toString(),
+        day: nd.getDate().toString()
       }
-      
-      if (month < 1 || month > 12) {
-        throw new Error('English month must be between 1 and 12');
+    } catch {
+      return null
+    }
+  }, [])
+
+  // ─── Auto conversion & validation ─────────────────────────────────
+  useEffect(() => {
+    setError('')
+    setResult('')
+
+    let dim = 30
+    let converted = null
+
+    if (direction === 'bs-to-ad') {
+      dim = getDaysInNepaliMonth(bsDate.year, bsDate.month)
+      const dayNum = Number(bsDate.day)
+      if (dayNum < 1 || dayNum > dim) {
+        setError(`Day must be between 1 and ${dim}`)
       }
-      
-      // Get days in month for validation
-      const daysInMonth = new Date(year, month, 0).getDate();
-      if (day < 1 || day > daysInMonth) {
-        throw new Error(`English day must be between 1 and ${daysInMonth} for the selected month`);
-      }
-      
-      const englishDate = new Date(year, month - 1, day);
-      const nepaliDate = new NepaliDate(englishDate);
-      return {
-        year: nepaliDate.getYear(),
-        month: nepaliDate.getMonth() + 1, // Convert to 1-based month
-        day: nepaliDate.getDate()
-      };
-    } catch (error) {
-      console.error('Error converting English to Nepali date:', error);
-      setError(error.message);
-      return null;
-    }
-  };
 
-  // Handle input changes with proper validation
-  const handleNepaliDateChange = (field, value) => {
-    let numValue = parseInt(value) || 0;
-    
-    // Set appropriate limits for each field
-    if (field === 'year') {
-      numValue = Math.max(2000, Math.min(2090, numValue));
-    } else if (field === 'month') {
-      numValue = Math.max(1, Math.min(12, numValue));
-      // Update days in month when month changes
-      updateDaysInMonth(nepaliDate.year, numValue, 'nepali');
-    } else if (field === 'day') {
-      numValue = Math.max(1, Math.min(daysInMonth, numValue));
-    }
-    
-    setNepaliDate(prev => ({ ...prev, [field]: numValue }));
-    setError(''); // Clear error on input change
-  };
-
-  const handleEnglishDateChange = (field, value) => {
-    let numValue = parseInt(value) || 0;
-    
-    // Set appropriate limits for each field
-    if (field === 'year') {
-      numValue = Math.max(1944, Math.min(2033, numValue));
-    } else if (field === 'month') {
-      numValue = Math.max(1, Math.min(12, numValue));
-      // Update days in month when month changes
-      updateDaysInMonth(englishDate.year, numValue, 'english');
-    } else if (field === 'day') {
-      numValue = Math.max(1, Math.min(daysInMonth, numValue));
-    }
-    
-    setEnglishDate(prev => ({ ...prev, [field]: numValue }));
-    setError(''); // Clear error on input change
-  };
-
-  // Convert date function using nepali-date package
-  const convertDate = () => {
-    setIsProcessing(true);
-    setError('');
-    
-    try {
-      let result = '';
-      
-      if (conversionDirection === 'nepali-to-english') {
-        // Convert Nepali to English
-        const engDate = convertNepaliToEnglish(nepaliDate.year, nepaliDate.month, nepaliDate.day);
-        
-        if (!engDate) {
-          throw new Error('Invalid Nepali date');
-        }
-        
-        setEnglishDate(engDate);
-        result = `${engDate.day} ${englishMonths[engDate.month-1].name}, ${engDate.year}`;
-        setConvertedDate(result);
-        
-      } else {
-        // Convert English to Nepali
-        const nepDate = convertEnglishToNepali(englishDate.year, englishDate.month, englishDate.day);
-        
-        if (!nepDate) {
-          throw new Error('Invalid English date');
-        }
-        
-        setNepaliDate(nepDate);
-        result = `${nepDate.day} ${nepaliMonths[nepDate.month-1].name}, ${nepDate.year}`;
-        setConvertedDate(result);
-      }
-    } catch (err) {
-      console.error('Conversion error:', err);
-      setError(err.message || 'Failed to convert date. Please check your input.');
-      setConvertedDate('');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Handle date selection from calendar
-  const handleDateSelect = (day, monthType, index) => {
-    if (monthType !== 'current') return;
-    
-    setSelectedDate(index);
-    
-    if (calendarView === 'english') {
-      const selectedEnglishDate = {
-        year: englishDate.year,
-        month: englishDate.month,
-        day: day.date
-      };
-      setSelectedDateInfo({
-        type: 'english',
-        date: selectedEnglishDate,
-        display: `${day.date} ${englishMonths[englishDate.month-1].name}, ${englishDate.year}`
-      });
-      
-      // If we're in English to Nepali conversion mode, update the input
-      if (conversionDirection === 'english-to-nepali') {
-        setEnglishDate(selectedEnglishDate);
+      const engDate = bsToAd(bsDate.year, bsDate.month, bsDate.day)
+      if (engDate) {
+        setAdDate({
+          year: engDate.getFullYear().toString(),
+          month: (engDate.getMonth() + 1).toString(),
+          day: engDate.getDate().toString()
+        })
+        converted = `${engDate.getDate()} ${englishMonths[engDate.getMonth()].name} ${engDate.getFullYear()}`
       }
     } else {
-      const selectedNepaliDate = {
-        year: nepaliDate.year,
-        month: nepaliDate.month,
-        day: day.date
-      };
-      setSelectedDateInfo({
-        type: 'nepali',
-        date: selectedNepaliDate,
-        display: `${day.date} ${nepaliMonths[nepaliDate.month-1].name}, ${nepaliDate.year} BS`
-      });
-      
-      // If we're in Nepali to English conversion mode, update the input
-      if (conversionDirection === 'nepali-to-english') {
-        setNepaliDate(selectedNepaliDate);
+      dim = new Date(Number(adDate.year), Number(adDate.month), 0).getDate() || 31
+      const dayNum = Number(adDate.day)
+      if (dayNum < 1 || dayNum > dim) {
+        setError(`Day must be between 1 and ${dim}`)
+      }
+
+      const bsObj = adToBs(adDate.year, adDate.month, adDate.day)
+      if (bsObj) {
+        setBsDate(bsObj)
+        converted = `${bsObj.day} ${nepaliMonths[Number(bsObj.month) - 1].name} ${bsObj.year}`
       }
     }
-  };
 
-  // Generate calendar days
-  const generateCalendarDays = () => {
-    const days = [];
-    const today = new Date();
-    
-    if (calendarView === 'english') {
-      // Generate English calendar
-      const year = englishDate.year;
-      const month = englishDate.month;
-      
-      // First day of the month
-      const firstDay = new Date(year, month - 1, 1).getDay();
-      
-      // Days in the month
-      const daysInMonth = new Date(year, month, 0).getDate();
-      
-      // Previous month days
-      const prevMonthLastDate = new Date(year, month - 1, 0).getDate();
-      
-      // Add previous month's days
-      for (let i = firstDay - 1; i >= 0; i--) {
-        days.push({
-          date: prevMonthLastDate - i,
-          month: 'prev',
-          isToday: false,
-          dayOfWeek: (firstDay - i - 1) % 7
-        });
-      }
-      
-      // Add current month's days
-      for (let i = 1; i <= daysInMonth; i++) {
-        const dayOfWeek = new Date(year, month - 1, i).getDay();
-        const isToday = today.getDate() === i && 
-                        today.getMonth() + 1 === month && 
-                        today.getFullYear() === year;
-        days.push({
-          date: i,
-          month: 'current',
-          isToday,
-          dayOfWeek
-        });
-      }
-      
-      // Add next month's days to complete the grid
-      const totalCells = 42; // 6 weeks * 7 days
-      const nextMonthDays = totalCells - days.length;
-      for (let i = 1; i <= nextMonthDays; i++) {
-        days.push({
-          date: i,
-          month: 'next',
-          isToday: false,
-          dayOfWeek: (days.length + i - 1) % 7
-        });
-      }
-    } else {
-      // Generate Nepali calendar using nepali-date
-      const year = nepaliDate.year;
-      const month = nepaliDate.month;
-      
+    setDaysInMonth(dim)
+    if (converted) setResult(converted)
+  }, [
+    direction,
+    bsDate.year, bsDate.month, bsDate.day,
+    adDate.year, adDate.month, adDate.day,
+    getDaysInNepaliMonth, bsToAd, adToBs
+  ])
+
+  // Set initial selected day
+  useEffect(() => {
+    setSelectedDay(Number(direction === 'bs-to-ad' ? bsDate.day : adDate.day))
+  }, [direction])
+
+  // Initialize ads when script is loaded
+  useEffect(() => {
+    if (adsLoaded && typeof window !== 'undefined' && window.adsbygoogle) {
       try {
-        // Create a NepaliDate object for the first day of the month
-        const firstDayOfMonth = new NepaliDate(year, month - 1, 1); // Month is 0-based
-        
-        // Get the English date equivalent to get the day of the week
-        const firstDayEnglish = firstDayOfMonth.toEnglish();
-        const firstDay = firstDayEnglish.getDay(); // Get day of week (0-6)
-        
-        // Get days in the month
-        const daysInMonth = firstDayOfMonth.getDaysInMonth();
-        
-        // Add placeholder days for proper alignment
-        for (let i = 0; i < firstDay; i++) {
-          days.push({
-            date: '',
-            month: 'prev',
-            isToday: false,
-            dayOfWeek: i
-          });
-        }
-        
-        // Add current month's days
-        const todayNepali = new NepaliDate();
-        for (let i = 1; i <= daysInMonth; i++) {
-          const dayOfWeek = (firstDay + i - 1) % 7;
-          const isToday = i === todayNepali.getDate() && 
-                          month === todayNepali.getMonth() + 1 && 
-                          year === todayNepali.getYear();
-          days.push({
-            date: i,
-            month: 'current',
-            isToday,
-            dayOfWeek
-          });
-        }
-        
-        // Add next month's days to complete the grid
-        const totalCells = 42; // 6 weeks * 7 days
-        const nextMonthDays = totalCells - days.length;
-        for (let i = 1; i <= nextMonthDays; i++) {
-          days.push({
-            date: i,
-            month: 'next',
-            isToday: false,
-            dayOfWeek: (days.length + i - 1) % 7
-          });
-        }
-      } catch (error) {
-        console.error('Error generating Nepali calendar:', error);
-        // Fallback to a simple calendar if there's an error
-        for (let i = 1; i <= 31; i++) {
-          days.push({
-            date: i,
-            month: 'current',
-            isToday: false,
-            dayOfWeek: (i - 1) % 7
-          });
-        }
+        (window.adsbygoogle = window.adsbygoogle || []).push({})
+      } catch (e) {
+        // ignore
       }
     }
-    
-    return days;
-  };
+  }, [adsLoaded])
 
-  // Copy result to clipboard
-  const copyToClipboard = () => {
-    if (convertedDate) {
-      navigator.clipboard.writeText(convertedDate);
-      alert('Copied to clipboard!');
+  // ─── Change handlers – allow full editing ─────────────────────────
+  const updateBs = (field, value) => {
+    if (value === '' || /^\d{0,4}$/.test(value)) {
+      setBsDate(prev => ({ ...prev, [field]: value }))
     }
-  };
+  }
 
-  // Set to current date
-  const setToCurrentDate = () => {
-    const todayNepali = new NepaliDate();
-    const todayEnglish = new Date();
-    
-    if (conversionDirection === 'nepali-to-english') {
-      setNepaliDate({ 
-        year: todayNepali.getYear(), 
-        month: todayNepali.getMonth() + 1, 
-        day: todayNepali.getDate() 
-      });
+  const updateAd = (field, value) => {
+    if (value === '' || /^\d{0,4}$/.test(value)) {
+      setAdDate(prev => ({ ...prev, [field]: value }))
+    }
+  }
+
+  // Clamp on blur (optional – improves UX)
+  const clampOnBlurBs = (field) => {
+    setBsDate(prev => {
+      let val = prev[field]
+      if (val === '') return prev
+      let num = Number(val)
+      if (field === 'year') num = Math.max(1970, Math.min(2100, num))
+      if (field === 'month') num = Math.max(1, Math.min(12, num))
+      if (field === 'day') num = Math.max(1, Math.min(daysInMonth, num))
+      return { ...prev, [field]: num.toString() }
+    })
+  }
+
+  const clampOnBlurAd = (field) => {
+    setAdDate(prev => {
+      let val = prev[field]
+      if (val === '') return prev
+      let num = Number(val)
+      if (field === 'year') num = Math.max(1910, Math.min(2050, num))
+      if (field === 'month') num = Math.max(1, Math.min(12, num))
+      if (field === 'day') num = Math.max(1, Math.min(daysInMonth, num))
+      return { ...prev, [field]: num.toString() }
+    })
+  }
+
+  // ─── Quick input parse ────────────────────────────────────────────
+  const applyQuickInput = () => {
+    const s = quickInput.trim()
+    const match = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/) ||
+                  s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/)
+
+    if (!match) {
+      alert('Format: YYYY-MM-DD  or  DD-MM-YYYY')
+      return
+    }
+
+    let y, m, d
+    if (match[1].length === 4) {
+      [y, m, d] = [match[1], match[2], match[3]]
     } else {
-      setEnglishDate({ 
-        year: todayEnglish.getFullYear(), 
-        month: todayEnglish.getMonth() + 1, 
-        day: todayEnglish.getDate() 
-      });
+      [d, m, y] = [match[1], match[2], match[3]]
     }
-  };
 
-  // Handle month navigation
-  const handleMonthNavigation = (direction) => {
-    if (calendarView === 'english') {
-      let newMonth = englishDate.month + direction;
-      let newYear = englishDate.year;
-      
-      if (newMonth < 1) {
-        newMonth = 12;
-        newYear--;
-      } else if (newMonth > 12) {
-        newMonth = 1;
-        newYear++;
-      }
-      
-      setEnglishDate({ ...englishDate, month: newMonth, year: newYear });
+    if (direction === 'bs-to-ad') {
+      updateBs('year', y)
+      updateBs('month', m)
+      updateBs('day', d)
     } else {
-      let newMonth = nepaliDate.month + direction;
-      let newYear = nepaliDate.year;
-      
-      if (newMonth < 1) {
-        newMonth = 12;
-        newYear--;
-      } else if (newMonth > 12) {
-        newMonth = 1;
-        newYear++;
-      }
-      
-      setNepaliDate({ ...nepaliDate, month: newMonth, year: newYear });
+      updateAd('year', y)
+      updateAd('month', m)
+      updateAd('day', d)
     }
-  };
+    setQuickInput('')
+  }
 
-  const calendarDays = generateCalendarDays();
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // ─── Calendar logic ───────────────────────────────────────────────
+  const changeMonth = (delta) => {
+    if (calendarView === 'ad') {
+      let m = Number(adDate.month) + delta
+      let y = Number(adDate.year)
+      if (m > 12) { m = 1; y += 1 }
+      if (m < 1) { m = 12; y -= 1 }
+      setAdDate(p => ({ ...p, month: m.toString(), year: y.toString() }))
+    } else {
+      let m = Number(bsDate.month) + delta
+      let y = Number(bsDate.year)
+      if (m > 12) { m = 1; y += 1 }
+      if (m < 1) { m = 12; y -= 1 }
+      setBsDate(p => ({ ...p, month: m.toString(), year: y.toString() }))
+    }
+  }
 
+  const generateCalendarDays = () => {
+    const cells = []
+
+    if (calendarView === 'ad') {
+      const y = Number(adDate.year) || todayAD.getFullYear()
+      const m = Number(adDate.month) || (todayAD.getMonth() + 1)
+      const first = new Date(y, m - 1, 1)
+      const firstDow = first.getDay()
+      const daysInMonth = new Date(y, m, 0).getDate()
+      const prevLast = new Date(y, m - 2, 0).getDate()
+
+      for (let i = firstDow - 1; i >= 0; i--) {
+        cells.push({ day: prevLast - i, type: 'prev' })
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday =
+          d === todayAD.getDate() &&
+          m === todayAD.getMonth() + 1 &&
+          y === todayAD.getFullYear()
+        cells.push({ day: d, type: 'current', isToday })
+      }
+    } else {
+      const y = Number(bsDate.year) || todayBS.getYear()
+      const m = Number(bsDate.month) || (todayBS.getMonth() + 1)
+      const days = getDaysInNepaliMonth(y, m)
+      const firstAd = bsToAd(y, m, 1)
+      const firstDow = firstAd ? firstAd.getDay() : 0
+
+      for (let i = 0; i < firstDow; i++) {
+        cells.push({ day: '', type: 'prev' })
+      }
+
+      for (let d = 1; d <= days; d++) {
+        const isToday =
+          d === todayBS.getDate() &&
+          m === todayBS.getMonth() + 1 &&
+          y === todayBS.getYear()
+        cells.push({ day: d, type: 'current', isToday })
+      }
+    }
+
+    while (cells.length < 42) {
+      const nextDay = cells.filter(c => c.type === 'current').length + 1
+      cells.push({ day: nextDay, type: 'next' })
+    }
+
+    return cells
+  }
+
+  const calendarDays = generateCalendarDays()
+
+  const handleSelectDay = (cell) => {
+    if (cell.type !== 'current' || !cell.day) return
+    setSelectedDay(cell.day)
+
+    if (calendarView === 'ad') {
+      setAdDate(p => ({ ...p, day: cell.day.toString() }))
+    } else {
+      setBsDate(p => ({ ...p, day: cell.day.toString() }))
+    }
+  }
+
+  const copyResult = () => {
+    if (result) {
+      navigator.clipboard.writeText(result)
+      alert('Copied to clipboard!')
+    }
+  }
+
+  // ─── Render ───────────────────────────────────────────────────────
   return (
-    <>
-    <NavBar/>
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-10 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto">
+
+        {toolsAdsConfig.isConfigured() && (
+          <Script
+            id="adsbygoogle-init"
+            strategy="afterInteractive"
+            src={toolsAdsConfig.getScriptUrl()}
+            crossOrigin="anonymous"
+            onLoad={() => setAdsLoaded(true)}
+            onError={(e) => console.error('AdSense script failed to load', e)}
+          />
+        )}
+
+        <div className="mb-6">
+          <Link href="/tools" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900">
+            <span className="inline-block transform -translate-x-1">◀</span>
+            Back to tools
+          </Link>
+        </div>
+
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-800 mb-3 flex items-center justify-center gap-3">
-            <FaGlobeAsia className="text-green-500" /> Nepali Date Converter
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 flex items-center justify-center gap-3">
+            <FaGlobeAsia className="text-green-600" />
+            Nepali Date Converter
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Convert between Bikram Sambat (Nepali calendar) and Gregorian (English) calendars with our easy-to-use tool
+          <p className="mt-3 text-lg text-gray-700">
+            Bikram Sambat (BS) ↔ Gregorian (AD)
+          </p>
+          <p className="mt-2 text-gray-600">
+            Today: <span className="font-medium text-green-700">
+              {todayBS.format('YYYY-MM-DD')} BS
+            </span>
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-10">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 mb-4 sm:mb-0">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FaCalendarAlt className="text-green-600 text-xl" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">Date Conversion</h2>
-                  <p className="text-gray-500 text-sm">Current Nepali Date: {currentNepaliDate}</p>
+        {/* Top Ad Unit */}
+        {toolsAdsConfig.isConfigured() && (
+          <div className="mb-6">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('top')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+          </div>
+        )}
+
+        {/* Direction buttons */}
+        <div className="flex justify-center gap-4 mb-10 flex-wrap">
+          <button
+            onClick={() => setDirection('bs-to-ad')}
+            className={`px-8 py-3 rounded-full font-semibold shadow transition-all ${
+              direction === 'bs-to-ad'
+                ? 'bg-green-600 text-white'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            BS → AD
+          </button>
+          <button
+            onClick={() => setDirection('ad-to-bs')}
+            className={`px-8 py-3 rounded-full font-semibold shadow transition-all ${
+              direction === 'ad-to-bs'
+                ? 'bg-green-600 text-white'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            AD → BS
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3 max-w-xl mx-auto">
+            <FaExclamationTriangle className="flex-shrink-0" />
+            {error}
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-8">
+
+          {/* Input section */}
+          <div className="bg-white rounded-2xl shadow-xl p-7 border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+              <FaCalendarAlt className="text-green-600" />
+              {direction === 'bs-to-ad' ? 'Bikram Sambat (BS)' : 'Gregorian (AD)'}
+            </h2>
+
+            <div className="space-y-6">
+
+              {/* Quick input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quick entry (YYYY-MM-DD or DD-MM-YYYY)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={quickInput}
+                    onChange={e => setQuickInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && applyQuickInput()}
+                    placeholder={direction === 'bs-to-ad' ? '2082-01-15' : '2025-04-28'}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                  />
+                  <button
+                    onClick={applyQuickInput}
+                    className="px-5 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
+                  >
+                    Apply
+                  </button>
                 </div>
               </div>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConversionDirection('nepali-to-english')}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    conversionDirection === 'nepali-to-english' 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+
+              {/* Year */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  value={direction === 'bs-to-ad' ? bsDate.year : adDate.year}
+                  onChange={e => {
+                    const handler = direction === 'bs-to-ad' ? updateBs : updateAd
+                    handler('year', e.target.value)
+                  }}
+                  onBlur={() => {
+                    const clamp = direction === 'bs-to-ad' ? clampOnBlurBs : clampOnBlurAd
+                    clamp('year')
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-lg"
+                  placeholder="YYYY"
+                />
+              </div>
+
+              {/* Month */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <select
+                  value={direction === 'bs-to-ad' ? bsDate.month : adDate.month}
+                  onChange={e => {
+                    const handler = direction === 'bs-to-ad' ? updateBs : updateAd
+                    handler('month', e.target.value)
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-lg"
                 >
-                  Nepali to English
-                </button>
-                <button
-                  onClick={() => setConversionDirection('english-to-nepali')}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    conversionDirection === 'english-to-nepali' 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  English to Nepali
-                </button>
+                  {(direction === 'bs-to-ad' ? nepaliMonths : englishMonths).map(m => (
+                    <option key={m.value} value={m.value.toString()}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Day */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Day (max {daysInMonth})
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  value={direction === 'bs-to-ad' ? bsDate.day : adDate.day}
+                  onChange={e => {
+                    const handler = direction === 'bs-to-ad' ? updateBs : updateAd
+                    handler('day', e.target.value)
+                  }}
+                  onBlur={() => {
+                    const clamp = direction === 'bs-to-ad' ? clampOnBlurBs : clampOnBlurAd
+                    clamp('day')
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-lg"
+                  placeholder="DD"
+                />
               </div>
             </div>
+
+            {result && (
+              <div className="mt-10 p-5 bg-green-50 rounded-xl border border-green-200">
+                <div className="text-green-800 font-medium mb-2">Converted:</div>
+                <div className="flex items-center justify-between text-xl font-bold text-green-900">
+                  <span>{result}</span>
+                  <button
+                    onClick={copyResult}
+                    className="p-3 hover:bg-green-100 rounded-full transition"
+                    title="Copy to clipboard"
+                  >
+                    <FaCopy className="text-green-700 text-xl" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Input Section */}
-            <div>
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                  <FaExclamationTriangle className="text-red-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-red-800">Error</p>
-                    <p className="text-red-600 text-sm mt-1">{error}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-5">
-                {conversionDirection === 'nepali-to-english' ? (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nepali Year (BS)</label>
-                      <input
-                        type="number"
-                        value={nepaliDate.year}
-                        onChange={(e) => handleNepaliDateChange('year', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                        min="2000"
-                        max="2090"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nepali Month</label>
-                      <select
-                        value={nepaliDate.month}
-                        onChange={(e) => handleNepaliDateChange('month', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      >
-                        {nepaliMonths.map((month) => (
-                          <option key={month.value} value={month.value}>
-                            {month.name} ({month.value})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nepali Day (1-{daysInMonth})</label>
-                      <input
-                        type="number"
-                        value={nepaliDate.day}
-                        onChange={(e) => handleNepaliDateChange('day', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                        min="1"
-                        max={daysInMonth}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">English Year (AD)</label>
-                      <input
-                        type="number"
-                        value={englishDate.year}
-                        onChange={(e) => handleEnglishDateChange('year', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                        min="1944"
-                        max="2033"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">English Month</label>
-                      <select
-                        value={englishDate.month}
-                        onChange={(e) => handleEnglishDateChange('month', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      >
-                        {englishMonths.map((month) => (
-                          <option key={month.value} value={month.value}>
-                            {month.name} ({month.value})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">English Day (1-{daysInMonth})</label>
-                      <input
-                        type="number"
-                        value={englishDate.day}
-                        onChange={(e) => handleEnglishDateChange('day', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                        min="1"
-                        max={daysInMonth}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="flex gap-3 mt-8">
+          {/* Calendar section */}
+          <div className="bg-white rounded-2xl shadow-xl p-7 border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                <FaCalendarAlt className="text-green-600" />
+                {calendarView === 'ad' ? 'Gregorian Calendar' : 'Bikram Sambat Calendar'}
+              </h2>
+              <div className="flex gap-2 bg-gray-100 p-1.5 rounded-lg">
                 <button
-                  onClick={convertDate}
-                  disabled={isProcessing}
-                  className={`flex-1 px-6 py-3 rounded-lg font-medium text-white flex items-center justify-center gap-2 ${
-                    isProcessing ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-600'
-                  } transition-colors shadow-md`}
+                  onClick={() => setCalendarView('ad')}
+                  className={`px-5 py-2 rounded-md font-medium transition ${
+                    calendarView === 'ad' ? 'bg-white shadow text-green-700' : 'text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  {isProcessing ? (
-                    <>
-                      <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Converting...
-                    </>
-                  ) : (
-                    <>
-                      <FaSyncAlt size={14} />
-                      Convert Date
-                    </>
-                  )}
+                  AD
                 </button>
-                
                 <button
-                  onClick={setToCurrentDate}
-                  className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-sm"
+                  onClick={() => setCalendarView('bs')}
+                  className={`px-5 py-2 rounded-md font-medium transition ${
+                    calendarView === 'bs' ? 'bg-white shadow text-green-700' : 'text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  Today
+                  BS
                 </button>
               </div>
-
-              {convertedDate && (
-                <div className="mt-6 p-5 bg-green-50 rounded-xl border border-green-200">
-                  <div className="font-medium text-green-800 mb-2">Converted Date:</div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-lg font-semibold text-green-900">{convertedDate}</div>
-                    <button
-                      onClick={copyToClipboard}
-                      className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <FaCopy />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {selectedDateInfo && (
-                <div className="mt-4 p-5 bg-blue-50 rounded-xl border border-blue-200">
-                  <div className="font-medium text-blue-800 mb-2">Selected Date:</div>
-                  <div className="text-lg font-semibold text-blue-900">{selectedDateInfo.display}</div>
-                </div>
-              )}
             </div>
 
-            {/* Calendar Section */}
-            <div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 sm:mb-0">
-                  {calendarView === 'english' ? 'English Calendar' : 'Nepali Calendar'}
-                </h3>
-                <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
-                  <button
-                    onClick={() => setCalendarView('english')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${calendarView === 'english' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            <div className="flex justify-between items-center mb-6 bg-gray-50 p-4 rounded-xl text-xl font-bold text-gray-900">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="p-3 hover:bg-gray-200 rounded-full transition"
+              >
+                <FaChevronLeft />
+              </button>
+              <span>
+                {calendarView === 'ad'
+                  ? `${englishMonths[Number(adDate.month) - 1]?.name} ${adDate.year}`
+                  : `${nepaliMonths[Number(bsDate.month) - 1]?.name} ${bsDate.year}`}
+              </span>
+              <button
+                onClick={() => changeMonth(1)}
+                className="p-3 hover:bg-gray-200 rounded-full transition"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                <div
+                  key={d}
+                  className={`py-3 text-sm font-semibold ${i === 6 ? 'text-red-600' : 'text-gray-700'}`}
+                >
+                  {d}
+                </div>
+              ))}
+
+              {calendarDays.map((cell, idx) => {
+                const isWeekend = idx % 7 === 6
+                const isSelected = cell.type === 'current' && cell.day === selectedDay
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleSelectDay(cell)}
+                    className={`
+                      aspect-square flex items-center justify-center rounded-lg text-base font-medium cursor-pointer transition
+                      ${cell.type !== 'current' ? 'text-gray-300 pointer-events-none' : 'hover:bg-gray-100 border border-transparent'}
+                      ${cell.isToday ? 'bg-green-100 border-2 border-green-400 font-bold text-green-800' : ''}
+                      ${isSelected ? 'bg-blue-100 border-2 border-blue-500 font-bold' : ''}
+                      ${isWeekend && cell.type === 'current' ? 'text-red-600' : ''}
+                    `}
                   >
-                    English
-                  </button>
-                  <button
-                    onClick={() => setCalendarView('nepali')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${calendarView === 'nepali' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Nepali
-                  </button>
-                </div>
-              </div>
-              
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-4 bg-gray-50 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <button 
-                      className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                      onClick={() => handleMonthNavigation(-1)}
-                    >
-                      <FaChevronLeft className="h-5 w-5 text-gray-600" />
-                    </button>
-                    <div className="font-semibold text-gray-800">
-                      {calendarView === 'english' 
-                        ? `${englishMonths[englishDate.month-1].name} ${englishDate.year}` 
-                        : `${nepaliMonths[nepaliDate.month-1].name} ${nepaliDate.year} BS`
-                      }
-                    </div>
-                    <button 
-                      className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                      onClick={() => handleMonthNavigation(1)}
-                    >
-                      <FaChevronRight className="h-5 w-5 text-gray-600" />
-                    </button>
+                    {cell.day || ''}
                   </div>
-                </div>
-                
-                <div className="p-4">
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {weekDays.map((day, index) => (
-                      <div 
-                        key={day} 
-                        className={`text-center text-xs font-medium py-2 ${index === 0 ? 'text-red-500' : 'text-gray-500'}`}
-                      >
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-1">
-                    {calendarDays.map((day, index) => (
-                      <div
-                        key={index}
-                        className={`h-12 flex items-center justify-center rounded-lg text-sm
-                          ${day.month !== 'current' ? 'text-gray-300' : 
-                            day.isToday ? 'bg-green-100 text-green-800 font-bold border border-green-300' : 
-                            selectedDate === index ? 'bg-blue-100 text-blue-800 font-medium border border-blue-300' :
-                            day.dayOfWeek === 0 ? 'text-red-500' : 'text-gray-700'}
-                          ${day.month === 'current' ? 'hover:bg-gray-100 cursor-pointer' : ''}
-                        `}
-                        onClick={() => day.month === 'current' && handleDateSelect(day, day.month, index)}
-                      >
-                        {day.date}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 text-sm text-gray-500">
-                <p>Click on a date to select it for conversion. Today is highlighted in green, selected date in blue, and Sundays in red.</p>
-              </div>
+                )
+              })}
             </div>
           </div>
         </div>
 
-        
-
-        {/* CTA Section */}
-       <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
-            <p className="mb-6 max-w-2xl mx-auto">
-              Let's discuss how we can help you achieve your digital goals and take your business to the next level.
-            </p>
-            <a 
-              href="/contact" 
-              className="inline-block bg-white text-[#25609A] px-6 py-3 rounded-md font-medium hover:bg-gray-100 transition-colors"
-            >
-              Get in Touch
-            </a>
+        {/* Bottom Ad Unit */}
+        {toolsAdsConfig.isConfigured() && (
+          <div className="mt-8">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
           </div>
-          
+        )}
       </div>
-     
     </div>
-     <Footer/>
-     </>
-  );
+  )
 }

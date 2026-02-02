@@ -5,6 +5,8 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import API_URL from '@/app/config';
 
 export default function CompressPDF() {
   const [file, setFile] = useState(null);
@@ -72,7 +74,7 @@ export default function CompressPDF() {
       formData.append('compressionLevel', compressionLevel);
 
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/pdf/compress', true);
+      xhr.open('POST', `${API_URL}/api/pdf/compress`, true);
 
       // Progress tracking
       xhr.upload.onprogress = (e) => {
@@ -154,15 +156,16 @@ export default function CompressPDF() {
       </Head>
       
       {/* Google AdSense Script */}
-      <Script 
-        id="adsbygoogle-init"
-        strategy="afterInteractive"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
-        // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
-        crossOrigin="anonymous"
-        onLoad={() => setAdsLoaded(true)}
-        onError={(e) => console.error('AdSense script failed to load', e)}
-      />
+      {toolsAdsConfig.isConfigured() && (
+        <Script 
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          src={toolsAdsConfig.getScriptUrl()}
+          crossOrigin="anonymous"
+          onLoad={() => setAdsLoaded(true)}
+          onError={(e) => console.error('AdSense script failed to load', e)}
+        />
+      )}
       
         <div className="mx-3 md:mx-10 lg:mx-18">
         <div className="flex items-center mb-6">
@@ -170,16 +173,22 @@ export default function CompressPDF() {
         </div>
         
         {/* Top Ad Unit - Responsive Leaderboard */}
-        <div className="mb-8">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_TOP_AD_SLOT" // Replace with your actual top ad unit slot ID
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-        </div>
+        {toolsAdsConfig.isConfigured() ? (
+          <div className="mb-8">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('top')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+          </div>
+        ) : (
+          <div className="mb-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
+            <p className="text-gray-500">Advertisement Space</p>
+          </div>
+        )}
         
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center mb-6">
@@ -243,18 +252,22 @@ export default function CompressPDF() {
               </div>
               
               {/* Middle Ad Unit - Responsive Rectangle */}
-              {file && (
+              {file && (toolsAdsConfig.isConfigured() ? (
                 <div className="my-6">
                   <ins
                     className="adsbygoogle"
                     style={{ display: 'block' }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-                    data-ad-slot="YOUR_MIDDLE_AD_SLOT" // Replace with your actual middle ad unit slot ID
+                    data-ad-client={toolsAdsConfig.getPublisherId()}
+                    data-ad-slot={toolsAdsConfig.getSlotId('middle')}
                     data-ad-format="auto"
                     data-full-width-responsive="true"
                   ></ins>
                 </div>
-              )}
+              ) : (
+                <div className="my-6 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
+                  <p className="text-gray-500">Advertisement Space</p>
+                </div>
+              ))}
               
               {/* Compression Level Selection */}
               <div className="mb-8">
@@ -371,19 +384,22 @@ export default function CompressPDF() {
         </div>
         
         {/* Bottom Ad Unit - Responsive Leaderboard */}
-        <div className="mt-8">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_BOTTOM_AD_SLOT" // Replace with your actual bottom ad unit slot ID
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-
-            
-
-        </div>
+        {toolsAdsConfig.isConfigured() ? (
+          <div className="mt-8">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+          </div>
+        ) : (
+          <div className="mt-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
+            <p className="text-gray-500">Advertisement Space</p>
+          </div>
+        )}
         <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
             <p className="mb-6 max-w-2xl mx-auto">

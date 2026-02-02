@@ -1,323 +1,288 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FaFacebook, FaWhatsapp, FaPinterest, FaInstagram, FaLink, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+  FaFacebook, FaWhatsapp, FaPinterest, FaInstagram, FaLink, 
+  FaCheck, FaExclamationTriangle 
+} from 'react-icons/fa';
 import { FaXTwitter } from "react-icons/fa6";
 import CommentSection from './CommentSection.js';
 import Image from 'next/image';
+import Script from 'next/script';
 
-const BlogArticle = ({ initialData }) => {
-  const [googleAds, setGoogleAds] = useState(null);
+const BlogArticle = ({ initialData, recentBlogs = [] }) => {
+  const [googleAdsReady, setGoogleAdsReady] = useState(false);
   const [copyStatus, setCopyStatus] = useState('idle');
   const [currentUrl, setCurrentUrl] = useState('');
+
+  const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
+  const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
   
+  const adUnitIds = {
+    top:    process.env.NEXT_PUBLIC_AD_TOP_SLOT    || '',
+    left:   process.env.NEXT_PUBLIC_AD_LEFT_SLOT   || '',
+    right:  process.env.NEXT_PUBLIC_AD_RIGHT_SLOT  || '',
+    bottom: process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT || '',
+  };
+
   useEffect(() => {
-    // Set current URL only on client side to avoid hydration mismatch
     setCurrentUrl(window.location.href);
   }, []);
 
   useEffect(() => {
-    const fetchAds = async () => {
+    if (adsEnabled && window.adsbygoogle) {
       try {
-        const ads = {
-          top: { __html: '<div class="ad-placeholder">Advertisement</div>' },
-          left: { __html: '<div class="ad-placeholder">Advertisement</div>' },
-          right: { __html: '<div class="ad-placeholder">Advertisement</div>' },
-          bottom: { __html: '<div class="ad-placeholder">Advertisement</div>' },
-        };
-        
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setGoogleAds(Math.random() > 0.5 ? ads : null);
-      } catch (error) {
-        console.error('Error fetching ads:', error);
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        setGoogleAdsReady(true);
+      } catch (err) {
+        console.error('AdSense push error:', err);
       }
-    };
-    
-    fetchAds();
-  }, []);
+    }
+  }, [adsEnabled]);
 
-  // Handle copy URL functionality
   const handleCopyUrl = async () => {
     try {
-      const shareUrl = currentUrl || `https://everestkit.com/blogs/${initialData?._id || initialData?.id}`;
-      
-      await navigator.clipboard.writeText(shareUrl);
+      const url = currentUrl || `https://everestkit.com/blogs/${initialData?._id}`;
+      await navigator.clipboard.writeText(url);
       setCopyStatus('copied');
-      
-      setTimeout(() => {
-        setCopyStatus('idle');
-      }, 2000);
+      setTimeout(() => setCopyStatus('idle'), 2200);
     } catch (err) {
-      console.error('Failed to copy URL:', err);
+      console.error('Copy failed:', err);
       setCopyStatus('error');
-      
-      setTimeout(() => {
-        setCopyStatus('idle');
-      }, 2000);
+      setTimeout(() => setCopyStatus('idle'), 2200);
     }
   };
 
-  // Get copy button icon based on status
-  const getCopyIcon = () => {
-    switch (copyStatus) {
-      case 'copied':
-        return <FaCheck className="h-5 w-5 text-green-600" />;
-      case 'error':
-        return <FaExclamationTriangle className="h-5 w-5 text-red-600" />;
-      default:
-        return <FaLink className="h-5 w-5" />;
-    }
-  };
-
-  // Get copy button tooltip text
-  const getCopyTooltip = () => {
-    switch (copyStatus) {
-      case 'copied':
-        return 'Copied!';
-      case 'error':
-        return 'Failed to copy';
-      default:
-        return 'Copy link';
-    }
-  };
-
-  // If no blog data, show loading or error
   if (!initialData) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Blog Not Found</h2>
-          <p className="text-gray-600 mb-6">The blog article you&apos;re looking for doesn&apos;t exist or may have been removed.</p>
-          <a 
-            href="/blogs" 
-            className="inline-block bg-[#25609A] text-white px-6 py-3 rounded-lg hover:bg-[#1a4a7a] transition-colors"
-          >
-            Back to Blogs
-          </a>
-        </div>
+      <div className="py-16 text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">Article not found</h2>
+        <p className="text-gray-600 mb-8">It may have been removed or the link is incorrect.</p>
+        <a href="/blogs" className="inline-flex items-center px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">
+          ← Back to all articles
+        </a>
       </div>
     );
   }
 
   const blog = initialData;
-  
-  // Use current URL when available, otherwise fallback
-  const shareUrl = currentUrl || `https://everestkit.com/blogs/${blog._id || blog.id}`;
+  const shareUrl = currentUrl || `https://everestkit.com/blogs/${blog._id}`;
   const shareTitle = encodeURIComponent(blog.title);
-    
-  // Simple social share links - all work the same way
+
   const socialLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${shareTitle}`,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${blog.title} ${shareUrl}`)}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${shareTitle}`,
-    instagram: `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`,
+    facebook:  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+    twitter:   `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${shareTitle}`,
+    whatsapp:  `https://wa.me/?text=${encodeURIComponent(blog.title + ' ' + shareUrl)}`,
+    pinterest: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${shareTitle}&media=`,
+    instagram: `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`, // note: IG doesn't have direct web share
   };
 
-  const renderAdPlaceholder = (position) => (
-    <div className={`bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 rounded-lg ${
-      position === 'top' || position === 'bottom' ? 'h-32' : 'h-96'
-    }`}>
-      Advertisement - {position.charAt(0).toUpperCase() + position.slice(1)}
-    </div>
-  );
+  const hasAd = (pos) => adsEnabled && publisherId && !!adUnitIds[pos];
 
-  const renderHTML = (htmlString) => (
-    <div 
-      className="prose prose-lg max-w-none"
-      dangerouslySetInnerHTML={{ __html: htmlString }} 
+  const renderAd = (position) => {
+    const isHorizontal = position === 'top' || position === 'bottom';
+    const className = `${isHorizontal ? 'h-[120px] my-10' : 'min-h-[300px] my-6'}`;
+
+    if (hasAd(position)) {
+      return (
+        <div className={className}>
+          <ins
+            className="adsbygoogle block w-full h-full"
+            data-ad-client={publisherId}
+            data-ad-slot={adUnitIds[position]}
+            data-ad-format={isHorizontal ? "auto" : "vertical"}
+            data-full-width-responsive="true"
+          />
+        </div>
+      );
+    }
+
+    // Placeholder when ad slot is not configured
+    return (
+      <div className={className}>
+        <div className="w-full h-full border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+          <span className="text-sm font-medium">Ads</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderContent = (html) => (
+    <div
+      className="prose prose-lg prose-headings:font-bold prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 max-w-none overflow-hidden"
+      dangerouslySetInnerHTML={{
+        __html: html
+          .replace(/<img([^>]+)>/g, '<img$1 style="max-width:100%;height:auto;display:block;margin:1.5rem auto;border-radius:0.5rem;" />')
+          .replace(/<iframe/g, '<iframe class="w-full aspect-video rounded-xl"')
+      }}
     />
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Top Ad */}
-      <div className="mb-8">
-        {googleAds?.top ? <div dangerouslySetInnerHTML={googleAds.top} /> : renderAdPlaceholder('top')}
-      </div>
+    <>
+      {adsEnabled && publisherId && (
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
+          strategy="afterInteractive"
+          onLoad={() => window.adsbygoogle?.push({})}
+        />
+      )}
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Left Sidebar Ad */}
-        <div className="hidden lg:block lg:w-1/6">
-          {googleAds?.left ? <div dangerouslySetInnerHTML={googleAds.left} /> : renderAdPlaceholder('left')}
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        
+        {/* Top advertisement */}
+        {renderAd('top')}
 
-        {/* Main Content */}
-        <div className="flex-1">
-          <article className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-            <header className="mb-8">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+        <div className="flex flex-col lg:flex-row lg:gap-8 xl:gap-10">
+          
+          {/* ======================== MAIN ARTICLE ======================== */}
+          <main className="flex-1 min-w-0 order-2 lg:order-1">
+            <article className="bg-white rounded-xl shadow-md p-6 md:p-8 lg:p-10 overflow-x-hidden">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 text-gray-900 break-words">
                 {blog.title}
               </h1>
 
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div className="flex items-center text-gray-600">
-                  <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-8 text-gray-600">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2a1 1 0 101.414-1.414L11 9.586V7z" clipRule="evenodd" />
                   </svg>
-                  <span>{new Date(blog.createdAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}</span>
+                  {new Date(blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
 
-                {/* Social Sharing Icons - All work the same simple way */}
-                {currentUrl && (
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500 mr-2 hidden sm:block">Share:</span>
-                    
-                    {/* Facebook */}
-                    <a
-                      href={socialLinks.facebook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-[#1877F2] transition duration-300 transform hover:scale-110"
-                      aria-label="Share on Facebook"
-                      title="Share on Facebook"
-                    >
-                      <FaFacebook className="h-5 w-5" />
-                    </a>
-                    
-                    {/* Twitter */}
-                    <a
-                      href={socialLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-black transition duration-300 transform hover:scale-110"
-                      aria-label="Share on Twitter"
-                      title="Share on Twitter"
-                    >
-                      <FaXTwitter className="h-5 w-5" />
-                    </a>
-                    
-                    {/* WhatsApp */}
-                    <a
-                      href={socialLinks.whatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-[#25D366] transition duration-300 transform hover:scale-110"
-                      aria-label="Share on WhatsApp"
-                      title="Share on WhatsApp"
-                    >
-                      <FaWhatsapp className="h-5 w-5" />
-                    </a>
-                    
-                    {/* Pinterest */}
-                    <a
-                      href={socialLinks.pinterest}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-[#BD081C] transition duration-300 transform hover:scale-110"
-                      aria-label="Share on Pinterest"
-                      title="Share on Pinterest"
-                    >
-                      <FaPinterest className="h-5 w-5" />
-                    </a>
-                    
-                    {/* Instagram */}
-                    <a
-                      href={socialLinks.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-[#E4405F] transition duration-300 transform hover:scale-110"
-                      aria-label="Share on Instagram"
-                      title="Share on Instagram"
-                    >
-                      <FaInstagram className="h-5 w-5" />
-                    </a>
-                    
-                    {/* Copy URL Button */}
-                    <button
-                      onClick={handleCopyUrl}
-                      className={`text-gray-500 hover:text-blue-600 transition duration-300 transform hover:scale-110 ${
-                        copyStatus === 'copied' ? 'text-green-600' : 
-                        copyStatus === 'error' ? 'text-red-600' : ''
-                      }`}
-                      aria-label={getCopyTooltip()}
-                      title={getCopyTooltip()}
-                      disabled={copyStatus === 'copied'}
-                    >
-                      {getCopyIcon()}
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500 hidden sm:inline">Share:</span>
+                  <SocialIcon href={socialLinks.facebook} icon={<FaFacebook />} color="#1877F2" label="Facebook" />
+                  <SocialIcon href={socialLinks.twitter}   icon={<FaXTwitter />} color="#000"     label="X/Twitter" />
+                  <SocialIcon href={socialLinks.whatsapp}  icon={<FaWhatsapp />} color="#25D366"  label="WhatsApp" />
+                  <SocialIcon href={socialLinks.pinterest} icon={<FaPinterest />} color="#E60023" label="Pinterest" />
+                  <SocialIcon href={socialLinks.instagram} icon={<FaInstagram />} color="#E4405F" label="Instagram" />
+                  
+                  <button
+                    onClick={handleCopyUrl}
+                    className={`p-1.5 rounded-full hover:bg-gray-100 transition ${copyStatus === 'copied' ? 'text-green-600' : copyStatus === 'error' ? 'text-red-600' : 'text-gray-500 hover:text-blue-600'}`}
+                    title={copyStatus === 'copied' ? 'Copied!' : copyStatus === 'error' ? 'Copy failed' : 'Copy link'}
+                  >
+                    {copyStatus === 'copied' ? <FaCheck className="w-5 h-5" /> :
+                     copyStatus === 'error' ? <FaExclamationTriangle className="w-5 h-5" /> :
+                     <FaLink className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
 
-              <hr className="border-t border-gray-200 mb-6" />
-              
               {blog.subheading && (
-                <h2 className="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed">
+                <p className="text-xl text-gray-700 mb-10 leading-relaxed border-l-4 border-blue-500 pl-5 italic">
                   {blog.subheading}
-                </h2>
+                </p>
               )}
-            </header>
 
-            {/* Blog Image */}
-            {blog.image && (
-              <div className="relative h-64 md:h-96 w-full mb-8 rounded-xl overflow-hidden shadow-md">
-                <Image
-                  src={`/uploads/${blog.image}`}
-                  alt={blog.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+              {blog.image && (
+                <div className="relative aspect-[16/9] md:aspect-[21/9] mb-10 rounded-xl overflow-hidden shadow">
+                  <Image
+                    src={`/uploads/${blog.image}`}
+                    alt={blog.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
+                    priority
+                  />
+                </div>
+              )}
+
+              <div className="mb-12">
+                {renderContent(blog.content)}
               </div>
-            )}
 
-            {/* Blog Content */}
-            <div className="mb-8">
-              {renderHTML(blog.content)}
+              {blog.youtubeLink && (
+                <div className="aspect-video rounded-xl overflow-hidden shadow-lg mb-12">
+                  <iframe
+                    src={blog.youtubeLink.replace('watch?v=', 'embed/')}
+                    title="YouTube video"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+              )}
+
+              {blog.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-8 border-t border-gray-200">
+                  {blog.tags.map((tag) => (
+                    <span key={tag} className="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </article>
+
+            <div className="mt-12">
+              <CommentSection blog={blog} />
             </div>
 
-            {/* YouTube Video */}
-            {blog.youtubeLink && (
-              <div className="mb-8 rounded-xl overflow-hidden shadow-md">
-                <iframe
-                  src={blog.youtubeLink}
-                  title="YouTube video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-64 md:h-96"
-                />
+            {/* Bottom ad */}
+            {renderAd('bottom')}
+          </main>
+
+          {/* ======================== SIDEBAR ======================== */}
+          {recentBlogs?.length > 0 && (
+            <aside className="w-full lg:w-80 shrink-0 order-1 lg:order-2 mb-10 lg:mb-0">
+              <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+                <h3 className="text-xl font-semibold mb-6 text-gray-900">Latest Articles</h3>
+                <ul className="space-y-5">
+                  {recentBlogs.map((post) => (
+                    <li key={post._id} className="group">
+                      <a href={`/blogs/${post._id}`} className="flex gap-4 hover:opacity-90 transition">
+                        <div className="w-20 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                          {post.image ? (
+                            <Image
+                              src={`/uploads/${post.image}`}
+                              alt={post.title}
+                              width={80}
+                              height={64}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700">
+                            {post.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
+            </aside>
+          )}
 
-            {/* Tags (if available) */}
-            {blog.tags && blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
-                {blog.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </article>
-
-          {/* Comments Section */}
-          <CommentSection blog={blog} />
-
-          
-        </div>
-
-        {/* Right Sidebar Ad */}
-        <div className="hidden lg:block lg:w-1/6">
-          {googleAds?.right ? <div dangerouslySetInnerHTML={googleAds.right} /> : renderAdPlaceholder('right')}
         </div>
       </div>
-
-      {/* Bottom Ad */}
-      <div className="mt-8">
-        {googleAds?.bottom ? <div dangerouslySetInnerHTML={googleAds.bottom} /> : renderAdPlaceholder('bottom')}
-      </div>
-    </div>
+    </>
   );
 };
+
+// Tiny helper component
+function SocialIcon({ href, icon, color, label }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-500 hover:text-[var(--color)] transition duration-300 transform hover:scale-110"
+      style={{ '--color': color }}
+      aria-label={`Share on ${label}`}
+      title={`Share on ${label}`}
+    >
+      {React.cloneElement(icon, { className: "h-6 w-6" })}
+    </a>
+  );
+}
 
 export default BlogArticle;

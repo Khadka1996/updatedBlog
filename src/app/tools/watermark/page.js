@@ -1,20 +1,25 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react';
-import { FaFilePdf, FaImage, FaFont, FaDownload, FaUndo } from 'react-icons/fa';
+import { FaFilePdf, FaImage, FaFont, FaDownload, FaUndo, FaArrowsAlt, FaExpand, FaRedo } from 'react-icons/fa';
 import Script from 'next/script';
 import Head from 'next/head';
-import { PDFDocument, rgb } from 'pdf-lib'; // Added rgb import
+import { PDFDocument, rgb } from 'pdf-lib';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function WatermarkPDF() {
   const [file, setFile] = useState(null);
+  const [pdfPages, setPdfPages] = useState([]);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [watermarkType, setWatermarkType] = useState('text');
   const [adsLoaded, setAdsLoaded] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [previewDragging, setPreviewDragging] = useState(false);
+  const [previewMode, setPreviewMode] = useState(true);
   const [watermarkOptions, setWatermarkOptions] = useState({
     text: 'CONFIDENTIAL',
     font: 'Helvetica',
@@ -27,9 +32,14 @@ export default function WatermarkPDF() {
     imageSize: 50,
     imageOpacity: 30,
     pages: 'all',
+    customX: 0,
+    customY: 0,
   });
+  const [previewWatermarkPos, setPreviewWatermarkPos] = useState({ x: 0, y: 0, width: 200, height: 60 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const previewCanvasRef = useRef(null);
 
   // Handle drag & drop
   const handleDragEnter = (e) => {
@@ -66,6 +76,54 @@ export default function WatermarkPDF() {
       preview: URL.createObjectURL(selectedFile),
     });
     setDownloadUrl('');
+    
+    // Load PDF pages for preview
+    loadPdfPages(selectedFile);
+  };
+
+  // Load and render PDF pages
+  const loadPdfPages = async (pdfFile) => {
+    setIsLoadingPdf(true);
+    try {
+      const pdfjs = await import('pdfjs-dist');
+      pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+      const arrayBuffer = await pdfFile.arrayBuffer();
+      const loadingTask = pdfjs.getDocument(arrayBuffer);
+      const pdf = await loadingTask.promise;
+
+      const pages = [];
+      const maxPages = Math.min(pdf.numPages, 5); // Load first 5 pages
+
+      for (let i = 1; i <= maxPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
+
+        pages.push({
+          pageNumber: i,
+          dataUrl: canvas.toDataURL('image/jpeg', 0.8),
+          width: viewport.width,
+          height: viewport.height,
+        });
+      }
+
+      setPdfPages(pages);
+    } catch (error) {
+      console.error('Failed to load PDF:', error);
+      setPdfPages([]);
+    } finally {
+      setIsLoadingPdf(false);
+    }
   };
 
   // Handle watermark image selection
@@ -325,6 +383,75 @@ export default function WatermarkPDF() {
     return { x, y };
   };
 
+  // Preview Canvas - Handle dragging
+  const handlePreviewMouseDown = (e) => {
+    const rect = previewCanvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (
+      x >= previewWatermarkPos.x &&
+      x <= previewWatermarkPos.x + previewWatermarkPos.width &&
+      y >= previewWatermarkPos.y &&
+      y <= previewWatermarkPos.y + previewWatermarkPos.height
+    ) {
+      setPreviewDragging(true);
+      setDragOffset({
+        x: x - previewWatermarkPos.x,
+        y: y - previewWatermarkPos.y,
+      });
+    }
+  };
+
+  const handlePreviewMouseMove = (e) => {
+    if (!previewDragging) return;
+
+    const rect = previewCanvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setPreviewWatermarkPos((prev) => ({
+      ...prev,
+      x: Math.max(0, Math.min(x - dragOffset.x, rect.width - prev.width)),
+      y: Math.max(0, Math.min(y - dragOffset.y, rect.height - prev.height)),
+    }));
+
+    setWatermarkOptions((prev) => ({
+      ...prev,
+      position: 'custom',
+      customX: x - dragOffset.x,
+      customY: y - dragOffset.y,
+    }));
+  };
+
+  const handlePreviewMouseUp = () => {
+    setPreviewDragging(false);
+  };
+
+  // Handle watermark size change in preview
+  const handleResizeWatermark = (newSize) => {
+    if (watermarkType === 'text') {
+      setWatermarkOptions((prev) => ({
+        ...prev,
+        size: newSize,
+      }));
+      setPreviewWatermarkPos((prev) => ({
+        ...prev,
+        height: newSize,
+        width: newSize * 4,
+      }));
+    } else {
+      setWatermarkOptions((prev) => ({
+        ...prev,
+        imageSize: newSize,
+      }));
+      setPreviewWatermarkPos((prev) => ({
+        ...prev,
+        width: (newSize / 100) * 400,
+      }));
+    }
+  };
+
   return (
 
     <>
@@ -335,22 +462,24 @@ export default function WatermarkPDF() {
         <title>Watermark PDF - PDF Tools</title>
         <meta name="description" content="Add text or image watermarks to your PDF documents" />
       </Head>
-<Script
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
       <div className="mx-3 md:mx-10 lg:mx-18">
         {/* Top Ad Unit */}
         <div className="mb-8">
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-            data-ad-slot="YOUR_TOP_AD_SLOT"
+            data-ad-client={toolsAdsConfig.getPublisherId()}
+            data-ad-slot={toolsAdsConfig.getSlotId("top")}
             data-ad-format="auto"
             data-full-width-responsive="true"
           ></ins>
@@ -408,6 +537,7 @@ export default function WatermarkPDF() {
                   onClick={() => {
                     URL.revokeObjectURL(file.preview);
                     setFile(null);
+                    setPdfPages([]);
                   }}
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Remove"
@@ -416,14 +546,16 @@ export default function WatermarkPDF() {
                 </button>
               </div>
 
+
+
               {/* Middle Ad Unit */}
               {file && (
                 <div className="my-6">
                   <ins
                     className="adsbygoogle"
                     style={{ display: 'block' }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                    data-ad-slot="YOUR_MIDDLE_AD_SLOT"
+                    data-ad-client={toolsAdsConfig.getPublisherId()}
+                    data-ad-slot={toolsAdsConfig.getSlotId("middle")}
                     data-ad-format="auto"
                     data-full-width-responsive="true"
                   ></ins>
@@ -452,6 +584,160 @@ export default function WatermarkPDF() {
                     <FaImage className="mr-2" />
                     Image Watermark
                   </button>
+                </div>
+
+                {/* Live Preview Canvas */}
+                <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-700 flex items-center">
+                      <FaArrowsAlt className="mr-2 text-blue-500" />
+                      Live Preview - Drag & Resize Watermark
+                    </h4>
+                    <button
+                      onClick={() => setPreviewMode(!previewMode)}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      {previewMode ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+
+                  {isLoadingPdf && (
+                    <div className="bg-blue-50 rounded-lg p-8 text-center">
+                      <svg className="animate-spin h-8 w-8 text-blue-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <p className="text-blue-700">Loading PDF page...</p>
+                    </div>
+                  )}
+
+                  {previewMode && pdfPages.length > 0 && (
+                    <div className="relative bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden"
+                      style={{ width: '100%' }}
+                      ref={previewCanvasRef}
+                      onMouseDown={handlePreviewMouseDown}
+                      onMouseMove={handlePreviewMouseMove}
+                      onMouseUp={handlePreviewMouseUp}
+                      onMouseLeave={handlePreviewMouseUp}
+                    >
+                      {/* Show Actual PDF Page */}
+                      <div className="relative w-full" style={{ position: 'relative', width: '100%', paddingBottom: '125%' }}>
+                        <img
+                          src={pdfPages[0].dataUrl}
+                          alt="PDF Page 1"
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+
+                        {/* Draggable Watermark Preview */}
+                        <div
+                          className="absolute border-2 border-blue-400 rounded cursor-move group hover:border-blue-600 transition-all"
+                          style={{
+                            left: `${(previewWatermarkPos.x / (previewCanvasRef.current?.offsetWidth || 500)) * 100}%`,
+                            top: `${(previewWatermarkPos.y / (previewCanvasRef.current?.offsetHeight || 500)) * 100}%`,
+                            width: `${(previewWatermarkPos.width / (previewCanvasRef.current?.offsetWidth || 500)) * 100}%`,
+                            height: `${(previewWatermarkPos.height / (previewCanvasRef.current?.offsetHeight || 500)) * 100}%`,
+                            opacity: watermarkOptions.opacity / 100,
+                            transform: `rotate(${watermarkOptions.rotation}deg)`,
+                          }}
+                          onMouseDown={handlePreviewMouseDown}
+                          onMouseMove={handlePreviewMouseMove}
+                          onMouseUp={handlePreviewMouseUp}
+                        >
+                          {watermarkType === 'text' ? (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-white font-bold"
+                              style={{
+                                color: watermarkOptions.color,
+                                fontSize: `${Math.min(watermarkOptions.size * 0.5, 24)}px`,
+                                fontFamily: watermarkOptions.font,
+                              }}
+                            >
+                              {watermarkOptions.text}
+                            </div>
+                          ) : (
+                            watermarkOptions.imageFile && (
+                              <img
+                                src={watermarkOptions.imageFile.preview}
+                                alt="Watermark"
+                                className="w-full h-full object-contain"
+                              />
+                            )
+                          )}
+
+                          {/* Resize Handle */}
+                          <div
+                            className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-full cursor-se-resize transform translate-x-2 translate-y-2 group-hover:scale-125 transition-transform"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setPreviewDragging('resize');
+                            }}
+                            title="Drag to resize"
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Info Text */}
+                      <div className="absolute bottom-2 left-2 text-xs text-gray-600 bg-white px-2 py-1 rounded opacity-70 z-10">
+                        <FaArrowsAlt className="inline mr-1" />
+                        Drag to move | Bottom-right corner to resize
+                      </div>
+                    </div>
+                  )}
+
+                  {previewMode && pdfPages.length === 0 && !isLoadingPdf && (
+                    <div className="bg-gray-100 rounded-lg p-8 text-center text-gray-500">
+                      <p>PDF will appear here once loaded</p>
+                    </div>
+                  )}
+
+                  {/* Quick Resize Sliders for Preview */}
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                        <FaExpand className="mr-2" />
+                        Quick Size Adjust
+                      </label>
+                      <input
+                        type="range"
+                        min={watermarkType === 'text' ? '10' : '5'}
+                        max={watermarkType === 'text' ? '100' : '100'}
+                        value={watermarkType === 'text' ? watermarkOptions.size : watermarkOptions.imageSize}
+                        onChange={(e) => handleResizeWatermark(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-gray-600 mt-1">
+                        {watermarkType === 'text' ? `${watermarkOptions.size}px` : `${watermarkOptions.imageSize}%`}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Position Lock</label>
+                      <select
+                        value={watermarkOptions.position}
+                        onChange={(e) => {
+                          const newPos = e.target.value;
+                          handleOptionChange('position', newPos);
+                          if (newPos !== 'custom') {
+                            // Reset to preset position
+                            setPreviewWatermarkPos({
+                              x: 50,
+                              y: 50,
+                              width: 200,
+                              height: 60,
+                            });
+                          }
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="center">Center</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="top-right">Top Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="tiled">Tiled (Repeat)</option>
+                        <option value="custom">Custom Position</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Text Watermark Options */}
@@ -728,8 +1014,8 @@ export default function WatermarkPDF() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

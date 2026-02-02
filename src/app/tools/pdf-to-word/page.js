@@ -5,6 +5,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function PdfToWord() {
   const [file, setFile] = useState(null);
@@ -100,23 +101,25 @@ export default function PdfToWord() {
         {/* Google AdSense Script */}
         
       </Head>
-<Script 
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
       <div className="mx-3 md:mx-10 lg:mx-18">
         {/* Top Ad Unit - Responsive Leaderboard */}
         <div className="mb-8">
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_TOP_AD_SLOT" // Replace with your actual top ad unit slot ID
+            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+            data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
             data-ad-format="auto"
             data-full-width-responsive="true"
           ></ins>
@@ -186,8 +189,8 @@ export default function PdfToWord() {
                   <ins
                     className="adsbygoogle"
                     style={{ display: 'block' }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-                    data-ad-slot="YOUR_MIDDLE_AD_SLOT" // Replace with your actual middle ad unit slot ID
+                    data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+                    data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
                     data-ad-format="auto"
                     data-full-width-responsive="true"
                   ></ins>
@@ -314,8 +317,8 @@ export default function PdfToWord() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT" // Replace with your actual bottom ad unit slot ID
+              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>
@@ -325,7 +328,7 @@ export default function PdfToWord() {
        <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
             <p className="mb-6 max-w-2xl mx-auto">
-              Let's discuss how we can help you achieve your digital goals and take your business to the next level.
+              Let&apos;s discuss how we can help you achieve your digital goals and take your business to the next level.
             </p>
             <a 
               href="/contact" 

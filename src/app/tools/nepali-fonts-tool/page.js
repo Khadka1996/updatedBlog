@@ -6,6 +6,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 function NepaliFontTool() {
   const [inputText, setInputText] = useState('');
@@ -165,13 +166,15 @@ function NepaliFontTool() {
           `}</style>
         </Head>
 
-        <Script
-          id="ads-script"
-          strategy="afterInteractive"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-        />
+        {toolsAdsConfig.isConfigured() && (
+          <Script
+            id="ads-script"
+            strategy="afterInteractive"
+            src={toolsAdsConfig.getScriptUrl()}
+            crossOrigin="anonymous"
+            onLoad={() => setAdsLoaded(true)}
+          />
+        )}
 
         {/* Transliteration Library Script */}
         <Script
@@ -202,8 +205,8 @@ function NepaliFontTool() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_TOP_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("top")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             />
@@ -335,8 +338,8 @@ function NepaliFontTool() {
               <ins
                 className="adsbygoogle"
                 style={{ display: 'block' }}
-                data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                data-ad-slot="YOUR_MIDDLE_AD_SLOT"
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId("middle")}
                 data-ad-format="auto"
                 data-full-width-responsive="true"
               />
@@ -362,8 +365,8 @@ function NepaliFontTool() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             />

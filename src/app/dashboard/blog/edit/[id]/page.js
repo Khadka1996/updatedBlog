@@ -67,12 +67,19 @@ export default function EditArticle() {
 
   const modules = {
     toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["blockquote", "code-block"],
-      ["link", "image", "video"],
-      ["clean"],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ font: [] }],
+      [{ size: ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ color: [] }, { background: [] }],
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ align: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      ['blockquote', 'code-block'],
+      ['link', 'image', 'video'],
+      [{ direction: 'rtl' }],
+      ['clean'],
     ],
   };
 
@@ -680,7 +687,7 @@ export default function EditArticle() {
         <DialogContent sx={{ py: 4 }}>
           <Box textAlign="center">
             <Typography variant="h6" gutterBottom color="error">
-              Delete "{article.title}"?
+              Delete &quot;{article.title}&quot;?
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
               This action cannot be undone. All comments, likes, and associated data will be permanently removed from the system.

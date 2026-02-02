@@ -5,6 +5,8 @@ import Head from 'next/head';
 import Script from 'next/script';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import API_URL from '@/app/config';
 
 export default function MergePDF() {
   const [files, setFiles] = useState([]);
@@ -134,7 +136,7 @@ export default function MergePDF() {
       });
 
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/pdf/merge', true);
+      xhr.open('POST', `${API_URL}/api/pdf/merge`, true);
 
       // Progress tracking
       xhr.upload.onprogress = (e) => {
@@ -263,14 +265,16 @@ export default function MergePDF() {
       </Head>
       
       {/* Google AdSense Script */}
-      <Script 
-        id="adsbygoogle-init"
-        strategy="afterInteractive"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
-        crossOrigin="anonymous"
-        onLoad={() => setAdsLoaded(true)}
-        onError={(e) => console.error('AdSense script failed to load', e)}
-      />
+      {toolsAdsConfig.isConfigured() && (
+        <Script 
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          src={toolsAdsConfig.getScriptUrl()}
+          crossOrigin="anonymous"
+          onLoad={() => setAdsLoaded(true)}
+          onError={(e) => console.error('AdSense script failed to load', e)}
+        />
+      )}
       
       <NavBar />
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-3 md:p-6">
@@ -290,8 +294,8 @@ export default function MergePDF() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_TOP_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("top")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>
@@ -506,8 +510,8 @@ export default function MergePDF() {
                     <ins
                       className="adsbygoogle"
                       style={{ display: 'block', textAlign: 'center', minHeight: '250px' }}
-                      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                      data-ad-slot="YOUR_MIDDLE_AD_SLOT"
+                      data-ad-client={toolsAdsConfig.getPublisherId()}
+                      data-ad-slot={toolsAdsConfig.getSlotId("middle")}
                       data-ad-format="auto"
                       data-full-width-responsive="true"
                     ></ins>
@@ -615,8 +619,8 @@ export default function MergePDF() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

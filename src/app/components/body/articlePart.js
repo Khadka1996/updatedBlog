@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import Script from 'next/script';
+import AdsInit from '@/app/components/ads/AdsInit';
+
+const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
+const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
+const adTopSlot = process.env.NEXT_PUBLIC_AD_TOP_SLOT;
 
 async function getTopArticle() {
   try {
@@ -71,9 +77,6 @@ function TopArticleCard({ article }) {
               </p>
             )}
 
-            <p className="text-white/80 text-base mb-6 leading-relaxed">
-              {truncatedContent}
-            </p>
 
             {/* Stats */}
             <div className="flex items-center justify-start text-sm text-white/80 mb-6 space-x-6">
@@ -186,6 +189,28 @@ export default async function TopArticle() {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Top article ad (client-initialized) */}
+        {adsEnabled && publisherId && (
+          <>
+            <Script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
+              strategy="afterInteractive"
+            />
+            <div className="mt-8 max-w-6xl mx-auto">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client={publisherId}
+                data-ad-slot={adTopSlot}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+            </div>
+            <AdsInit />
+          </>
         )}
       </div>
     </section>

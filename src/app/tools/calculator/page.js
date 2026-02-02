@@ -5,6 +5,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function ScientificCalculator() {
   const [input, setInput] = useState('');
@@ -211,14 +212,16 @@ export default function ScientificCalculator() {
           <meta name="description" content="Advanced scientific calculator with functions for math, science, and engineering" />
         </Head>
         
-        <Script 
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
         
         <div className="mx-3 md:mx-10 lg:mx-18">
           <div className="flex items-center mb-6">
@@ -230,8 +233,8 @@ export default function ScientificCalculator() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_TOP_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("top")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>
@@ -413,8 +416,8 @@ export default function ScientificCalculator() {
               <ins
                 className="adsbygoogle"
                 style={{ display: 'block' }}
-                data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                data-ad-slot="YOUR_MIDDLE_AD_SLOT"
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId("middle")}
                 data-ad-format="auto"
                 data-full-width-responsive="true"
               ></ins>
@@ -452,8 +455,8 @@ export default function ScientificCalculator() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

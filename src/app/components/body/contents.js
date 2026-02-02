@@ -18,7 +18,7 @@ const Contents = ({ searchParams }) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
+        const res = await fetch('http://localhost:5000/api/blogs/latest', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -172,7 +172,7 @@ const Contents = ({ searchParams }) => {
             </svg>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No Articles Yet</h3>
             <p className="text-gray-500 mb-6">
-              We're working on creating amazing content for you. Check back soon!
+              We&apos;re working on creating amazing content for you. Check back soon!
             </p>
           </div>
         </div>
@@ -187,7 +187,7 @@ const Contents = ({ searchParams }) => {
               {blog.image && (
                 <div className="relative h-48 w-full">
                   <Image
-                    src={`https://api.everestkit.com/uploads/${blog.image}`}
+                    src={`http://localhost:5000/uploads/${blog.image}`}
                     alt={blog.title || 'Blog image'}
                     fill
                     className="object-cover"

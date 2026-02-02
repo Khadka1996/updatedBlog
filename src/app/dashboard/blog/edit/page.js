@@ -14,6 +14,7 @@ import {
   Article as ArticleIcon,
   Add as AddIcon
 } from "@mui/icons-material";
+import { toast } from "react-toastify";
 
 export default function ArticleList() {
   const [articles, setArticles] = useState([]);
@@ -24,12 +25,15 @@ export default function ArticleList() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await fetch("/api/blogs");
+        const response = await fetch('/api/blogs', {
+          credentials: 'include',
+        });
         const result = await response.json();
         
         if (!response.ok) throw new Error("Failed to fetch articles");
         
         setArticles(result.data || []);
+        setError("");
       } catch (err) {
         setError(err.message);
       }
@@ -46,7 +50,8 @@ export default function ArticleList() {
   const handleDeleteConfirm = async () => {
     try {
       const response = await fetch(`/api/blogs/${articleToDelete._id}`, {
-        method: "DELETE",  // Should be uppercase 'DELETE' to match HTTP standards
+        method: "DELETE",
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -57,13 +62,10 @@ export default function ArticleList() {
       setArticles(articles.filter(a => a._id !== articleToDelete._id));
       setDeleteDialogOpen(false);
       
-      // Optional: Show success message
-      setMessage({ text: "Article deleted successfully", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      toast.success("Article deleted successfully");
       
     } catch (err) {
       setError(err.message);
-      // Optionally auto-hide error after some time
       setTimeout(() => setError(""), 5000);
     }
   };

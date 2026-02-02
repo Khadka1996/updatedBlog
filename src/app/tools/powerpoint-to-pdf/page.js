@@ -6,6 +6,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function PowerpointToPdf() {
   const [file, setFile] = useState(null);
@@ -98,15 +99,17 @@ export default function PowerpointToPdf() {
       </Head>
       
        {/* Google AdSense Script */}
-        <Script 
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
 
       <div className="mx-3 md:mx-10 lg:mx-18">
         {/* Top Ad Unit - Responsive Leaderboard */}
@@ -114,8 +117,8 @@ export default function PowerpointToPdf() {
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_TOP_AD_SLOT" // Replace with your actual top ad unit slot ID
+            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+            data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
             data-ad-format="auto"
             data-full-width-responsive="true"
           ></ins>
@@ -185,8 +188,8 @@ export default function PowerpointToPdf() {
                   <ins
                     className="adsbygoogle"
                     style={{ display: 'block' }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-                    data-ad-slot="YOUR_MIDDLE_AD_SLOT" // Replace with your actual middle ad unit slot ID
+                    data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+                    data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
                     data-ad-format="auto"
                     data-full-width-responsive="true"
                   ></ins>
@@ -344,8 +347,8 @@ export default function PowerpointToPdf() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT" // Replace with your actual bottom ad unit slot ID
+              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

@@ -9,6 +9,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 ChartJS.register(LineElement, PointElement, LinearScale, TimeScale, Tooltip);
 
@@ -260,14 +261,16 @@ export default function CurrencyConverter() {
           <title>Currency Converter - Real-Time Exchange Rates</title>
           <meta name="description" content="Convert currencies with real-time exchange rates" />
         </Head>
-        <Script
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -283,8 +286,8 @@ export default function CurrencyConverter() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_TOP_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("top")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>
@@ -429,7 +432,7 @@ export default function CurrencyConverter() {
                     className="mt-4 w-full md:w-auto px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center gap-2 justify-center transition-all shadow-md"
                     aria-label="Add to favorites"
                   >
-                    <FaStar /> Add to Favorites
+                    <FaStar />) Add to Favorites
                   </button>
                 </div>
               </div>
@@ -550,7 +553,7 @@ export default function CurrencyConverter() {
                       {chartType === 'bar' ? 'Candlestick View' : 'Bar View'}
                     </button>
                     <div className={`flex items-center text-sm font-medium ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
-                      {isPositiveChange ? <FaCaretUp className="mr-1" /> : <FaCaretDown className="mr-1" />}
+                      {isPositiveChange ? <FaCaretUp className="mr-1" /> : <FaCaretDown className="mr-1" /> }
                       {isPositiveChange ? '+' : ''}{changePercentage}%
                     </div>
                   </div>
@@ -593,8 +596,7 @@ export default function CurrencyConverter() {
                       })}
                     </div>
                   ) : (
-                    <Line data={chartData} options={chartOptions} />
-                  )}
+                    <Line data={chartData} options={chartOptions} /> )}
                   <div className="grid grid-cols-5 gap-2 text-xs text-center md:hidden">
                     {[0, Math.floor(historicalRates.length / 4), Math.floor(historicalRates.length / 2), Math.floor(historicalRates.length * 3 / 4), historicalRates.length - 1].map(
                       (i) =>
@@ -651,8 +653,8 @@ export default function CurrencyConverter() {
             <ins
               className="adsbygoogle"
               style={{ display: 'block' }}
-              data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
               data-ad-format="auto"
               data-full-width-responsive="true"
             ></ins>

@@ -7,8 +7,10 @@ import Footer from '@/app/components/footer/footer';
 import BlogArticle from '@/app/blog/article/ArticlePage';
 import '@/app/globals.css';
 import MobileFooterNav from '@/app/components/footer/footerMobile';
+import Image from 'next/image';
+import Link from 'next/link';
 
-const ServerBlogPage = ({ initialData, error, currentUrl }) => {
+const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) => {
   const router = useRouter();
   
   if (error) {
@@ -94,7 +96,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl }) => {
         <meta name="description" content={cleanedContent} />
         <meta name="keywords" content={tags ? tags.join(', ') : ''} />
         
-        {/* Open Graph Meta Tags - CRITICAL for Facebook */}
+        {/* Open Graph Meta Tags */}
         <meta property="og:type" content="article" />
         <meta property="og:url" content={siteUrl} />
         <meta property="og:title" content={title} />
@@ -104,26 +106,74 @@ const ServerBlogPage = ({ initialData, error, currentUrl }) => {
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="EverestKit" />
         
-        {/* Twitter Card Meta Tags */}
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={cleanedContent} />
         <meta name="twitter:image" content={imageUri} />
         <meta name="twitter:site" content="@everestkit" />
         
-        {/* Article Meta Tags */}
+        {/* Article Meta */}
         <meta property="article:published_time" content={createdAt} />
         {tags && tags.map((tag, index) => (
           <meta key={index} property="article:tag" content={tag} />
         ))}
         
-        {/* Canonical URL */}
         <link rel="canonical" href={siteUrl} />
       </Head>
       
-      <BlogArticle initialData={initialData} />
-      <MobileFooterNav/>
-      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="lg:flex lg:items-start lg:gap-4 xl:gap-6">
+          <main className="flex-1 min-w-0">
+            <BlogArticle initialData={initialData} />
+          </main>
+
+          <aside className="w-full lg:w-80 shrink-0 mt-8 lg:mt-0">
+            <div className="bg-white rounded-lg shadow p-4 sticky top-24">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Latest Articles</h3>
+              {!recentBlogs || recentBlogs.length === 0 ? (
+                <div className="p-4 border-2 border-dashed border-gray-200 rounded text-gray-500 text-sm">No recent articles</div>
+              ) : (
+                <ul className="space-y-4">
+                  {recentBlogs.map((b) => (
+                    <li 
+                      key={b._id} 
+                      className="flex items-start gap-3 pb-3 border-b border-gray-100 last:pb-0 last:border-0 hover:bg-gray-50 p-2 rounded transition"
+                    >
+                      <div className="w-16 h-12 rounded overflow-hidden flex-shrink-0 bg-gray-100">
+                        {b.image ? (
+                          <Image 
+                            src={`http://localhost:5000/uploads/${b.image}`} 
+                            alt={b.title || 'img'} 
+                            width={160} 
+                            height={120} 
+                            className="object-cover w-full h-full" 
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Link 
+                          href={`/blogs/${b._id}`} 
+                          className="block font-semibold text-sm text-gray-900 hover:text-blue-600 line-clamp-2"
+                        >
+                          {b.title}
+                        </Link>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(b.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <MobileFooterNav />
       <Footer />
     </>
   );
@@ -133,15 +183,12 @@ export const getServerSideProps = async (context) => {
   const { id } = context.params;
   const { req } = context;
   
-  // Get current URL for server-side rendering
   const protocol = req.headers['x-forwarded-proto'] || 'http';
   const host = req.headers.host;
   const currentUrl = `${protocol}://${host}${req.url}`;
 
   if (!id || id.length !== 24) {
-    return {
-      notFound: true,
-    };
+    return { notFound: true };
   }
 
   try {
@@ -149,24 +196,29 @@ export const getServerSideProps = async (context) => {
       `http://localhost:5000/api/blogs/${id}`,
       {
         timeout: 10000,
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers: { 'Content-Type': 'application/json' }
       }
     );
     
     const blogData = response.data?.data || null;
 
     if (!blogData) {
-      return {
-        notFound: true,
-      };
+      return { notFound: true };
+    }
+
+    let recentBlogs = [];
+    try {
+      const recentRes = await axios.get('http://localhost:5000/api/blogs/latest', { timeout: 8000 });
+      recentBlogs = recentRes.data?.data || [];
+    } catch (e) {
+      recentBlogs = [];
     }
 
     return {
       props: {
         initialData: blogData,
         currentUrl,
+        recentBlogs: recentBlogs.slice(0, 12),
       },
     };
     
@@ -174,9 +226,7 @@ export const getServerSideProps = async (context) => {
     console.error('Error fetching blog data:', error);
     
     if (error.response?.status === 404) {
-      return {
-        notFound: true,
-      };
+      return { notFound: true };
     }
     
     return {

@@ -6,6 +6,8 @@ import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import API_URL from '@/app/config';
 
 export default function PhotoToPdf() {
   const [files, setFiles] = useState([]);
@@ -59,7 +61,7 @@ export default function PhotoToPdf() {
     setFiles(newFiles);
   };
 
-  // Simulate conversion process
+  // Convert images to PDF
   const handleProcess = async () => {
     if (files.length === 0) {
       alert('Please add photos first!');
@@ -68,11 +70,24 @@ export default function PhotoToPdf() {
   
     setIsProcessing(true);
     
-    // Mock implementation for demo
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      const mockBlob = new Blob(['Mock PDF content'], { type: 'application/pdf' });
-      const url = URL.createObjectURL(mockBlob);
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('images', file.file);
+      });
+      formData.append('gridSize', gridSize);
+      
+      const response = await fetch(`${API_URL}/api/photo-to-pdf/convert`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Conversion failed');
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
       
       setDownloadUrl({
         url,
@@ -80,7 +95,8 @@ export default function PhotoToPdf() {
       });
       setShowDownloadModal(true);
     } catch (error) {
-      alert('Conversion failed');
+      alert('Conversion failed: ' + error.message);
+      console.error('Photo to PDF error:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -124,15 +140,17 @@ export default function PhotoToPdf() {
       </Head>
 
      {/* Google AdSense Script */}
-        <Script 
+      {toolsAdsConfig.isConfigured() && (
+          <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX`}
+          src={toolsAdsConfig.getScriptUrl()}
           // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
           crossOrigin="anonymous"
           onLoad={() => setAdsLoaded(true)}
           onError={(e) => console.error('AdSense script failed to load', e)}
         />
+      )}
 
       <div className="mx-3 md:mx-10 lg:mx-18">
         {/* Top Ad Unit - Responsive Leaderboard */}
@@ -140,8 +158,8 @@ export default function PhotoToPdf() {
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_TOP_AD_SLOT" // Replace with your actual top ad unit slot ID
+            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+            data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
             data-ad-format="auto"
             data-full-width-responsive="true"
           ></ins>
@@ -208,7 +226,7 @@ export default function PhotoToPdf() {
                     }}
                     className="text-sm text-red-500 hover:text-red-700 flex items-center gap-1"
                   >
-                    <FaTrash size={12} /> Clear All
+                    <FaTrash size={12} />) Clear All
                   </button>
                 </div>
                 
@@ -239,8 +257,8 @@ export default function PhotoToPdf() {
                   <ins
                     className="adsbygoogle"
                     style={{ display: 'block' }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-                    data-ad-slot="YOUR_MIDDLE_AD_SLOT" // Replace with your actual middle ad unit slot ID
+                    data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+                    data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
                     data-ad-format="auto"
                     data-full-width-responsive="true"
                   ></ins>
@@ -307,7 +325,7 @@ export default function PhotoToPdf() {
                     </>
                   ) : (
                     <>
-                      <FaFilePdf /> Create PDF
+                      <FaFilePdf />) Create PDF
                     </>
                   )}
                 </button>
@@ -377,8 +395,8 @@ export default function PhotoToPdf() {
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
-            data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your actual AdSense publisher ID
-            data-ad-slot="YOUR_BOTTOM_AD_SLOT" // Replace with your actual bottom ad unit slot ID
+            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
+            data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
             data-ad-format="auto"
             data-full-width-responsive="true"
           ></ins>
@@ -414,7 +432,7 @@ export default function PhotoToPdf() {
                   setShowDownloadModal(false);
                 }}
               >
-                <FaDownload /> Download PDF
+                <FaDownload />) Download PDF
               </a>
               
               <button

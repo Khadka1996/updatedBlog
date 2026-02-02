@@ -1,0 +1,6 @@
+Patches applied:
+- Reduced container paddings from py-8 to py-4
+- Reduced gaps from 8 to 4
+- Reduced article padding and image heights
+- Sidebar width reduced to w-72 and card paddings tightened
+- SidebarBlog default limit already 12; tightened spacing

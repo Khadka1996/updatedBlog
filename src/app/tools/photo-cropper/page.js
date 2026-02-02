@@ -8,6 +8,7 @@ import Script from 'next/script';
 import { FaInfoCircle, FaUpload, FaDownload, FaMobile, FaDesktop, FaFilePowerpoint, FaFilePdf, FaExchangeAlt } from 'react-icons/fa';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function HighQualityCropper() {
   const [imgSrc, setImgSrc] = useState('');
@@ -135,24 +136,34 @@ export default function HighQualityCropper() {
           <meta name="description" content="Crop your images to the perfect size and aspect ratio with high quality." />
           
         </Head>
-        <Script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID"
+        {toolsAdsConfig.isConfigured() && (
+          <Script 
+            id="adsbygoogle-init"
             strategy="afterInteractive"
+            src={toolsAdsConfig.getScriptUrl()}
             crossOrigin="anonymous"
+            onLoad={() => {
+              if (window.adsbygoogle) {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+              }
+            }}
+            onError={(e) => console.error('AdSense script failed to load', e)}
           />
+        )}
         <div className="mx-3 md:mx-10 lg:mx-18">
-          {/* AdSense Banner */}
-          <div className="mb-6">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
-              data-ad-slot="YOUR_AD_SLOT_ID"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          {/* Top Ad Unit */}
+          {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('TOP_SLOT') && (
+            <div className="mb-6 flex justify-center">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'inline-block', width: '100%', height: 'auto' }}
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId('TOP_SLOT')}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+            </div>
+          )}
           
           <div className="bg-white p-8 rounded-lg shadow-md">
             <div className="flex items-center mb-6">

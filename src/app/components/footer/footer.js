@@ -29,7 +29,7 @@ const Footer = () => {
             </p>
             <div className="mt-4">
               <p className="text-gray-400 text-sm">
-                📧 <a href="mailto:support@everestkit.com" className="hover:text-white transition-colors">support@everestkit.com</a>
+                📧 <a href="mailto:mail@everestkit.com" className="hover:text-white transition-colors">mail@everestkit.com</a>
               </p>
             </div>
           </div>

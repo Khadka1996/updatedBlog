@@ -59,7 +59,7 @@ const CookiesPolicy = () => {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
     website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'support@everestkit.com',
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',
   };
 
   const sections = [
