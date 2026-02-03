@@ -74,7 +74,7 @@ export default function CompressPDF() {
       formData.append('compressionLevel', compressionLevel);
 
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${API_URL}/api/pdf/compress`, true);
+      xhr.open('POST', '/api/pdf/compress', true);
 
       // Progress tracking
       xhr.upload.onprogress = (e) => {
@@ -87,7 +87,9 @@ export default function CompressPDF() {
       xhr.responseType = 'blob';
       
       xhr.onload = () => {
-        if (xhr.status === 200) {
+        if (xhr.status === 413) {
+          setError('File is too large. Maximum file size is 50MB.');
+        } else if (xhr.status === 200) {
           const blob = xhr.response;
           const url = URL.createObjectURL(blob);
           const compressedSizeMB = blob.size / (1024 * 1024);

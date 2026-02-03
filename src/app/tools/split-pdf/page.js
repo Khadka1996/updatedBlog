@@ -120,7 +120,7 @@ export default function SplitPDF() {
       formData.append('ranges', pageRanges.filter(r => r.trim()).join(';'));
       formData.append('splitMode', 'custom');
 
-      const response = await fetch(`${API_URL}/api/pdf/split`, {
+      const response = await fetch('/api/pdf/split', {
         method: 'POST',
         body: formData,
         headers: {
@@ -130,6 +130,16 @@ export default function SplitPDF() {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Check for specific error codes
+        if (response.status === 413) {
+          throw new Error('File is too large. Maximum supported file size is 50MB.');
+        } else if (response.status === 400) {
+          throw new Error('Invalid PDF file or page ranges. Please check and try again.');
+        } else if (response.status === 500) {
+          throw new Error('Server error. Please try again later.');
+        }
+        
         throw new Error(errorText || `Server error: ${response.status}`);
       }
 

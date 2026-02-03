@@ -8,17 +8,22 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.everestkit.com',
+        pathname: '/uploads/**',
+      },
     ],
   },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: 'https://api.everestkit.com/api/:path*',
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:5000/uploads/:path*',
+        destination: 'https://api.everestkit.com/uploads/:path*',
       },
     ]
   },

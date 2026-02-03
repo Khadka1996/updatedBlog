@@ -136,7 +136,7 @@ export default function MergePDF() {
       });
 
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${API_URL}/api/pdf/merge`, true);
+      xhr.open('POST', '/api/pdf/merge', true);
 
       // Progress tracking
       xhr.upload.onprogress = (e) => {
@@ -151,6 +151,12 @@ export default function MergePDF() {
       xhr.onload = () => {
         setIsMerging(false);
         setUploadProgress(0);
+        
+        // Check for specific error codes first
+        if (xhr.status === 413) {
+          setError('Files are too large. Maximum total size is 200MB. Please reduce file sizes and try again.');
+          return;
+        }
         
         // Check content type to determine if it's an error
         const contentType = xhr.getResponseHeader('content-type');

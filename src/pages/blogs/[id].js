@@ -85,7 +85,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
   };
 
   const cleanedContent = truncateText(stripHtmlTags(content), 160);
-  const imageUri = image ? `http://localhost:5000/uploads/${image}` : 'https://everestkit.com/default-blog-image.jpg';
+  const imageUri = image ? `https://api.everestkit.com/uploads/${image}` : 'https://everestkit.com/default-blog-image.jpg';
   const siteUrl = currentUrl || `https://everestkit.com${router.asPath}`;
 
   return (
@@ -122,54 +122,56 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
         <link rel="canonical" href={siteUrl} />
       </Head>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="lg:flex lg:items-start lg:gap-4 xl:gap-6">
-          <main className="flex-1 min-w-0">
-            <BlogArticle initialData={initialData} />
-          </main>
+      <div className="bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 xl:gap-8">
+            <main className="flex-1 min-w-0 order-2 lg:order-1">
+              <BlogArticle initialData={initialData} />
+            </main>
 
-          <aside className="w-full lg:w-80 shrink-0 mt-8 lg:mt-0">
-            <div className="bg-white rounded-lg shadow p-4 sticky top-24">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Latest Articles</h3>
-              {!recentBlogs || recentBlogs.length === 0 ? (
-                <div className="p-4 border-2 border-dashed border-gray-200 rounded text-gray-500 text-sm">No recent articles</div>
-              ) : (
-                <ul className="space-y-4">
-                  {recentBlogs.map((b) => (
-                    <li 
-                      key={b._id} 
-                      className="flex items-start gap-3 pb-3 border-b border-gray-100 last:pb-0 last:border-0 hover:bg-gray-50 p-2 rounded transition"
-                    >
-                      <div className="w-16 h-12 rounded overflow-hidden flex-shrink-0 bg-gray-100">
-                        {b.image ? (
-                          <Image 
-                            src={`http://localhost:5000/uploads/${b.image}`} 
-                            alt={b.title || 'img'} 
-                            width={160} 
-                            height={120} 
-                            className="object-cover w-full h-full" 
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <Link 
-                          href={`/blogs/${b._id}`} 
-                          className="block font-semibold text-sm text-gray-900 hover:text-blue-600 line-clamp-2"
-                        >
-                          {b.title}
-                        </Link>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(b.createdAt).toLocaleDateString()}
+            <aside className="w-full lg:w-72 shrink-0 order-2 lg:order-2 mt-8 lg:mt-0\">
+              <div className="bg-white rounded-lg shadow p-4 sm:p-5 sticky top-20 sm:top-24">
+                <h3 className="text-base sm:text-lg font-semibold mb-4 text-gray-900">Latest Articles</h3>
+                {!recentBlogs || recentBlogs.length === 0 ? (
+                  <div className="p-3 border-2 border-dashed border-gray-200 rounded text-gray-500 text-xs sm:text-sm">No recent articles</div>
+                ) : (
+                  <ul className="space-y-3 sm:space-y-4">
+                    {recentBlogs.map((b) => (
+                      <li 
+                        key={b._id} 
+                        className="flex items-start gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-gray-100 last:pb-0 last:border-0 hover:bg-gray-50 p-2 rounded transition"
+                      >
+                        <div className="w-14 sm:w-16 h-10 sm:h-12 rounded overflow-hidden flex-shrink-0 bg-gray-100">
+                          {b.image ? (
+                            <Image 
+                              src={`https://api.everestkit.com/uploads/${b.image}`} 
+                              alt={b.title || 'img'} 
+                              width={160} 
+                              height={120} 
+                              className="object-cover w-full h-full" 
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200" />
+                          )}
                         </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </aside>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            href={`/blogs/${b._id}`} 
+                            className="block font-semibold text-xs sm:text-sm text-gray-900 hover:text-blue-600 line-clamp-2"
+                          >
+                            {b.title}
+                          </Link>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(b.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
 
@@ -193,7 +195,7 @@ export const getServerSideProps = async (context) => {
 
   try {
     const response = await axios.get(
-      `http://localhost:5000/api/blogs/${id}`,
+      `https://api.everestkit.com/api/blogs/${id}`,
       {
         timeout: 10000,
         headers: { 'Content-Type': 'application/json' }
@@ -208,7 +210,7 @@ export const getServerSideProps = async (context) => {
 
     let recentBlogs = [];
     try {
-      const recentRes = await axios.get('http://localhost:5000/api/blogs/latest', { timeout: 8000 });
+      const recentRes = await axios.get('https://api.everestkit.com/api/blogs/latest', { timeout: 8000 });
       recentBlogs = recentRes.data?.data || [];
     } catch (e) {
       recentBlogs = [];

@@ -9,7 +9,7 @@ const adTopSlot = process.env.NEXT_PUBLIC_AD_TOP_SLOT;
 
 async function getTopArticle() {
   try {
-    const res = await fetch('http://localhost:5000/api/blogs/top-viewed', {
+    const res = await fetch('https://api.everestkit.com/api/blogs/top-viewed', {
       next: { revalidate: 300 }, // Revalidate every 5 minutes
     });
 
@@ -44,7 +44,7 @@ function TopArticleCard({ article }) {
             {article.image ? (
               <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden shadow-lg">
                 <Image
-                  src={`http://localhost:5000/uploads/${article.image}`}
+                  src={`https://api.everestkit.com/uploads/${article.image}`}
                   alt={article.title || 'Top article image'}
                   fill
                   className="object-cover hover:scale-105 transition-transform duration-700"

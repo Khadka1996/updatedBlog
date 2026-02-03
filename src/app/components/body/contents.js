@@ -18,7 +18,7 @@ const Contents = ({ searchParams }) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const res = await fetch('http://localhost:5000/api/blogs/latest', {
+        const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -187,7 +187,7 @@ const Contents = ({ searchParams }) => {
               {blog.image && (
                 <div className="relative h-48 w-full">
                   <Image
-                    src={`http://localhost:5000/uploads/${blog.image}`}
+                    src={`https://api.everestkit.com/uploads/${blog.image}`}
                     alt={blog.title || 'Blog image'}
                     fill
                     className="object-cover"

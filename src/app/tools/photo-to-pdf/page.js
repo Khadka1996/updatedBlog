@@ -77,13 +77,39 @@ export default function PhotoToPdf() {
       });
       formData.append('gridSize', gridSize);
       
-      const response = await fetch(`${API_URL}/api/photo-to-pdf/convert`, {
+      const response = await fetch('/api/photo-to-pdf/convert', {
         method: 'POST',
         body: formData
       });
       
       if (!response.ok) {
-        throw new Error('Conversion failed');
+        let errorMessage = 'Conversion failed';
+        
+        // Try to parse error response (read body only once)
+        try {
+          const contentType = response.headers.get('content-type');
+          const responseBody = await response.text();
+          
+          if (contentType?.includes('application/json')) {
+            const errorData = JSON.parse(responseBody);
+            errorMessage = errorData.message || errorMessage;
+          } else {
+            errorMessage = responseBody || errorMessage;
+          }
+        } catch (e) {
+          console.error('Error parsing response:', e);
+        }
+        
+        // Handle specific status codes
+        if (response.status === 413) {
+          throw new Error('Files are too large. Maximum total size is 50MB.');
+        } else if (response.status === 400) {
+          throw new Error(errorMessage || 'Invalid images. Please check file format.');
+        } else if (response.status === 500) {
+          throw new Error(errorMessage || 'Server error. Please try again later.');
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const blob = await response.blob();
