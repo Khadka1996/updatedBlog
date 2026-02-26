@@ -123,44 +123,64 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
       </Head>
       
       <div className="bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6 xl:gap-8">
-            <main className="flex-1 min-w-0 order-2 lg:order-1">
-              <BlogArticle initialData={initialData} />
+        <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4">
+          
+          <div className="flex flex-col lg:flex-row lg:items-start lg:gap-4 xl:gap-6">
+            
+            {/* MAIN ARTICLE */}
+            <main className="flex-1 min-w-0 order-1">
+              <div className="bg-white rounded-xl shadow-sm p-3 sm:p-5 lg:p-7">
+                
+                <div>
+                  <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none article-content break-words overflow-hidden">
+                    <BlogArticle initialData={initialData} />
+                  </div>
+                </div>
+
+              </div>
             </main>
 
-            <aside className="w-full lg:w-72 shrink-0 order-2 lg:order-2 mt-8 lg:mt-0\">
-              <div className="bg-white rounded-lg shadow p-4 sm:p-5 sticky top-20 sm:top-24">
-                <h3 className="text-base sm:text-lg font-semibold mb-4 text-gray-900">Latest Articles</h3>
+            {/* SIDEBAR */}
+            <aside className="w-full lg:w-72 shrink-0 order-2 mt-3 lg:mt-0">
+              <div className="bg-white rounded-xl shadow-sm p-1 sm:p-2 sticky top-24">
+                
+                <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
+                  Latest Articles
+                </h3>
+
                 {!recentBlogs || recentBlogs.length === 0 ? (
-                  <div className="p-3 border-2 border-dashed border-gray-200 rounded text-gray-500 text-xs sm:text-sm">No recent articles</div>
+                  <div className="p-2 border-2 border-dashed border-gray-200 rounded text-gray-500 text-sm">
+                    No recent articles
+                  </div>
                 ) : (
-                  <ul className="space-y-3 sm:space-y-4">
+                  <ul className="space-y-1.5">
                     {recentBlogs.map((b) => (
-                      <li 
-                        key={b._id} 
-                        className="flex items-start gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-gray-100 last:pb-0 last:border-0 hover:bg-gray-50 p-2 rounded transition"
+                      <li
+                        key={b._id}
+                        className="flex items-start gap-2 pb-1.5 border-b border-gray-100 last:pb-0 last:border-0 hover:bg-gray-50 p-1 rounded transition"
                       >
-                        <div className="w-14 sm:w-16 h-10 sm:h-12 rounded overflow-hidden flex-shrink-0 bg-gray-100">
+                        <div className="w-12 h-9 rounded overflow-hidden flex-shrink-0 bg-gray-100">
                           {b.image ? (
-                            <Image 
-                              src={`https://api.everestkit.com/uploads/${b.image}`} 
-                              alt={b.title || 'img'} 
-                              width={160} 
-                              height={120} 
-                              className="object-cover w-full h-full" 
+                            <Image
+                              src={`https://api.everestkit.com/uploads/${b.image}`}
+                              alt={b.title || 'img'}
+                              width={160}
+                              height={120}
+                              className="object-cover w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full bg-gray-200" />
                           )}
                         </div>
+
                         <div className="flex-1 min-w-0">
-                          <Link 
-                            href={`/blogs/${b._id}`} 
-                            className="block font-semibold text-xs sm:text-sm text-gray-900 hover:text-blue-600 line-clamp-2"
+                          <Link
+                            href={`/blogs/${b._id}`}
+                            className="block font-semibold text-sm text-gray-900 hover:text-blue-600 line-clamp-2 break-words"
                           >
                             {b.title}
                           </Link>
+
                           <div className="text-xs text-gray-400 mt-1">
                             {new Date(b.createdAt).toLocaleDateString()}
                           </div>
@@ -171,6 +191,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
                 )}
               </div>
             </aside>
+
           </div>
         </div>
       </div>

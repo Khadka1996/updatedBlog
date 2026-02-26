@@ -283,8 +283,8 @@ export default function MergePDF() {
       )}
       
       <NavBar />
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-3 md:p-6">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <div className="mb-4 md:mb-6">
             <a href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-sm md:text-base">
@@ -296,16 +296,18 @@ export default function MergePDF() {
           </div>
           
           {/* Top Ad Unit - Mobile responsive */}
-          <div className="mb-6">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("top")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          {adsLoaded && (
+            <div className="mb-2 hidden md:block">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block', textAlign: 'center' }}
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId("top")}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+            </div>
+          )}
           
           {/* Main Content Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -512,16 +514,18 @@ export default function MergePDF() {
                   </div>
                   
                   {/* Middle Ad Unit - Mobile responsive */}
-                  <div className="my-6">
-                    <ins
-                      className="adsbygoogle"
-                      style={{ display: 'block', textAlign: 'center', minHeight: '250px' }}
-                      data-ad-client={toolsAdsConfig.getPublisherId()}
-                      data-ad-slot={toolsAdsConfig.getSlotId("middle")}
-                      data-ad-format="auto"
-                      data-full-width-responsive="true"
-                    ></ins>
-                  </div>
+                  {adsLoaded && (
+                    <div className="my-3">
+                      <ins
+                        className="adsbygoogle"
+                        style={{ display: 'block', textAlign: 'center' }}
+                        data-ad-client={toolsAdsConfig.getPublisherId()}
+                        data-ad-slot={toolsAdsConfig.getSlotId("middle")}
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"
+                      ></ins>
+                    </div>
+                  )}
                 </>
               )}
               
@@ -621,16 +625,18 @@ export default function MergePDF() {
           </div>
           
           {/* Bottom Ad Unit */}
-          <div className="mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          {adsLoaded && (
+            <div className="mt-4">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block', textAlign: 'center' }}
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+            </div>
+          )}
           
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-8 rounded-2xl p-6 md:p-8 text-center text-white overflow-hidden">
