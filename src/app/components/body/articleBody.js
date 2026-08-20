@@ -14,6 +14,7 @@ const BlogPage = async ({ searchParams }) => {
     // Fetch blog data from backend API
     const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
       next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) {

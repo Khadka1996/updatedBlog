@@ -11,6 +11,7 @@ async function getTopArticle() {
   try {
     const res = await fetch('https://api.everestkit.com/api/blogs/top-viewed', {
       next: { revalidate: 300 }, // Revalidate every 5 minutes
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) {
