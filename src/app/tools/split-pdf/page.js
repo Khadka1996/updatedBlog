@@ -6,6 +6,7 @@ import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
 export default function SplitPDF() {
@@ -210,7 +211,7 @@ export default function SplitPDF() {
       <div className="mx-3 md:mx-10 lg:mx-18">
 
            <div className="flex items-center mb-6">
-          <a href="/tools" className="text-blue-600 hover:underline">← Back to all tools</a>
+          <ToolBreadcrumbs label="Split PDF" />
         </div>
 
           {/* Top Ad Unit - Responsive Leaderboard */}

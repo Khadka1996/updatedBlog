@@ -3,10 +3,12 @@ import "./globals.css";
 import Script from "next/script";
 import WhatsAppButton from './components/WhatsAppButton.js';
 import MobileFooterNav from './components/footer/footerMobile';
+import AdsInit from './components/ads/AdsInit';
+import { SITE_URL } from '../config/site';
 const inter = Inter({ subsets: ["latin"] });
 
 // Define your base URL
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://everestkit.com';
+const baseUrl = SITE_URL;
 
 export const metadata = {
   title: {
@@ -32,9 +34,6 @@ export const metadata = {
     google: "uR6uIZhkkV6qUHOZoHisH_MwJphdQ-NYiosHp3k2Yoc"
   },
   metadataBase: new URL(baseUrl),
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     title: "Everestkit - Your All-in-One Digital Toolbox",
     description: "Powerful tools for PDF manipulation, image editing, and digital services to boost your productivity.",
@@ -89,12 +88,6 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
-    shortcut: '/next.svg',
-    apple: '/next.svg',
-    other: {
-      rel: 'apple-touch-icon-precomposed',
-      url: '/next.svg',
-    },
   },
   manifest: `${baseUrl}/site.webmanifest`,
   category: 'technology',
@@ -106,8 +99,6 @@ export default function RootLayout({ children }) {
       <head>
         {/* Favicon links */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         
         {/* Google Tag Manager */}
@@ -143,8 +134,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         {children}
+        <AdsInit />
         
         {/* Additional scripts that need to load after the page is interactive */}
      

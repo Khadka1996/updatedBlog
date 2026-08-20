@@ -111,6 +111,14 @@ const Footer = () => {
               </li>
               <li>
                 <Link
+                  href="/registration-details"
+                  className="text-gray-400 hover:text-white transition-colors block py-1"
+                >
+                   Company Registration Details
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/contact"
                   className="text-gray-400 hover:text-white transition-colors block py-1"
                 >

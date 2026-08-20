@@ -23,7 +23,7 @@ const SocialProof = () => {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
-  const phoneNumber = "9779823153502";
+  const phoneNumber = "9717029446";
 
   const handleWhatsAppClick = () => {
     const message = "Hi! I’m interested in your services after seeing your client success stories.";

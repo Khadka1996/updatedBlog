@@ -1,6 +1,8 @@
 // app/cookies-policy/page.tsx
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { 
   FaCookie, 
@@ -57,7 +59,7 @@ const CookiesPolicy = () => {
 
   const companyInfo = {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    website: SITE_URL,
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',
   };

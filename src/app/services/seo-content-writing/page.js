@@ -26,7 +26,7 @@ const SEOContentWriting = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 const handleWhatsAppClick = () => {
-  const phoneNumber = '9779823153502';
+  const phoneNumber = '9717029446';
   const message = 'Hello! I have a question about your SEO content writing services.';
 
   if (isMobile) {
@@ -39,7 +39,7 @@ const handleWhatsAppClick = () => {
 const handleSubmit = (e) => {
   e.preventDefault();
 
-  const phoneNumber = '9779823153502';
+  const phoneNumber = '9717029446';
   const whatsappMessage = `New SEO Content Writing Inquiry:
 
 Name: ${formData.name}

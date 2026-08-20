@@ -275,11 +275,11 @@ export default function Register() {
                 label={
                   <Typography variant="body2">
                     I agree to the{' '}
-                    <Link href="/terms" underline="hover" color="#008384" fontWeight={500}>
+                    <Link href="/terms-and-conditions" underline="hover" color="#008384" fontWeight={500}>
                       Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" underline="hover" color="#008384" fontWeight={500}>
+                    <Link href="/privacy-policy" underline="hover" color="#008384" fontWeight={500}>
                       Privacy Policy
                     </Link>
                   </Typography>

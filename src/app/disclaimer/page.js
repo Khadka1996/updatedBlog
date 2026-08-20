@@ -1,6 +1,8 @@
 // app/disclaimer/page.js
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { 
   FaExclamationTriangle, 
@@ -50,7 +52,7 @@ const Disclaimer = () => {
 
   const companyInfo = {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    website: SITE_URL,
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',
     legalEmail: process.env.NEXT_PUBLIC_LEGAL_EMAIL || 'legal@everestkit.com',
@@ -206,7 +208,7 @@ const Disclaimer = () => {
                   <FaExclamationTriangle className="mr-3 text-[#ff6b6b]" /> General Disclaimer
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  The information provided by {companyInfo.name} (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) on {companyInfo.website} (the &quot;Site&quot;) is for general informational purposes only. All information on the Site is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.
+                  The information provided by {companyInfo.name} (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) on {companyInfo.website} (the &quot;Site&quot;) is for general informational and business purposes only. All information on the Site is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
                   UNDER NO CIRCUMSTANCE SHALL WE HAVE ANY LIABILITY TO YOU FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF THE SITE OR RELIANCE ON ANY INFORMATION PROVIDED ON THE SITE. YOUR USE OF THE SITE AND YOUR RELIANCE ON ANY INFORMATION ON THE SITE IS SOLELY AT YOUR OWN RISK.

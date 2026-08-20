@@ -6,6 +6,7 @@ import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
 export default function CompressPDF() {
@@ -18,7 +19,10 @@ export default function CompressPDF() {
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [adsLoaded, setAdsLoaded] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => setIsHydrated(true), []);
 
   // Compression level options
   const compressionLevels = [
@@ -124,15 +128,11 @@ export default function CompressPDF() {
   useEffect(() => {
     if (adsLoaded && window.adsbygoogle) {
       try {
-        // Push top ad
         window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-        // Push bottom ad
-        window.adsbygoogle.push({});
-        // Push middle ad if file is uploaded
-        if (file) {
-          window.adsbygoogle.push({});
-        }
+        const unfilledAds = document.querySelectorAll(
+          'ins.adsbygoogle:not([data-adsbygoogle-status])'
+        );
+        unfilledAds.forEach(() => window.adsbygoogle.push({}));
       } catch (e) {
         console.error('AdSense ad push failed:', e);
       }
@@ -147,6 +147,8 @@ export default function CompressPDF() {
     };
   }, [file, downloadUrl]);
 
+  const adsConfigured = isHydrated && toolsAdsConfig.isConfigured();
+
   return (
     <>
     <NavBar/>
@@ -158,7 +160,7 @@ export default function CompressPDF() {
       </Head>
       
       {/* Google AdSense Script */}
-      {toolsAdsConfig.isConfigured() && (
+      {adsConfigured && (
         <Script 
           id="adsbygoogle-init"
           strategy="afterInteractive"
@@ -171,11 +173,11 @@ export default function CompressPDF() {
       
         <div className="mx-3 md:mx-10 lg:mx-18">
         <div className="flex items-center mb-6">
-          <a href="/tools" className="text-blue-600 hover:underline">← Back to all tools</a>
+          <ToolBreadcrumbs label="Compress PDF" />
         </div>
         
         {/* Top Ad Unit - Responsive Leaderboard */}
-        {toolsAdsConfig.isConfigured() ? (
+        {adsConfigured ? (
           <div className="mb-8">
             <ins
               className="adsbygoogle"
@@ -254,7 +256,7 @@ export default function CompressPDF() {
               </div>
               
               {/* Middle Ad Unit - Responsive Rectangle */}
-              {file && (toolsAdsConfig.isConfigured() ? (
+              {file && (adsConfigured ? (
                 <div className="my-6">
                   <ins
                     className="adsbygoogle"
@@ -386,7 +388,7 @@ export default function CompressPDF() {
         </div>
         
         {/* Bottom Ad Unit - Responsive Leaderboard */}
-        {toolsAdsConfig.isConfigured() ? (
+        {adsConfigured ? (
           <div className="mt-8">
             <ins
               className="adsbygoogle"

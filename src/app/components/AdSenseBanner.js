@@ -1,59 +1,67 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export default function AdSenseBanner({ adSlot, format = 'auto' }) {
-  const [adLoaded, setAdLoaded] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const adRef = useRef(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setAdLoaded(true);
-      } catch (err) {
-        console.error("AdSense error:", err);
-      }
+    if (!toolsAdsConfig.isConfigured() || !toolsAdsConfig.isValidSlotId(adSlot)) {
+      setVisible(false);
+      return undefined;
     }
-  }, []);
 
-  // Define placeholder dimensions based on ad format
-  const placeholderStyles = {
-    rectangle: { height: '250px', width: '100%' },
-    vertical: { height: '600px', width: '120px' },
-    auto: { height: '90px', width: '100%' }
-  };
+    const ad = adRef.current;
+    if (!ad) return undefined;
+
+    const updateVisibility = () => {
+      const status = ad.getAttribute('data-ad-status');
+      if (status === 'unfilled') setVisible(false);
+      if (status === 'filled') setVisible(true);
+    };
+
+    const observer = new MutationObserver(updateVisibility);
+    observer.observe(ad, { attributes: true, attributeFilter: ['data-ad-status'] });
+
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (err) {
+      console.error('AdSense error:', err);
+      setVisible(false);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (ad.getAttribute('data-ad-status') !== 'filled') setVisible(false);
+    }, 8000);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeoutId);
+    };
+  }, [adSlot]);
+
+  if (!toolsAdsConfig.isConfigured() || !toolsAdsConfig.isValidSlotId(adSlot) || !visible) {
+    return null;
+  }
 
   return (
     <>
       <Script
         strategy="afterInteractive"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID`}
+        src={toolsAdsConfig.getScriptUrl()}
         crossOrigin="anonymous"
         onError={(e) => console.error("AdSense script failed to load", e)}
       />
       
       <div className="my-8 w-full flex justify-center">
-        {/* Demo placeholder (shown before ad loads) */}
-        {!adLoaded && (
-          <div 
-            className="bg-white border-2 border-dashed border-gray-300 animate-pulse flex items-center justify-center"
-            style={placeholderStyles[format] || placeholderStyles.auto}
-          >
-            <span className="text-gray-500 text-sm font-medium">
-              {format.toUpperCase()} AD PLACEHOLDER
-            </span>
-          </div>
-        )}
-
-        {/* Actual AdSense Ad */}
         <ins
+          ref={adRef}
           className="adsbygoogle"
-          style={{
-            display: adLoaded ? 'block' : 'none',
-            ...placeholderStyles[format]
-          }}
-          data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
+          style={{ display: 'block' }}
+          data-ad-client={toolsAdsConfig.getPublisherId()}
           data-ad-slot={adSlot}
           data-ad-format={format}
           data-full-width-responsive="true"

@@ -59,7 +59,7 @@ export default function AIAssistantWidget() {
   };
 
   const handleWhatsAppRedirect = () => {
-    const phoneNumber = '9779815817938';
+    const phoneNumber = '9717029446';
     const message = 'Hello! I would like to chat with you.';
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');

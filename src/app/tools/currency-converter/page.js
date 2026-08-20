@@ -10,6 +10,7 @@ import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 ChartJS.register(LineElement, PointElement, LinearScale, TimeScale, Tooltip);
 
@@ -275,7 +276,7 @@ export default function CurrencyConverter() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 md:mb-6">
-            <a href="/tools" className="text-blue-600 hover:underline text-sm md:text-base">← Back to all tools</a>
+            <ToolBreadcrumbs label="Currency Converter" />
             <span className={`px-2 py-1 rounded text-sm font-medium ${apiStatus === 'success' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
               {apiStatus === 'success' ? 'Live' : 'Fallback'}
             </span>

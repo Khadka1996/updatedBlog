@@ -9,6 +9,7 @@ import '@/app/globals.css';
 import MobileFooterNav from '@/app/components/footer/footerMobile';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SITE_URL } from '@/config/site';
 
 const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) => {
   const router = useRouter();
@@ -85,8 +86,9 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
   };
 
   const cleanedContent = truncateText(stripHtmlTags(content), 160);
-  const imageUri = image ? `https://api.everestkit.com/uploads/${image}` : 'https://everestkit.com/default-blog-image.jpg';
-  const siteUrl = currentUrl || `https://everestkit.com${router.asPath}`;
+  const imageUri = image ? `https://api.everestkit.com/uploads/${image}` : `${SITE_URL}/default-blog-image.jpg`;
+  const canonicalUrl = `${SITE_URL}/blogs/${initialData._id}`;
+  const siteUrl = currentUrl || canonicalUrl;
 
   return (
     <>
@@ -119,7 +121,7 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
           <meta key={index} property="article:tag" content={tag} />
         ))}
         
-        <link rel="canonical" href={siteUrl} />
+        <link rel="canonical" href={canonicalUrl} />
       </Head>
       
       <div className="bg-gray-50 min-h-screen">

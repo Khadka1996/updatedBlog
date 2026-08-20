@@ -1,4 +1,3 @@
-// config.js
-const API_URL = "https://api.everestkit.com";
+import { API_URL } from './config/site';
 
 export default API_URL;

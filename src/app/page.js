@@ -9,6 +9,13 @@ import OurTools from './components/body/ourTools';
 import TopBody from './components/body/topbody';
 import Footer from './components/footer/footer';
 import NavBar from './components/header/navbar';
+import { createPageMetadata } from './seo';
+
+export const metadata = createPageMetadata({
+  title: 'Everestkit',
+  description: 'Everestkit provides practical online tools, digital services, and useful resources for modern work.',
+  path: '/',
+});
 
 const Page = () => {
   return (

@@ -30,6 +30,13 @@ import Abiskar2Image from '../components/assets/abiskar2.jpg';
 import Manish from '../components/assets/Manissh.jpeg';
 import Footer from '../components/footer/footer';
 import NavBar from '../components/header/navbar';
+import { createPageMetadata } from '../seo';
+
+export const metadata = createPageMetadata({
+  title: 'About Everestkit',
+  description: 'Learn about Everestkit, our team, and the digital tools and services we build.',
+  path: '/about',
+});
 
 const AboutUs = () => {
   const teamMembers = [

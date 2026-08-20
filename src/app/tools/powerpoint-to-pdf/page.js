@@ -7,6 +7,7 @@ import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 export default function PowerpointToPdf() {
   const [file, setFile] = useState(null);
@@ -125,7 +126,7 @@ export default function PowerpointToPdf() {
         </div>
         
         <div className="flex items-center mb-6">
-          <a href="/tools" className="text-blue-600 hover:underline">← Back to all tools</a>
+          <ToolBreadcrumbs label="PowerPoint to PDF" />
         </div>
         
         <div className="bg-white p-8 rounded-lg shadow-md">

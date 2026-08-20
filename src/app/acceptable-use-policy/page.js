@@ -1,6 +1,8 @@
 // app/acceptable-use-policy/page.js
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { 
   FaShieldAlt, 
@@ -53,7 +55,7 @@ const AcceptableUsePolicy = () => {
 
   const companyInfo = {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    website: SITE_URL,
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',
     legalEmail: process.env.NEXT_PUBLIC_LEGAL_EMAIL || 'legal@everestkit.com',
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',

@@ -9,8 +9,9 @@ import API_URL from '../config.js'
 const ITEMS_PER_PAGE = 12;
 
 const BlogPage = async ({ searchParams = {} }) => {
-  const page = parseInt(searchParams.page) || 1;
-  const searchQuery = searchParams.search || '';
+  const resolvedSearchParams = await searchParams;
+  const page = parseInt(resolvedSearchParams?.page, 10) || 1;
+  const searchQuery = resolvedSearchParams?.search || '';
 
   try {
     // Build API URL with pagination and search parameters

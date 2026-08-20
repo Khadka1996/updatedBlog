@@ -12,7 +12,7 @@ const ContactUs = () => {
   const [message, setMessage] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
-  const whatsappId = "9779815817938"; 
+  const whatsappId = "9717029446";
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -47,7 +47,7 @@ const ContactUs = () => {
 <div
   className="relative text-white py-32 px-6 md:px-12 shadow-xl overflow-hidden bg-cover bg-center"
   style={{ backgroundImage: `url(${contactBg.src})` }}
->        <div className="absolute inset-0 opacity-10 bg-[url('/images/contact-pattern.svg')] bg-cover bg-center pointer-events-none" />
+>
         
         <h1 className="text-4xl md:text-5xl font-extrabold text-center tracking-tight mt-10">
           Contact Us
@@ -176,7 +176,7 @@ const ContactUs = () => {
             <div className="w-full md:w-1/2 h-96 md:h-auto">
               <iframe
                 title="Location Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3105.150681931219!2d-77.0368736844035!3d38.89767627957071!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b7b7bcdecbb1df%3A0x715969d6d1b8c7a1!2sWhite%20House%2C%20Washington%2C%20DC%2C%20USA!5e0!3m2!1sen!2sin!4v1698765432105!5m2!1sen!2sin"
+                src="https://www.google.com/maps?q=Putalisadak%2C%20Kathmandu%2C%20Nepal&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

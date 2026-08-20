@@ -27,7 +27,7 @@ const LeadCapture = () => {
   }, []);
 
   const handleWhatsAppClick = () => {
-    const phoneNumber = '9779823153502';
+    const phoneNumber = '9717029446';
     const message = 'Hello! I have a question about your lead capture services.';
     
     if (isMobile) {
@@ -40,7 +40,7 @@ const LeadCapture = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const phoneNumber = '9779823153502';
+    const phoneNumber = '9717029446';
     const whatsappMessage = `New Lead Capture Inquiry:
     
 Name: ${formData.name}

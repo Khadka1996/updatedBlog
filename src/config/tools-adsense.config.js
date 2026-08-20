@@ -4,11 +4,24 @@
  */
 
 export const toolsAdsConfig = {
+  isValidPublisherId: (publisherId) => /^ca-pub-\d{10,}$/.test(publisherId || ''),
+
+  isValidSlotId: (slotId) => /^\d{4,}$/.test(slotId || ''),
+
   // Get AdSense configuration status
   isConfigured: () => {
+    const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
+    const slotIds = [
+      process.env.NEXT_PUBLIC_AD_TOP_SLOT,
+      process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT,
+      process.env.NEXT_PUBLIC_AD_LEFT_SLOT,
+      process.env.NEXT_PUBLIC_AD_RIGHT_SLOT,
+    ];
+
     return (
       process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true' &&
-      !!process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID
+      toolsAdsConfig.isValidPublisherId(publisherId) &&
+      slotIds.some((slotId) => toolsAdsConfig.isValidSlotId(slotId))
     );
   },
 
@@ -26,14 +39,19 @@ export const toolsAdsConfig = {
 
   // Check if specific ad slot is configured
   hasSlot: (position) => {
-    const slotEnv = `NEXT_PUBLIC_AD_${position.toUpperCase()}_SLOT`;
-    return !!process.env[slotEnv];
+    return toolsAdsConfig.isValidSlotId(toolsAdsConfig.getSlotId(position));
   },
 
   // Get ad slot ID for specific position
   getSlotId: (position) => {
-    const slotEnv = `NEXT_PUBLIC_AD_${position.toUpperCase()}_SLOT`;
-    return process.env[slotEnv] || '';
+    const slots = {
+      top: process.env.NEXT_PUBLIC_AD_TOP_SLOT,
+      bottom: process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT,
+      left: process.env.NEXT_PUBLIC_AD_LEFT_SLOT,
+      right: process.env.NEXT_PUBLIC_AD_RIGHT_SLOT,
+      middle: process.env.NEXT_PUBLIC_AD_MIDDLE_SLOT,
+    };
+    return slots[position.toLowerCase()] || '';
   },
 
   // Tool-specific ad positions

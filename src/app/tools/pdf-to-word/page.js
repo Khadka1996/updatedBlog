@@ -6,6 +6,7 @@ import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 export default function PdfToWord() {
   const [file, setFile] = useState(null);
@@ -126,7 +127,7 @@ export default function PdfToWord() {
         </div>
         
         <div className="flex items-center mb-6">
-          <a href="/tools" className="text-blue-600 hover:underline">← Back to all tools</a>
+          <ToolBreadcrumbs label="PDF to Word" />
         </div>
         
         <div className="bg-white p-8 rounded-lg shadow-md">

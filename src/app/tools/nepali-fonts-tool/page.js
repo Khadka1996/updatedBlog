@@ -7,6 +7,7 @@ import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 function NepaliFontTool() {
   const [inputText, setInputText] = useState('');
@@ -191,14 +192,7 @@ function NepaliFontTool() {
         />
 
         <div className="py-10">
-          <div className="flex items-center mb-6">
-            <a href="/tools" className="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-              </svg>
-              Back to all tools
-            </a>
-          </div>
+          <ToolBreadcrumbs label="Nepali Fonts Tool" />
 
           {/* Top Ad */}
           <div className="mb-8 rounded-lg overflow-hidden">

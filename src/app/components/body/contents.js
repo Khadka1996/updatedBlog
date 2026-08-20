@@ -280,7 +280,7 @@ const Contents = ({ searchParams }) => {
 
                 {/* Read More Button */}
                 <Link
-                  href={`/blog/${blog._id}`}
+                  href={`/blogs/${blog._id}`}
                   className="mt-6 w-full px-4 py-3 bg-gradient-to-r from-[#25609A] to-[#51A94C] text-white rounded-lg hover:from-[#1a4a7a] hover:to-[#4A8E45] transition-all duration-300 text-center font-medium shadow-md hover:shadow-lg"
                   aria-label={`Read more about ${blog.title || 'this article'}`}
                 >

@@ -6,6 +6,7 @@ import Script from 'next/script';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
 export default function MergePDF() {
@@ -285,15 +286,7 @@ export default function MergePDF() {
       <NavBar />
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumb */}
-          <div className="mb-4 md:mb-6">
-            <a href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-sm md:text-base">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to all tools
-            </a>
-          </div>
+          <ToolBreadcrumbs label="Merge PDF" />
           
           {/* Top Ad Unit - Mobile responsive */}
           {adsLoaded && (

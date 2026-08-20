@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-blue: #25609a;
+  --brand-blue-hover: #1a4a7a;
+  --brand-green: #4caf4f;
+  --brand-green-hover: #3e8e40;
+  --brand-green-soft: #eaf6eb;
+}
+
 .article-content {
   word-break: normal;
   overflow-wrap: break-word;

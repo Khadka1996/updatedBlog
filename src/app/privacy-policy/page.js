@@ -1,6 +1,8 @@
 // frontend/src/app/privacy-policy/page.js
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { FaShieldAlt, FaUserLock, FaCookie, FaQuestionCircle, FaEnvelope, FaCheck, FaSpinner, FaTimes } from 'react-icons/fa';
 import Head from 'next/head';
@@ -37,7 +39,7 @@ const PrivacyPolicy = () => {
 
   const companyInfo = {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    website: SITE_URL,
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '',
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',

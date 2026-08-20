@@ -32,6 +32,7 @@ import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 // Icon mapping component
 const IconComponent = ({ iconName, className }) => {
@@ -261,7 +262,7 @@ export default function ServicesPage() {
         />
 
         {/* Hero Section with Scroll Indicator */}
-        <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] text-white py-24 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] text-white py-4 relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
             <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Our Expert Services</h1>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed mb-8">
@@ -301,19 +302,21 @@ export default function ServicesPage() {
         )}
 
         {/* Google Ad - Top Banner (Hidden on mobile) */}
-        <div className="max-w-6xl mx-auto px-4 py-8 hidden md:block">
-          <ins 
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client={`ca-pub-${process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID}`}
-            data-ad-slot="1234567890"
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-          <Script id="top-ad">
-            {`(adsbygoogle = window.adsbygoogle || []).push({});`}
-          </Script>
-        </div>
+        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('top') && (
+          <div className="max-w-6xl mx-auto px-4 py-8 hidden md:block">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('top')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+            <Script id="top-ad">
+              {`(adsbygoogle = window.adsbygoogle || []).push({});`}
+            </Script>
+          </div>
+        )}
 
         {/* Services Section */}
         <div id="services-section" className="scroll-mt-20">

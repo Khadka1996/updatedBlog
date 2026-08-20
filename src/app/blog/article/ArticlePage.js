@@ -9,6 +9,7 @@ import { FaXTwitter } from "react-icons/fa6";
 import CommentSection from './CommentSection.js';
 import Image from 'next/image';
 import Script from 'next/script';
+import { SITE_URL } from '../../../config/site';
 
 const BlogArticle = ({ initialData, recentBlogs = [] }) => {
   const [googleAdsReady, setGoogleAdsReady] = useState(false);
@@ -42,7 +43,7 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
 
   const handleCopyUrl = async () => {
     try {
-      const url = currentUrl || `https://everestkit.com/blogs/${initialData?._id}`;
+      const url = currentUrl || `${SITE_URL}/blogs/${initialData?._id}`;
       await navigator.clipboard.writeText(url);
       setCopyStatus('copied');
       setTimeout(() => setCopyStatus('idle'), 2200);
@@ -66,7 +67,7 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
   }
 
   const blog = initialData;
-  const shareUrl = currentUrl || `https://everestkit.com/blogs/${blog._id}`;
+  const shareUrl = currentUrl || `${SITE_URL}/blogs/${blog._id}`;
   const shareTitle = encodeURIComponent(blog.title);
 
   const socialLinks = {

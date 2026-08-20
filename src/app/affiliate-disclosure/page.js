@@ -1,6 +1,8 @@
 // app/affiliate-disclosure/page.js
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { 
   FaHandshake, 
@@ -52,7 +54,7 @@ const AffiliateDisclosure = () => {
 
   const companyInfo = {
     name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    website: SITE_URL,
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'mail@everestkit.com',
     affiliateEmail: process.env.NEXT_PUBLIC_AFFILIATE_EMAIL || 'partnerships@everestkit.com',
   };

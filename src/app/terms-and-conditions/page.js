@@ -1,5 +1,7 @@
 'use client';
 
+import { SITE_URL } from '../../config/site';
+
 import React, { useState, useEffect } from 'react';
 import { 
   FaFileContract, 
@@ -52,8 +54,8 @@ const TermsAndConditions = () => {
   }, []);
 
   const companyInfo = {
-    name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit',
-    website: process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://everestkit.com',
+    name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'EverestKit Company Pvt. Ltd.',
+    website: SITE_URL,
     address: process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Kathmandu, Nepal',
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '',
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin@everestkit.com',
