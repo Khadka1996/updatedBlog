@@ -13,7 +13,7 @@ const BlogPage = async ({ searchParams }) => {
   try {
     // Fetch blog data from backend API
     const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
-      cache: 'no-store', // Ensure fresh data (optional, added for immediate updates)
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) {
@@ -87,7 +87,7 @@ const BlogPage = async ({ searchParams }) => {
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        priority={blogs.indexOf(blog) < 4}
+                        priority={blogs.indexOf(blog) === 0}
                       />
                     </div>
                   )}

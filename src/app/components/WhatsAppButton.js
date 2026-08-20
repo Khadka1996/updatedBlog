@@ -132,7 +132,7 @@ export default function AIAssistantWidget() {
       <audio 
         ref={audioRef} 
         src="/notification.wav" 
-        preload="auto"
+        preload="none"
       />
       
       {/* 3D AI Assistant Button */}

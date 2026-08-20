@@ -6,8 +6,6 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head>
-          {/* Google AdSense Script */}
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         </Head>
         <body>
           <Main />

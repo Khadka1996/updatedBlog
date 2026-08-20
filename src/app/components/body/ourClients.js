@@ -47,7 +47,6 @@ const OurClients = () => {
                   width={150}
                   height={80}
                   className="h-20 w-32 object-contain"
-                  priority
                 />
               </div>
             ))}
@@ -60,7 +59,6 @@ const OurClients = () => {
                   width={150}
                   height={80}
                   className="h-20 w-32 object-contain"
-                  priority
                 />
               </div>
             ))}

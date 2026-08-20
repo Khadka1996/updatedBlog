@@ -1,6 +1,3 @@
-// Force dynamic rendering to allow fetch with revalidate: 0
-export const dynamic = "force-dynamic";
-
 import ArticleBody from './components/body/articleBody';
 import ArticlePart from './components/body/articlePart';
 import ContactUs from './components/body/contactUs';

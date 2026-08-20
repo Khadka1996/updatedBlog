@@ -1,5 +1,7 @@
 import { API_URL, SITE_URL } from '../config/site';
 
+export const revalidate = 3600;
+
 const staticRoutes = [
   '/',
   '/about',

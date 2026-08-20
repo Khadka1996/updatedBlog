@@ -4,6 +4,7 @@ import Script from "next/script";
 import WhatsAppButton from './components/WhatsAppButton.js';
 import MobileFooterNav from './components/footer/footerMobile';
 import AdsInit from './components/ads/AdsInit';
+import CookieConsent from './components/CookieConsent';
 import { SITE_URL } from '../config/site';
 const inter = Inter({ subsets: ["latin"] });
 
@@ -137,6 +138,7 @@ export default function RootLayout({ children }) {
       <body className={inter.className} suppressHydrationWarning>
         {children}
         <AdsInit />
+        <CookieConsent />
         
         {/* Additional scripts that need to load after the page is interactive */}
      
