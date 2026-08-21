@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { API_URL } from '@/config/site';
 
 const Contents = ({ searchParams }) => {
   const [blogs, setBlogs] = useState([]);
@@ -18,7 +19,7 @@ const Contents = ({ searchParams }) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
+        const res = await fetch(`${API_URL}/api/blogs/latest`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -187,7 +188,7 @@ const Contents = ({ searchParams }) => {
               {blog.image && (
                 <div className="relative h-48 w-full">
                   <Image
-                    src={`https://api.everestkit.com/uploads/${blog.image}`}
+                    src={`${API_URL}/uploads/${blog.image}`}
                     alt={blog.title || 'Blog image'}
                     fill
                     className="object-cover"

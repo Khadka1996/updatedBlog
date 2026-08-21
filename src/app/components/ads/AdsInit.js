@@ -3,7 +3,35 @@
 import { useEffect } from 'react'
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
-export default function AdsInit() {
+export default function AdsInit({ publisherId }) {
+  // Load the adsbygoogle script manually (not via next/script) so Next.js
+  // never stamps it with data-nscript, which AdSense's own loader warns about.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!publisherId) return;
+
+    const existing = document.querySelector(
+      `script[src*="pagead/js/adsbygoogle.js"][src*="${publisherId}"]`
+    );
+
+    let script;
+    if (!existing) {
+      script = document.createElement('script');
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      // Leave the script in place across route changes; only clean up
+      // if this component actually created it and is unmounting for good.
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [publisherId]);
+
   useEffect(() => {
     const timers = new WeakMap();
 

@@ -1,15 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import Script from 'next/script';
-import AdsInit from '@/app/components/ads/AdsInit';
-
-const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
-const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
-const adTopSlot = process.env.NEXT_PUBLIC_AD_TOP_SLOT;
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import { API_URL } from '@/config/site';
 
 async function getTopArticle() {
   try {
-    const res = await fetch('https://api.everestkit.com/api/blogs/top-viewed', {
+    const res = await fetch(`${API_URL}/api/blogs/top-viewed`, {
       next: { revalidate: 300 }, // Revalidate every 5 minutes
       signal: AbortSignal.timeout(5000),
     });
@@ -45,7 +41,7 @@ function TopArticleCard({ article }) {
             {article.image ? (
               <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden shadow-lg">
                 <Image
-                  src={`https://api.everestkit.com/uploads/${article.image}`}
+                  src={`${API_URL}/uploads/${article.image}`}
                   alt={article.title || 'Top article image'}
                   fill
                   className="object-cover hover:scale-105 transition-transform duration-700"
@@ -192,25 +188,17 @@ export default async function TopArticle() {
         )}
 
         {/* Top article ad (client-initialized) */}
-        {adsEnabled && publisherId && (
-          <>
-            <Script
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
-              strategy="afterInteractive"
-            />
-            <div className="mt-8 max-w-6xl mx-auto">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={publisherId}
-                data-ad-slot={adTopSlot}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-            <AdsInit />
-          </>
+        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('top') && (
+          <div className="mt-8 max-w-6xl mx-auto" data-ad-container>
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client={toolsAdsConfig.getPublisherId()}
+              data-ad-slot={toolsAdsConfig.getSlotId('top')}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+          </div>
         )}
       </div>
     </section>

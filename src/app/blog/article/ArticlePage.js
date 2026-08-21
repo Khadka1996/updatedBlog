@@ -10,36 +10,15 @@ import CommentSection from './CommentSection.js';
 import Image from 'next/image';
 import Script from 'next/script';
 import { SITE_URL } from '../../../config/site';
+import { toolsAdsConfig } from '../../../config/tools-adsense.config';
 
 const BlogArticle = ({ initialData, recentBlogs = [] }) => {
-  const [googleAdsReady, setGoogleAdsReady] = useState(false);
   const [copyStatus, setCopyStatus] = useState('idle');
   const [currentUrl, setCurrentUrl] = useState('');
-
-  const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
-  const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
-  
-  const adUnitIds = {
-    top:    process.env.NEXT_PUBLIC_AD_TOP_SLOT    || '',
-    left:   process.env.NEXT_PUBLIC_AD_LEFT_SLOT   || '',
-    right:  process.env.NEXT_PUBLIC_AD_RIGHT_SLOT  || '',
-    bottom: process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT || '',
-  };
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
   }, []);
-
-  useEffect(() => {
-    if (adsEnabled && window.adsbygoogle) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setGoogleAdsReady(true);
-      } catch (err) {
-        console.error('AdSense push error:', err);
-      }
-    }
-  }, [adsEnabled]);
 
   const handleCopyUrl = async () => {
     try {
@@ -78,7 +57,7 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
     instagram: `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`, // note: IG doesn't have direct web share
   };
 
-  const hasAd = (pos) => adsEnabled && publisherId && !!adUnitIds[pos];
+  const hasAd = (pos) => toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot(pos);
 
   const renderAd = (position) => {
     if (!hasAd(position)) {
@@ -86,14 +65,13 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
     }
 
     const isHorizontal = position === 'top' || position === 'bottom';
-    const margin = isHorizontal ? 'my-4' : 'my-4';
 
     return (
-      <div className={margin}>
+      <div className="my-4" data-ad-container>
         <ins
           className="adsbygoogle block w-full"
-          data-ad-client={publisherId}
-          data-ad-slot={adUnitIds[position]}
+          data-ad-client={toolsAdsConfig.getPublisherId()}
+          data-ad-slot={toolsAdsConfig.getSlotId(position)}
           data-ad-format={isHorizontal ? "auto" : "vertical"}
           data-full-width-responsive="true"
         />
@@ -117,10 +95,11 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
 
   return (
     <>
-      {adsEnabled && publisherId && (
+      {toolsAdsConfig.isConfigured() && (
         <Script
+          id="blog-article-adsbygoogle"
           async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
+          src={toolsAdsConfig.getScriptUrl()}
           strategy="afterInteractive"
           onLoad={() => window.adsbygoogle?.push({})}
         />

@@ -1,18 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Script from 'next/script';
-import { toolsAdsConfig } from '@/config/tools-adsense.config'
-import AdsInit from '@/app/components/ads/AdsInit';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import { API_URL } from '@/config/site';
 
 const BlogPage = async ({ searchParams }) => {
-  const adsEnabled = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ENABLED === 'true';
-  const publisherId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_ID;
-  const adBottomSlot = process.env.NEXT_PUBLIC_AD_BOTTOM_SLOT;
-
   try {
     // Fetch blog data from backend API
-    const res = await fetch('https://api.everestkit.com/api/blogs/latest', {
+    const res = await fetch(`${API_URL}/api/blogs/latest`, {
       next: { revalidate: 300 },
       signal: AbortSignal.timeout(5000),
     });
@@ -24,33 +19,27 @@ const BlogPage = async ({ searchParams }) => {
     const blogData = await res.json();
     const blogs = blogData.data || [];
 
-    const renderAdPlaceholder = () => (
-      <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center min-h-[200px] sm:min-h-[250px]">
-        <div className="text-center">
-          <p className="text-gray-500 text-sm sm:text-base font-semibold mb-1">Advertisement Space</p>
-          <p className="text-xs text-gray-400">Position: Bottom</p>
-          {!adsEnabled && <p className="text-xs text-red-400 mt-1">Ads disabled</p>}
-          {!publisherId && <p className="text-xs text-red-400 mt-1">Publisher ID not configured</p>}
-        </div>
-      </div>
-    );
-
+    // Only render a real ad unit when AdSense is genuinely configured with
+    // valid, real credentials (checked via regex, not just "is it truthy") —
+    // never a visible "Advertisement Space" placeholder box shown to real
+    // visitors, which looks broken and risks rendering an <ins> against an
+    // invalid client ID.
     const renderAdUnit = () => {
-      if (!adsEnabled || !publisherId || !adBottomSlot) {
-        return renderAdPlaceholder();
+      if (!toolsAdsConfig.isConfigured() || !toolsAdsConfig.hasSlot('bottom')) {
+        return null;
       }
 
       return (
-        <div className="ad-wrapper min-h-[200px] sm:min-h-[250px]">
-          <ins 
+        <div className="ad-wrapper min-h-[200px] sm:min-h-[250px]" data-ad-container>
+          <ins
             className="adsbygoogle"
-            style={{ 
+            style={{
               display: 'block',
               width: '100%',
               height: '100%'
             }}
-            data-ad-client={publisherId}
-            data-ad-slot={adBottomSlot}
+            data-ad-client={toolsAdsConfig.getPublisherId()}
+            data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
             data-ad-format="horizontal"
           />
         </div>
@@ -58,7 +47,7 @@ const BlogPage = async ({ searchParams }) => {
     };
 
     return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Latest Blogs Heading */}
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 text-center">
@@ -83,7 +72,7 @@ const BlogPage = async ({ searchParams }) => {
                   {blog.image && (
                     <div className="relative h-32 sm:h-36 w-full">
                       <Image
-                        src={`https://api.everestkit.com/uploads/${blog.image}`}
+                        src={`${API_URL}/uploads/${blog.image}`}
                         alt={blog.title || 'Blog image'}
                         fill
                         className="object-cover"
@@ -163,17 +152,11 @@ const BlogPage = async ({ searchParams }) => {
               ))}
             </div>
 
-            {/* Google Ads Integration */}
+            {/* Google Ads Integration — single script load for this page.
+                articlePart.js also renders an ad unit lower on the homepage
+                but relies on this same script rather than loading its own. */}
             <div className="mt-8 sm:mt-12">
-                {adsEnabled && publisherId && (
-                  <Script
-                    async
-                    src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
-                    strategy="afterInteractive"
-                  />
-                )}
-                {renderAdUnit()}
-                {adsEnabled && publisherId && <AdsInit />}
+              {renderAdUnit()}
             </div>
           </>
         )}

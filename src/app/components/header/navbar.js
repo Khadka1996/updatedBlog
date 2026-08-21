@@ -16,7 +16,7 @@ const NavBar = () => {
     // Check if user is logged in (this is just a simulation)
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const name = localStorage.getItem('userName') || '';
-    
+
     setIsLoggedIn(loggedIn);
     setUserName(name);
   }, []);
@@ -40,13 +40,13 @@ const NavBar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/">
-              <Image 
-                src="/logos.png" 
-                alt="Logo" 
-                width={85} 
-                height={64} 
-                className="h-16 w-20" 
+            <Link href="/" className="relative block w-[85px] h-16">
+              <Image
+                src="/logos.png"
+                alt="Logo"
+                fill
+                sizes="85px"
+                style={{ objectFit: 'contain' }}
                 priority
               />
             </Link>
@@ -142,8 +142,8 @@ const NavBar = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
-            <button 
-              onClick={toggleMenu} 
+            <button
+              onClick={toggleMenu}
               className="focus:outline-none"
               aria-label="Toggle menu"
             >
@@ -183,7 +183,7 @@ const NavBar = () => {
               >
                 Blog
               </Link>
-              
+
               <Link
                 href="/tools"
                 className={`px-4 py-3 rounded-md text-base font-medium ${

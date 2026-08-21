@@ -6,6 +6,7 @@ import MobileFooterNav from './components/footer/footerMobile';
 import AdsInit from './components/ads/AdsInit';
 import CookieConsent from './components/CookieConsent';
 import { SITE_URL } from '../config/site';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 const inter = Inter({ subsets: ["latin"] });
 
 // Define your base URL
@@ -89,6 +90,7 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   manifest: `${baseUrl}/site.webmanifest`,
   category: 'technology',
@@ -100,7 +102,16 @@ export default function RootLayout({ children }) {
       <head>
         {/* Favicon links */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+
+        {toolsAdsConfig.isConfigured() && (
+          <Script
+            async
+            src={toolsAdsConfig.getScriptUrl()}
+            crossOrigin="anonymous"
+          />
+        )}
         
         {/* Google Tag Manager */}
         <Script
@@ -137,7 +148,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className={inter.className} suppressHydrationWarning>
         {children}
-        <AdsInit />
+        <AdsInit publisherId={toolsAdsConfig.getPublisherId()} />
         <CookieConsent />
         
         {/* Additional scripts that need to load after the page is interactive */}

@@ -1,5 +1,12 @@
+import typographyPlugin from '@tailwindcss/typography';
+
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}", // keep in case some files do live here
+  ],
   theme: {
     extend: {
       colors: {
@@ -14,6 +21,6 @@ export default {
     },
   },
   plugins: [
-    require("@tailwindcss/typography"),
+    typographyPlugin,
   ],
 };

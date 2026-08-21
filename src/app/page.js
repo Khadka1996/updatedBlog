@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import ArticleBody from './components/body/articleBody';
 import ArticlePart from './components/body/articlePart';
 import ContactUs from './components/body/contactUs';
@@ -7,6 +8,7 @@ import TopBody from './components/body/topbody';
 import Footer from './components/footer/footer';
 import NavBar from './components/header/navbar';
 import { createPageMetadata } from './seo';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 
 export const metadata = createPageMetadata({
   title: 'Everestkit',
@@ -17,6 +19,18 @@ export const metadata = createPageMetadata({
 const Page = () => {
   return (
     <main>
+      {/* Single AdSense script load for the whole page — ArticleBody and
+          ArticlePart both render ad units further down but rely on this
+          one script rather than each loading their own. */}
+      {toolsAdsConfig.isConfigured() && (
+        <Script
+          id="homepage-adsbygoogle"
+          strategy="afterInteractive"
+          src={toolsAdsConfig.getScriptUrl()}
+          crossOrigin="anonymous"
+        />
+      )}
+
       {/* Fixed NavBar at the top */}
       <div className="fixed top-0 left-0 w-full z-50">
         <NavBar />

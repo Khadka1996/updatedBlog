@@ -40,25 +40,31 @@ const OurClients = () => {
         <div className="relative overflow-hidden">
           <div className="flex w-max animate-marqueeSlow">
             {clientsData.clients.map((client) => (
-              <div key={client.id} className="mx-8">
+              <div
+                key={client.id}
+                className="relative mx-8 w-32 h-20"
+              >
                 <Image
                   src={client.src}
                   alt={client.alt}
-                  width={150}
-                  height={80}
-                  className="h-20 w-32 object-contain"
+                  fill
+                  sizes="128px"
+                  style={{ objectFit: 'contain' }}
                 />
               </div>
             ))}
             {/* Duplicate for continuous scroll */}
             {clientsData.clients.map((client) => (
-              <div key={`duplicate-${client.id}`} className="mx-8">
+              <div
+                key={`duplicate-${client.id}`}
+                className="relative mx-8 w-32 h-20"
+              >
                 <Image
                   src={client.src}
                   alt={client.alt}
-                  width={150}
-                  height={80}
-                  className="h-20 w-32 object-contain"
+                  fill
+                  sizes="128px"
+                  style={{ objectFit: 'contain' }}
                 />
               </div>
             ))}
