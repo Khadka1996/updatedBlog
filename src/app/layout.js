@@ -113,22 +113,25 @@ export default function RootLayout({ children }) {
           />
         )}
         
-        {/* Google Tag Manager */}
-        <Script
-          strategy="afterInteractive"
-          src={`https://www.googletagmanager.com/gtag/js?id=G-HCTQX5RSTS`}
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-HCTQX5RSTS', {
-              page_path: window.location.pathname,
-            });
-          `}
-        </Script>
-        
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Script
+              strategy="afterInteractive"
+              src="https://www.googletagmanager.com/gtag/js?id=G-HCTQX5RSTS"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-HCTQX5RSTS', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
+
         {/* Structured Data / Schema.org */}
         <Script type="application/ld+json">
           {`
