@@ -8,7 +8,7 @@ export default function AdsInit({ publisherId }) {
   // never stamps it with data-nscript, which AdSense's own loader warns about.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!publisherId) return;
+    if (!publisherId || !toolsAdsConfig.isConfigured()) return;
 
     const existing = document.querySelector(
       `script[src*="pagead/js/adsbygoogle.js"][src*="${publisherId}"]`
