@@ -76,10 +76,10 @@ I'm interested in your SEO content writing services. Please contact me.`;
   return (
     <>
       <Head>
-        <title>Professional SEO Content Writing Services | [Your Company]</title>
+        <title>Professional SEO Content Writing Services | Everestkit Pvt Ltd</title>
         <meta name="description" content="Boost your rankings with our expert SEO content writing services. High-quality, keyword-optimized content tailored to your audience and business goals." />
         <meta name="keywords" content="SEO content writing, blog writing, website content, content marketing, SEO articles" />
-        <meta property="og:title" content="Professional SEO Content Writing Services | [Your Company]" />
+        <meta property="og:title" content="Professional SEO Content Writing Services | Everestkit Pvt Ltd" />
         <meta property="og:description" content="High-quality, optimized content that ranks well and converts visitors." />
       </Head>
       
@@ -254,7 +254,7 @@ I'm interested in your SEO content writing services. Please contact me.`;
             <div className="bg-white/10 p-6 rounded-lg">
               <FaLightbulb className="text-3xl text-[#52aa4d] mb-3" />
               <p className="italic mb-4">
-                "After working with [Your Company], our organic traffic increased by 215% in 6 months. Their SEO content strategy transformed our online presence."
+                "After working with Everestkit Pvt Ltd, our organic traffic increased by 215% in 6 months. Their SEO content strategy transformed our online presence."
               </p>
               <p className="font-bold">— Marketing Director, E-commerce Brand</p>
             </div>

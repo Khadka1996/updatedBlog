@@ -15,7 +15,7 @@ import {
   FaFileExcel,
   FaFileImage,
   FaFileAlt,
-  FaVideo,
+  FaQrcode,
   FaImage,
   FaPen,
   FaTint,
@@ -92,7 +92,7 @@ const AboutUs = () => {
     { name: 'Edit PDF', icon: <FaPen />, desc: 'Add text, images or annotations' },
     { name: 'PDF to JPG', icon: <FaFileImage />, desc: 'Convert pages to images' },
     { name: 'Watermark', icon: <FaTint />, desc: 'Add image or text watermark' },
-    { name: 'Video Downloader', icon: <FaVideo />, desc: 'Download videos from platforms' },
+    { name: 'QR Code Generator', icon: <FaQrcode />, desc: 'Create QR codes for links, WiFi and contacts' },
     { name: 'Photo Size Reducer', icon: <FaImage />, desc: 'Reduce image file size' },
     { name: 'Photo Cropper', icon: <FaImage />, desc: 'Crop images with precision' }
   ];

@@ -1,6 +1,7 @@
 // pages/not-found.js
 'use client'
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import NavBar from './components/header/navbar';
 
 export default function NotFound() {
@@ -19,8 +20,8 @@ export default function NotFound() {
     <div className="flex flex-col items-center justify-center mt-8 mb-8">
       <h1 className="text-4xl font-bold text-red-500">404</h1>
       <p className="text-xl text-gray-600 mt-4">Oops! Page not found.</p>
-      <p className="text-md text-gray-500 mt-2">The page you're looking for doesn't exist or has been moved.</p>
-      <a href="/" className="mt-6 text-blue-500 hover:text-blue-700">Go back to Home</a>
+      <p className="text-md text-gray-500 mt-2">The page you&apos;re looking for doesn&apos;t exist or has been moved.</p>
+      <Link href="/" className="mt-6 text-blue-500 hover:text-blue-700">Go back to Home</Link>
     </div>
   );
 }

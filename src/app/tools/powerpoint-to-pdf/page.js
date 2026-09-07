@@ -12,6 +12,7 @@ import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 export default function PowerpointToPdf() {
   const [file, setFile] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [comingSoon, setComingSoon] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [adsLoaded, setAdsLoaded] = useState(false); // Track AdSense script loading
   const [conversionOptions, setConversionOptions] = useState({
@@ -58,10 +59,9 @@ export default function PowerpointToPdf() {
     const delay = fileSizeMB > 10 ? 3500 : fileSizeMB > 5 ? 2500 : 1500;
     await new Promise(resolve => setTimeout(resolve, delay));
     
-    // Mock implementation for demo:
-    const mockBlob = new Blob(['Mock PDF content'], { type: 'application/pdf' });
-    const url = URL.createObjectURL(mockBlob);
-    setDownloadUrl(url);
+    // Real server-side conversion is not available yet - surface a clear
+    // "coming soon" state instead of returning a placeholder file.
+    setComingSoon(true);
     setIsConverting(false);
   };
 
@@ -275,11 +275,16 @@ export default function PowerpointToPdf() {
           )}
           
           {/* Convert Button */}
-          {file && !downloadUrl && (
+          {comingSoon && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm text-center">
+              This converter is <strong>coming soon</strong>. High-quality Office conversion is being finished on our servers &mdash; please check back shortly.
+            </div>
+          )}
+          {file && !downloadUrl && !comingSoon && (
             <div className="flex justify-center">
               <button
                 onClick={handleConvert}
-                disabled={isConverting}
+                disabled={isConverting || comingSoon}
                 className={`px-6 py-3 rounded-lg font-medium text-white bg-[#4caf4f] hover:bg-[#3e8e40] transition-colors flex items-center`}
               >
                 {isConverting ? (

@@ -1,4 +1,4 @@
-import { FaFilePdf, FaFileWord, FaDownload, FaFilePowerpoint, FaFileExcel, FaImage, FaEdit, FaFileAlt, FaPaste, FaCropAlt } from "react-icons/fa";
+import { FaFilePdf, FaFileWord, FaFilePowerpoint, FaFileExcel, FaImage, FaEdit, FaFileAlt, FaPaste, FaCropAlt, FaQrcode } from "react-icons/fa";
 import { MdMergeType, MdCompress } from "react-icons/md";
 import { FaCalendarAlt, FaSortAlphaDown, FaCalculator, FaMoneyBillWave, FaClock,FaFont  } from "react-icons/fa"; // Import relevant icons
 
@@ -16,7 +16,7 @@ const tools = [
   { icon: <FaEdit className="text-brand-green text-4xl" />, title: "Edit PDF", description: "Add text, images, shapes, or freehand annotations to PDFs." },
   { icon: <FaImage className="text-brand-green text-4xl" />, title: "PDF to JPG", description: "Convert each PDF page into JPG or extract images from PDFs." },
   { icon: <FaPaste className="text-brand-green text-4xl" />, title: "Watermark", description: "Add an image or text watermark to your PDFs easily." },
-  { icon: <FaDownload className="text-brand-green text-4xl" />, title: "Video Downloader", description: "Download videos from various platforms in different formats and qualities." },
+  { icon: <FaQrcode className="text-brand-green text-4xl" />, title: "QR Code Generator", description: "Create QR codes for links, WiFi, contacts and more. Download as PNG or SVG." },
   { icon: <MdCompress className="text-brand-green text-4xl" />, title: "Photo Size Reducer", description: "Reduce photo file size without losing quality for easy sharing." },
   { icon: <FaCropAlt className="text-brand-green text-4xl" />, title: "Photo Cropper", description: "Crop your images with precision to highlight the perfect area." },
   {

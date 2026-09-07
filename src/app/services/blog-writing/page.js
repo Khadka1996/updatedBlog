@@ -74,10 +74,10 @@ I'm interested in your blog writing services. Please contact me.`;
   return (
     <>
       <Head>
-        <title>Engaging Blog Writing Services | [Your Company]</title>
+        <title>Engaging Blog Writing Services | Everestkit Pvt Ltd</title>
         <meta name="description" content="Boost your brand with engaging, informative blog articles crafted by experts to drive traffic and connect with your audience." />
         <meta name="keywords" content="blog writing, content marketing, blog articles, SEO blogs, engaging content" />
-        <meta property="og:title" content="Engaging Blog Writing Services | [Your Company]" />
+        <meta property="og:title" content="Engaging Blog Writing Services | Everestkit Pvt Ltd" />
         <meta property="og:description" content="High-quality blog content that captivates readers and enhances your online presence." />
       </Head>
       
