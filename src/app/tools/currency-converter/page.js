@@ -95,14 +95,14 @@ export default function CurrencyConverter() {
       console.error('API Error:', err);
       setError('Failed to fetch live rates. Using fallback data.');
       setApiStatus('error');
-      useFallbackData();
+      loadFallbackData();
     } finally {
       setIsLoading(false);
     }
   };
 
   // Fallback data
-  const useFallbackData = () => {
+  const loadFallbackData = () => {
     const results = selectedCurrencies.map(currency => ({
       currency,
       rate: fallbackRates[fromCurrency][currency] || 0,

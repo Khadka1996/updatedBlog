@@ -68,8 +68,10 @@ export default function PdfToJpg() {
   const generatePdfPreview = async (pdfUrl) => {
     try {
       setError(null);
-      const pdfjs = await import('pdfjs-dist');
-      pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+      // Use the legacy build + the worker file copied to /public by the
+      // postinstall script so the API and worker versions always match.
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
       
       const loadingTask = pdfjs.getDocument(pdfUrl);
       const pdf = await loadingTask.promise;
@@ -159,11 +161,20 @@ export default function PdfToJpg() {
     try {
       const isSinglePage = selectedPages.length === 1;
 
+      const encode = (pageIndex) => {
+        const src = pdfPages[pageIndex];
+        // Re-encode from the stored canvas at the chosen quality; fall back to
+        // the preview data URL if the canvas is no longer available.
+        return src.canvas
+          ? src.canvas.toDataURL('image/jpeg', quality / 100)
+          : src.dataUrl;
+      };
+
       if (isSinglePage) {
         // Single page - download directly as JPG
         const pageIndex = selectedPages[0];
-        const dataUrl = pdfPages[pageIndex].dataUrl;
-        
+        const dataUrl = encode(pageIndex);
+
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = `${file.name.replace(/\.pdf$/i, '')}_page_${pageIndex + 1}.jpg`;
@@ -182,7 +193,7 @@ export default function PdfToJpg() {
         const zip = new JSZip();
 
         selectedPages.forEach((pageIndex) => {
-          const dataUrl = pdfPages[pageIndex].dataUrl;
+          const dataUrl = encode(pageIndex);
           // Remove data URI header
           const base64 = dataUrl.split(',')[1];
           zip.file(`page_${pageIndex + 1}.jpg`, base64, { base64: true });
@@ -284,8 +295,8 @@ export default function PdfToJpg() {
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
             <span className="inline-flex items-center justify-center gap-2">
               <FaFilePdf className="text-red-500" />
-              → 
-              <FaFileImage class Cards is="text-green-500" />
+              →
+              <FaFileImage className="text-green-500" />
             </span>
           </h1>
           <h2 className="text-2xl font-semibold text-blue-600">PDF to JPG Converter</h2>
@@ -346,7 +357,7 @@ export default function PdfToJpg() {
                     onClick={removeFile}
                     className="text-sm text-red-500 hover:text-red-700 flex items-center gap-1"
                   >
-                    <FaTrash size={12} />) Remove
+                    <FaTrash size={12} /> Remove
                   </button>
                 </div>
                 

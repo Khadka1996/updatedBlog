@@ -11,6 +11,7 @@ import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 export default function PdfToWord() {
   const [file, setFile] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [comingSoon, setComingSoon] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [conversionOptions, setConversionOptions] = useState({
     format: 'docx',
@@ -50,21 +51,11 @@ export default function PdfToWord() {
     }
 
     setIsConverting(true);
-    
-    // Simulate API call delay based on file size
-    const fileSizeMB = parseFloat(file.size);
-    const delay = fileSizeMB > 10 ? 3000 : fileSizeMB > 5 ? 2000 : 1000;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    
-    // In a real implementation:
-    // 1. Send file and options to your backend API
-    // 2. Receive the converted Word document
-    // 3. Create download link
-    
-    // Mock implementation for demo:
-    const mockBlob = new Blob(['Mock Word document content'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const url = URL.createObjectURL(mockBlob);
-    setDownloadUrl(url);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    // Real server-side conversion is not available yet - surface a clear
+    // "coming soon" state instead of returning a placeholder file.
+    setComingSoon(true);
     setIsConverting(false);
   };
 
@@ -249,11 +240,16 @@ export default function PdfToWord() {
           )}
           
           {/* Convert Button */}
-          {file && !downloadUrl && (
+          {comingSoon && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm text-center">
+              This converter is <strong>coming soon</strong>. High-quality Office conversion is being finished on our servers &mdash; please check back shortly.
+            </div>
+          )}
+          {file && !downloadUrl && !comingSoon && (
             <div className="flex justify-center">
               <button
                 onClick={handleConvert}
-                disabled={isConverting}
+                disabled={isConverting || comingSoon}
                 className={`px-6 py-3 rounded-lg font-medium text-white bg-[#4caf4f] hover:bg-[#3e8e40] transition-colors flex items-center`}
               >
                 {isConverting ? (

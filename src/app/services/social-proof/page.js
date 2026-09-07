@@ -62,7 +62,7 @@ I’m impressed by your client success stories and want to know more.`;
   return (
     <>
       <Head>
-        <title>Trusted by Clients Worldwide | Social Proof | [Your Company]</title>
+        <title>Trusted by Clients Worldwide | Social Proof | Everestkit Pvt Ltd</title>
         <meta
           name="description"
           content="Discover why clients trust us. See real success stories, testimonials, and reviews showcasing our impact."
@@ -71,7 +71,7 @@ I’m impressed by your client success stories and want to know more.`;
           name="keywords"
           content="social proof, testimonials, client reviews, success stories, trusted services"
         />
-        <meta property="og:title" content="Trusted by Clients Worldwide | Social Proof | [Your Company]" />
+        <meta property="og:title" content="Trusted by Clients Worldwide | Social Proof | Everestkit Pvt Ltd" />
         <meta
           property="og:description"
           content="See real client testimonials and success stories that prove our commitment to delivering results."
@@ -125,7 +125,7 @@ I’m impressed by your client success stories and want to know more.`;
           {[
             {
               quote:
-                "Working with [Your Company] was a game changer. Our traffic tripled and conversions doubled within 3 months!",
+                "Working with Everestkit Pvt Ltd was a game changer. Our traffic tripled and conversions doubled within 3 months!",
               name: "Emily R.",
               role: "Marketing Manager",
               company: "Retail Corp"
@@ -139,7 +139,7 @@ I’m impressed by your client success stories and want to know more.`;
             },
             {
               quote:
-                "Thanks to [Your Company], we now rank #1 for several key terms. Highly recommend their expertise!",
+                "Thanks to Everestkit Pvt Ltd, we now rank #1 for several key terms. Highly recommend their expertise!",
               name: "Sophia L.",
               role: "Founder",
               company: "Startup Hub"

@@ -169,7 +169,7 @@ export default function ScientificCalculator() {
   };
 
   // Use history item
-  const useHistoryItem = (item) => {
+  const applyHistoryItem = (item) => {
     setInput(item.calculation);
     setResult(item.result);
     setShowHistory(false);
@@ -207,7 +207,7 @@ export default function ScientificCalculator() {
   return (
     <>
       <NavBar/>
-      <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="p-3 sm:p-6 bg-gray-100 min-h-screen">
         <Head>
           <title>Scientific Calculator - Advanced Math Tool</title>
           <meta name="description" content="Advanced scientific calculator with functions for math, science, and engineering" />
@@ -224,7 +224,7 @@ export default function ScientificCalculator() {
         />
       )}
         
-        <div className="mx-3 md:mx-10 lg:mx-18">
+        <div className="mx-0 sm:mx-3 md:mx-10 lg:mx-18">
           <ToolBreadcrumbs label="Scientific Calculator" />
 
           {/* Top Ad Unit */}
@@ -239,14 +239,16 @@ export default function ScientificCalculator() {
             ></ins>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-6">
-              <FaCalculator className="text-purple-500 text-3xl mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold">Scientific Calculator</h1>
-                <p className="text-gray-500">Advanced calculator for math, science, and engineering</p>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <FaCalculator className="text-purple-500 text-3xl shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold">Scientific Calculator</h1>
+                  <p className="text-gray-500 text-sm">Advanced calculator for math, science, and engineering</p>
+                </div>
               </div>
-              <div className="ml-auto flex items-center space-x-3">
+              <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
                 <button
                   onClick={() => setShowHistory(!showHistory)}
                   className={`px-3 py-1 rounded text-sm flex items-center gap-1 ${showHistory ? 'bg-purple-500 text-white' : 'bg-gray-100'}`}
@@ -290,7 +292,7 @@ export default function ScientificCalculator() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-4">
                   {scientificButtons.map((row, rowIndex) => (
                     row.map((btn, colIndex) => (
                       <button
@@ -317,9 +319,9 @@ export default function ScientificCalculator() {
                             setInput(prev => `10^${prev}`);
                           }
                         }}
-                        className="p-3 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium"
+                        className="px-1 py-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded text-xs sm:text-sm font-medium"
                       >
-                        {btn === '×' ? '×' : 
+                        {btn === '×' ? '×' :
                          btn === '÷' ? '÷' : 
                          btn === 'π' ? 'π' : 
                          btn === 'x²' ? 'x²' : 
@@ -336,7 +338,7 @@ export default function ScientificCalculator() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {basicButtons.map((row, rowIndex) => (
                     row.map((btn, colIndex) => (
                       <button
@@ -356,7 +358,7 @@ export default function ScientificCalculator() {
                             handleButtonClick(btn);
                           }
                         }}
-                        className={`p-3 rounded font-medium ${
+                        className={`p-2 sm:p-3 rounded font-medium text-sm sm:text-base flex items-center justify-center ${
                           btn === '=' ? 'bg-purple-500 text-white hover:bg-purple-600' :
                           ['C', '⌫'].includes(btn) ? 'bg-red-500 text-white hover:bg-red-600' :
                           ['÷', '×', '-', '+', '(', ')'].includes(btn) ? 'bg-blue-500 text-white hover:bg-blue-600' :
@@ -396,7 +398,7 @@ export default function ScientificCalculator() {
                       <div 
                         key={index} 
                         className="p-3 bg-white rounded border border-gray-200 hover:bg-purple-50 cursor-pointer"
-                        onClick={() => useHistoryItem(item)}
+                        onClick={() => applyHistoryItem(item)}
                       >
                         <div className="text-sm text-gray-600">{item.calculation}</div>
                         <div className="text-lg font-bold text-purple-600">= {item.result}</div>
