@@ -74,10 +74,10 @@ I'm interested in your website development services. Please contact me.`;
   return (
     <>
       <Head>
-        <title>Professional Website Development Services | [Your Company]</title>
+        <title>Professional Website Development Services | Everestkit Pvt Ltd</title>
         <meta name="description" content="Build stunning, responsive, and high-performance websites with our expert website development services tailored to your business needs." />
         <meta name="keywords" content="website development, web design, responsive websites, e-commerce websites, custom web development" />
-        <meta property="og:title" content="Professional Website Development Services | [Your Company]" />
+        <meta property="og:title" content="Professional Website Development Services | Everestkit Pvt Ltd" />
         <meta property="og:description" content="Custom-built websites that enhance your brand and drive business growth." />
       </Head>
       

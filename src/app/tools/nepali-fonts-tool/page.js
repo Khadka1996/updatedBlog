@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { FaFont, FaExchangeAlt, FaCopy, FaDownload, FaLanguage, FaSyncAlt } from 'react-icons/fa';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { FaFont, FaCopy, FaDownload, FaLanguage, FaSyncAlt } from 'react-icons/fa';
 import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
@@ -9,345 +9,367 @@ import NavBar from '@/app/components/header/navbar';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
-function NepaliFontTool() {
+/* ------------------------------------------------------------------ *
+ * Rule-based Roman -> Devanagari (Nepali) transliteration.
+ * Runs entirely in the browser, instantly, with no network calls.
+ * It is phonetic and forgiving: type the way the word sounds.
+ * ITRANS-style capitals are also understood (T D N -> retroflex,
+ * aa/ii/uu -> long vowels, M -> anusvara, .n -> anusvara, ~ -> chandrabindu).
+ * ------------------------------------------------------------------ */
+
+const HALANT = '्';
+const ANUSVARA = 'ं';
+const CHANDRABINDU = 'ँ';
+
+// [independent form, matra form]  (matra for "a" is empty = inherent vowel)
+const VOWELS = {
+  a: ['अ', ''],
+  aa: ['आ', 'ा'], A: ['आ', 'ा'],
+  i: ['इ', 'ि'],
+  ii: ['ई', 'ी'], ee: ['ई', 'ी'], I: ['ई', 'ी'],
+  u: ['उ', 'ु'],
+  uu: ['ऊ', 'ू'], oo: ['ऊ', 'ू'], U: ['ऊ', 'ू'],
+  RRi: ['ऋ', 'ॄ'], Ri: ['ऋ', 'ॄ'],
+  e: ['ए', 'े'],
+  ai: ['ऐ', 'ै'],
+  o: ['ओ', 'ो'],
+  au: ['औ', 'ौ'],
+};
+
+// Longest keys first so digraphs win over single letters
+const CONSONANTS = {
+  kSh: 'क्ष', ksh: 'क्ष', x: 'क्ष',
+  gy: 'ज्ञ', jn: 'ज्ञ',
+  shr: 'श्र',
+  chh: 'छ', Ch: 'छ',
+  kh: 'ख', gh: 'घ', ng: 'ङ',
+  ch: 'च', jh: 'झ', yn: 'ञ', JN: 'ञ',
+  Th: 'ठ', Dh: 'ढ', T: 'ट', D: 'ड', N: 'ण',
+  th: 'थ', dh: 'ध',
+  ph: 'फ', f: 'फ', bh: 'भ',
+  sh: 'श', Sh: 'ष', S: 'ष',
+  k: 'क', g: 'ग', j: 'ज',
+  t: 'त', d: 'द', n: 'न',
+  p: 'प', b: 'ब', m: 'म',
+  y: 'य', r: 'र', l: 'ल',
+  v: 'व', w: 'व', h: 'ह',
+  s: 'स', z: 'ज',
+};
+
+const DIGITS = { 0: '०', 1: '१', 2: '२', 3: '३', 4: '४', 5: '५', 6: '६', 7: '७', 8: '८', 9: '९' };
+
+const CONSONANT_KEYS = Object.keys(CONSONANTS).sort((a, b) => b.length - a.length);
+const VOWEL_KEYS = Object.keys(VOWELS).sort((a, b) => b.length - a.length);
+
+function matchAt(text, i, keys) {
+  for (const key of keys) {
+    if (text.startsWith(key, i)) return key;
+  }
+  return null;
+}
+
+function transliterate(input) {
+  let out = '';
+  let i = 0;
+  // true once a consonant is emitted and still waiting for its vowel
+  let pendingConsonant = false;
+
+  while (i < input.length) {
+    const ch = input[i];
+
+    // Explicit anusvara / chandrabindu helpers
+    if (ch === 'M' || (ch === '.' && input[i + 1] === 'n')) {
+      out += ANUSVARA;
+      i += ch === '.' ? 2 : 1;
+      pendingConsonant = false;
+      continue;
+    }
+    if (ch === '~') {
+      out += CHANDRABINDU;
+      i += 1;
+      pendingConsonant = false;
+      continue;
+    }
+
+    const cons = matchAt(input, i, CONSONANT_KEYS);
+    if (cons) {
+      if (pendingConsonant) out += HALANT; // consonant cluster
+      out += CONSONANTS[cons];
+      pendingConsonant = true;
+      i += cons.length;
+      continue;
+    }
+
+    const vow = matchAt(input, i, VOWEL_KEYS);
+    if (vow) {
+      const [independent, matra] = VOWELS[vow];
+      out += pendingConsonant ? matra : independent;
+      pendingConsonant = false;
+      i += vow.length;
+      continue;
+    }
+
+    // Anything else: flush the pending consonant (keeps its inherent "a",
+    // which is correct for Nepali) and pass the character through.
+    if (ch >= '0' && ch <= '9') {
+      out += DIGITS[ch];
+    } else if (ch === '.') {
+      out += '।'; // danda
+    } else {
+      out += ch;
+    }
+    pendingConsonant = false;
+    i += 1;
+  }
+
+  return out;
+}
+
+export default function NepaliFontTool() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState('');
+  const [copied, setCopied] = useState('');
   const [adsLoaded, setAdsLoaded] = useState(false);
-  const [transliterationReady, setTransliterationReady] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const textareaRef = useRef(null);
-  const transliterationRef = useRef(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const outRef = useRef(null);
 
- 
+  useEffect(() => setIsHydrated(true), []);
 
-  // Enhanced rule-based Roman-to-Nepali mapping
-  const romanToNepaliMap = {
-    'a': 'अ', 'aa': 'आ', 'i': 'इ', 'ee': 'ई', 'u': 'उ', 'oo': 'ऊ', 'e': 'ए', 'ai': 'ऐ', 'o': 'ओ', 'au': 'औ',
-    'k': 'क', 'kh': 'ख', 'g': 'ग', 'gh': 'घ', 'ng': 'ङ',
-    'ch': 'च', 'chh': 'छ', 'j': 'ज', 'jh': 'झ', 'yn': 'ञ',
-    't': 'त', 'th': 'थ', 'd': 'द', 'dh': 'ध', 'n': 'न',
-    'p': 'प', 'ph': 'फ', 'b': 'ब', 'bh': 'भ', 'm': 'म',
-    'y': 'य', 'r': 'र', 'l': 'ल', 'v': 'व', 'w': 'व',
-    'sh': 'श', 'shh': 'ष', 's': 'स', 'h': 'ह',
-    'ksh': 'क्ष', 'tr': 'त्र', 'gy': 'ज्ञ',
-    'ri': 'ृ', 'rh': 'ॠ', 
-    '.': '।', // Devanagari danda
-    '0': '०', '1': '१', '2': '२', '3': '३', '4': '४', 
-    '5': '५', '6': '६', '7': '७', '8': '८', '9': '९'
-  };
-
-  // Fallback rule-based Roman-to-Nepali conversion
-  const fallbackRomanToNepali = (text) => {
-    let result = text.toLowerCase();
-    
-    // Replace multi-character sequences first
-    Object.keys(romanToNepaliMap)
-      .sort((a, b) => b.length - a.length) // Sort by length descending to match longer sequences first
-      .forEach(key => {
-        const regex = new RegExp(key, 'g');
-        result = result.replace(regex, romanToNepaliMap[key]);
-      });
-    
-    return result;
-  };
-
-  // Handle input changes
-  const handleInput = (e) => {
-    const value = e.target.value;
+  const convert = useCallback((value) => {
     setInputText(value);
-    
-    if (!transliterationReady) {
-      setIsProcessing(true);
-      try {
-        const result = fallbackRomanToNepali(value);
-        setOutputText(result);
-      } catch (err) {
-        setError('Conversion failed.');
-        setOutputText('');
-      } finally {
-        setIsProcessing(false);
-      }
-    } else {
-      // For transliteration, sync to output
-      setOutputText(value);
+    setOutputText(transliterate(value));
+  }, []);
+
+  const clearAll = () => {
+    setInputText('');
+    setOutputText('');
+    setCopied('');
+  };
+
+  const copy = async (text, which) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(''), 1800);
+    } catch {
+      /* clipboard unavailable */
     }
   };
 
-  // Initialize transliteration when script loads
-  const initializeTransliteration = () => {
-    if (textareaRef.current && window.enableTransliteration) {
-      try {
-        window.enableTransliteration(textareaRef.current, 'ne');
-        transliterationRef.current = true;
-        setTransliterationReady(true);
-      } catch (err) {
-        console.error('Transliteration init error:', err);
-        setError('Transliteration setup failed. Using fallback.');
-        transliterationRef.current = false;
-        setTransliterationReady(false);
-      }
-    }
-  };
-
-  // Copy to clipboard
-  const copyToClipboard = (text) => {
-    if (text) {
-      navigator.clipboard.writeText(text).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
-    }
-  };
-
-  // Download text
-  const downloadText = () => {
+  const download = () => {
     if (!outputText) return;
-    const blob = new Blob([outputText], { type: 'text/plain' });
+    const blob = new Blob([outputText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'nepali-text.txt';
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  // Clear all text
-  const clearText = () => {
-    setInputText('');
-    setOutputText('');
-    setError('');
-  };
-
-  // Insert phrase
-  const insertPhrase = (phrase) => {
-    const newInput = inputText ? `${inputText} ${phrase.roman}` : phrase.roman;
-    setInputText(newInput);
-    
-    // Also update output if we're not using transliteration
-    if (!transliterationReady) {
-      const result = fallbackRomanToNepali(newInput);
-      setOutputText(result);
-    }
-  };
-
-  // Initialize ads
   useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
+    if (adsLoaded && typeof window !== 'undefined' && window.adsbygoogle) {
       try {
         window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-        if (outputText) window.adsbygoogle.push({});
+        const unfilled = document.querySelectorAll(
+          'ins.adsbygoogle:not([data-adsbygoogle-status])'
+        );
+        unfilled.forEach(() => window.adsbygoogle.push({}));
       } catch (e) {
         console.error('AdSense ad push failed:', e);
       }
     }
   }, [adsLoaded, outputText]);
 
-  // Initialize transliteration when component mounts
-  useEffect(() => {
-    if (window.enableTransliteration) {
-      initializeTransliteration();
-    }
-  }, []);
+  const adsConfigured = isHydrated && toolsAdsConfig.isConfigured();
 
   return (
     <>
       <NavBar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <Head>
-          <title>Nepali Transliteration Tool - Roman to Devanagari Converter</title>
-          <meta name="description" content="Convert Romanized Nepali to Devanagari script using Google's transliteration logic" />
-          <style jsx>{`
-            .font-devnagari { font-family: 'Noto Sans Devanagari', sans-serif; }
-          `}</style>
+          <title>Nepali Font Converter - Roman to Devanagari (Unicode)</title>
+          <meta
+            name="description"
+            content="Type Romanized Nepali and get Devanagari (Unicode) text instantly. Free, works offline in your browser - copy or download the result."
+          />
         </Head>
+        <style jsx global>{`
+          .font-devnagari {
+            font-family: 'Noto Sans Devanagari', 'Mangal', system-ui, sans-serif;
+          }
+        `}</style>
 
-        {toolsAdsConfig.isConfigured() && (
+        {adsConfigured && (
           <Script
             id="ads-script"
             strategy="afterInteractive"
             src={toolsAdsConfig.getScriptUrl()}
             crossOrigin="anonymous"
             onLoad={() => setAdsLoaded(true)}
+            onError={(e) => console.error('AdSense script failed to load', e)}
           />
         )}
 
-        {/* Transliteration Library Script */}
-        <Script
-          id="transliteration-script"
-          src="/js/transliteration-input.bundle.js"
-          onLoad={() => {
-            setTransliterationReady(true);
-            initializeTransliteration();
-          }}
-          onError={() => {
-            setError('Failed to load transliteration library. Using fallback.');
-            setTransliterationReady(false);
-          }}
-        />
-
-        <div className="py-10">
+        <div className="py-8 sm:py-10">
           <ToolBreadcrumbs label="Nepali Fonts Tool" />
 
           {/* Top Ad */}
-          <div className="mb-8 rounded-lg overflow-hidden">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("top")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            />
-          </div>
+          {adsConfigured ? (
+            <div className="mb-8 rounded-lg overflow-hidden">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId('top')}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+            </div>
+          ) : (
+            <div className="mb-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
+              <p className="text-gray-500">Advertisement Space</p>
+            </div>
+          )}
 
-          <div className="mb-8">
-            <div className="p-6 border-b-2 border-gray-100">
+          <div className="bg-white rounded-xl shadow-md">
+            <div className="p-4 sm:p-6 border-b-2 border-gray-100">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center">
-                  <div className="bg-blue-100 p-3 rounded-full mr-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="bg-blue-100 p-3 rounded-full shrink-0">
                     <FaFont className="text-blue-600 text-xl" />
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Nepali Transliteration Tool</h1>
-                    <p className="text-gray-600">Convert Romanized Nepali to Devanagari script</p>
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+                      Nepali Font Converter
+                    </h1>
+                    <p className="text-gray-600 text-sm">
+                      Romanized Nepali &rarr; Devanagari (Unicode)
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-full">
+                <div className="flex items-center text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-full self-start">
                   <FaLanguage className="mr-2" />
-                  <span className="font-devnagari mr-1">नेपाली</span> (Nepali)
+                  <span className="font-devnagari mr-1">&#x928;&#x947;&#x092A;&#x093E;&#x0932;&#x0940;</span> (Nepali)
                 </div>
               </div>
             </div>
 
-            {error && (
-              <div className="mx-6 mt-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-5">
                 <h2 className="text-lg font-semibold text-gray-700">Text Conversion</h2>
                 <button
-                  onClick={clearText}
-                  className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  onClick={clearAll}
+                  className="flex items-center px-3 sm:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
                 >
                   <FaSyncAlt className="mr-2" />
-                  Clear All
+                  Clear
                 </button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Input Section */}
-                <div className="space-y-4">
+                {/* Input */}
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-700">Romanized Text</h3>
+                    <h3 className="font-bold text-gray-700">Romanized text</h3>
+                    <button
+                      onClick={() => copy(inputText, 'in')}
+                      disabled={!inputText}
+                      className={`p-2 rounded-lg text-sm ${
+                        inputText ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'
+                      }`}
+                      title="Copy input"
+                    >
+                      {copied === 'in' ? 'Copied' : <FaCopy />}
+                    </button>
                   </div>
-
-                  <div className="relative">
-                    <textarea
-                      ref={textareaRef}
-                      value={inputText}
-                      onChange={handleInput}
-                      placeholder="Type Romanized text (e.g., 'namaste dhanyabad') - Converts in real-time"
-                      className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-sm"
-                    />
-                    {isProcessing && (
-                      <div className="absolute bottom-3 right-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                      </div>
-                    )}
-                  </div>
-
-                 
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => convert(e.target.value)}
+                    placeholder="Type here, e.g.  namaste, dhanyabaad, kasto chha"
+                    className="w-full h-56 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none shadow-sm"
+                  />
                 </div>
 
-                {/* Output Section */}
-                <div className="space-y-4">
+                {/* Output */}
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-700">Nepali Text</h3>
-                    <div className="flex space-x-2">
+                    <h3 className="font-bold text-gray-700">Nepali (Devanagari)</h3>
+                    <div className="flex gap-1">
                       <button
-                        onClick={() => copyToClipboard(outputText)}
+                        onClick={() => copy(outputText, 'out')}
                         disabled={!outputText}
-                        className={`p-2 rounded-lg ${outputText ? 'text-green-600 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'}`}
-                        title="Copy to clipboard"
+                        className={`p-2 rounded-lg ${
+                          outputText ? 'text-green-600 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                        title="Copy Nepali text"
                       >
-                        <FaCopy />
+                        {copied === 'out' ? 'Copied' : <FaCopy />}
                       </button>
                       <button
-                        onClick={downloadText}
+                        onClick={download}
                         disabled={!outputText}
-                        className={`p-2 rounded-lg ${outputText ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-300 cursor-not-allowed'}`}
-                        title="Download as text file"
+                        className={`p-2 rounded-lg ${
+                          outputText ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                        title="Download as .txt"
                       >
                         <FaDownload />
                       </button>
                     </div>
                   </div>
-
-                  <div className="relative">
-                    <div className="w-full h-48 p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-auto whitespace-pre-wrap shadow-sm font-devnagari">
-                      {outputText || (
-                        <div className="text-gray-400 italic">
-                          Converted text will appear here...
-                        </div>
-                      )}
-                    </div>
-                    {copied && (
-                      <div className="absolute bottom-3 right-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        Copied!
-                      </div>
+                  <div
+                    ref={outRef}
+                    className="w-full h-56 p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-auto whitespace-pre-wrap shadow-sm font-devnagari text-lg leading-relaxed"
+                  >
+                    {outputText || (
+                      <span className="text-gray-400 italic text-base">
+                        &#x928;&#x947;&#x092A;&#x093E;&#x0932;&#x0940; text will appear here&hellip;
+                      </span>
                     )}
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    <p>
-                      Tip: Type Romanized Nepali text to see it converted to Devanagari script.
-                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Conversion Info */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">About This Tool</h4>
-                <p className="text-blue-700 text-sm">
-                  This tool helps you convert Romanized Nepali (Latin script) to Devanagari script. 
-                  Type Romanized text as you would speak it, and see it converted to Nepali script in real-time.
-                </p>
+              {/* Middle Ad */}
+              {adsConfigured && outputText ? (
+                <div className="my-6 rounded-lg overflow-hidden">
+                  <ins
+                    className="adsbygoogle"
+                    style={{ display: 'block' }}
+                    data-ad-client={toolsAdsConfig.getPublisherId()}
+                    data-ad-slot={toolsAdsConfig.getSlotId('middle')}
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"
+                  />
+                </div>
+              ) : null}
+
+              <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                <h4 className="font-semibold mb-2">How to type</h4>
+                <ul className="list-disc pl-5 space-y-1 text-blue-700">
+                  <li>Spell words the way they sound: <code>namaste</code> &rarr; <span className="font-devnagari">&#x928;&#x092E;&#x0938;&#x094D;&#x0924;&#x0947;</span></li>
+                  <li>Long vowels: <code>aa ii uu</code> (or <code>ee oo</code>) &mdash; <code>dhanyabaad</code> &rarr; <span className="font-devnagari">&#x0927;&#x0928;&#x094D;&#x092F;&#x092C;&#x093E;&#x0926;</span></li>
+                  <li>Retroflex: capital <code>T D N</code>; aspirated: <code>kh gh chh th dh ph bh</code>; <code>x</code> = <span className="font-devnagari">&#x0915;&#x094D;&#x0937;</span>, <code>gy</code> = <span className="font-devnagari">&#x091C;&#x094D;&#x091E;</span></li>
+                  <li>Nasals: <code>M</code> or <code>.n</code> = <span className="font-devnagari">&#x0902;</span>, <code>~</code> = <span className="font-devnagari">&#x0901;</span></li>
+                  <li>Everything runs in your browser &mdash; nothing is uploaded, works offline.</li>
+                </ul>
               </div>
             </div>
           </div>
 
-          {/* Middle Ad */}
-          {outputText && (
-            <div className="my-6 rounded-lg overflow-hidden">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId("middle")}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-          )}
-
-          {/* CTA Section */}
-         <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
+          {/* CTA */}
+          <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-6 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
             <p className="mb-6 max-w-2xl mx-auto">
-              Let's discuss how we can help you achieve your digital goals and take your business to the next level.
+              Let&apos;s discuss how we can help you achieve your digital goals and take your business to the next level.
             </p>
-            <a 
-              href="/contact" 
+            <a
+              href="/contact"
               className="inline-block bg-white text-[#25609A] px-6 py-3 rounded-md font-medium hover:bg-gray-100 transition-colors"
             >
               Get in Touch
@@ -355,21 +377,25 @@ function NepaliFontTool() {
           </div>
 
           {/* Bottom Ad */}
-          <div className="rounded-lg overflow-hidden">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            />
-          </div>
+          {adsConfigured ? (
+            <div className="mt-8 rounded-lg overflow-hidden">
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client={toolsAdsConfig.getPublisherId()}
+                data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+            </div>
+          ) : (
+            <div className="mt-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
+              <p className="text-gray-500">Advertisement Space</p>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
     </>
   );
 }
-
-export default NepaliFontTool;

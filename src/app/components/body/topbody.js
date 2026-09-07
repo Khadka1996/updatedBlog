@@ -12,7 +12,7 @@ const TopBody = () => {
         <div className="mx-2 sm:mx-6 md:mx-10 lg:mx-18">
           {/* Main Heading */}
           <h1 className="text-4xl sm:text-5xl font-bold text-black leading-tight">
-            Place for your<br />One Step
+            Digital Tools, Marketing<br />&amp; Business
           </h1>
           {/* Sub Heading */}
           <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-[#4caf4f] mt-2 sm:mt-4">
@@ -20,7 +20,7 @@ const TopBody = () => {
           </h2>
           {/* Description */}
           <p className="text-base sm:text-lg md:text-xl text-gray-600 mt-2 sm:mt-4 max-w-[600px] mx-auto">
-            A vibrant hub for tools, content & services
+            A digital tools and growth platform for individuals and businesses
           </p>
           {/* Contact Button */}
           <a

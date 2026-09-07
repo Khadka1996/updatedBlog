@@ -22,6 +22,34 @@ const pdfjsLibRef = { current: null };
 // canvas/DOM APIs that don't exist during Next.js SSR.
 const PDF_RENDER_SCALE = 1.5;
 
+// Build a Fabric image from a URL.
+//
+// NOTE: fabric v6/v7's `FabricImage.fromURL()` returns an object that does not
+// paint when bundled through webpack (the PDF page background silently stayed
+// blank). Loading the <img> ourselves and handing the decoded element to
+// `new FabricImage(el, opts)` renders reliably.
+function createFabricImage(fb, url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const el =
+      typeof window !== 'undefined' ? new window.Image() : null;
+    if (!el) {
+      reject(new Error('Image loading is only available in the browser'));
+      return;
+    }
+    el.onload = () => {
+      const Ctor = fb.FabricImage || fb.Image;
+      // Force top-left origin: callers position via {left, top} as the corner,
+      // and the PDF export math also treats left/top as the corner. Fabric v7's
+      // default image origin is 'center', which put the page ~3/4 off-canvas.
+      const img = new Ctor(el, { originX: 'left', originY: 'top', ...options });
+      img.setCoords();
+      resolve(img);
+    };
+    el.onerror = () => reject(new Error('Failed to load image'));
+    el.src = url;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Fabric <-> plain-object element helpers
 //
@@ -253,7 +281,7 @@ export default function EditPDF() {
     for (const e of pageElements) {
       if (e.type === 'image' && e.src) {
         try {
-          const img = await fb.Image.fromURL(e.src);
+          const img = await createFabricImage(fb, e.src);
           img.set({
             left: e.left, top: e.top, angle: e.angle || 0,
             opacity: e.opacity ?? 1, visible: e.visible !== false,
@@ -482,7 +510,7 @@ export default function EditPDF() {
     const fb = fabricRef.current;
     if (!fb || !editorOptions.image) return;
     try {
-      const img = await fb.Image.fromURL(editorOptions.image.preview);
+      const img = await createFabricImage(fb, editorOptions.image.preview);
       img.scaleToWidth(180);
       img.set({ left: 60, top: 60 });
       img.data = { id: `el_${Date.now()}`, type: 'image', src: editorOptions.image.preview };
@@ -741,7 +769,7 @@ export default function EditPDF() {
       requestAnimationFrame(fitPageWidth);
       await rebuildCanvasFromElements(currentPage, elementsRef.current);
       try {
-        const bgImg = await fb.Image.fromURL(bgDataUrl);
+        const bgImg = await createFabricImage(fb, bgDataUrl);
         if (cancelled) return;
         bgImg.set({ left: 0, top: 0, selectable: false, evented: false, excludeFromExport: true });
         canvas.add(bgImg);

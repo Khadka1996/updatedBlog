@@ -74,10 +74,10 @@ I'm interested in your lead capture services. Please contact me.`;
   return (
     <>
       <Head>
-        <title>Effective Lead Capture Services | [Your Company]</title>
+        <title>Effective Lead Capture Services | Everestkit Pvt Ltd</title>
         <meta name="description" content="Generate high-quality leads with our expert lead capture strategies, including optimized forms, landing pages, and targeted campaigns." />
         <meta name="keywords" content="lead capture, lead generation, landing pages, conversion optimization, marketing funnels" />
-        <meta property="og:title" content="Effective Lead Capture Services | [Your Company]" />
+        <meta property="og:title" content="Effective Lead Capture Services | Everestkit Pvt Ltd" />
         <meta property="og:description" content="Turn visitors into leads with tailored strategies that drive conversions." />
       </Head>
       

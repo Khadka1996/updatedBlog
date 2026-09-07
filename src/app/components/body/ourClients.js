@@ -29,10 +29,10 @@ const OurClients = () => {
         {/* Section Heading */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Our Advertising Partners
+            Platforms We Advertise On
           </h2>
           <p className="text-lg text-gray-600">
-            We have been working with top social advertising platforms and third-party networks
+            We run and manage campaigns across the top social, search and third-party advertising networks
           </p>
         </div>
 
