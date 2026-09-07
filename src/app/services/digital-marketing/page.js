@@ -74,10 +74,10 @@ I'm interested in your digital marketing services. Please contact me.`;
   return (
     <>
       <Head>
-        <title>Expert Digital Marketing Services | [Your Company]</title>
+        <title>Expert Digital Marketing Services | Everestkit Pvt Ltd</title>
         <meta name="description" content="Drive traffic and boost conversions with our comprehensive digital marketing services, including SEO, PPC, social media, and more." />
         <meta name="keywords" content="digital marketing, SEO, PPC, social media marketing, content marketing, email marketing" />
-        <meta property="og:title" content="Expert Digital Marketing Services | [Your Company]" />
+        <meta property="og:title" content="Expert Digital Marketing Services | Everestkit Pvt Ltd" />
         <meta property="og:description" content="Comprehensive digital marketing strategies to grow your brand and maximize ROI." />
       </Head>
       

@@ -27,7 +27,7 @@ export const metadata = {
     "Compress PDF",
     "Crop images",
     "Digital services",
-    "Advertising partners",
+    "Platforms we advertise on",
     "Document tools",
     "Online tools",
     "Everest Kit"
@@ -133,7 +133,7 @@ export default function RootLayout({ children }) {
         )}
 
         {/* Structured Data / Schema.org */}
-        <Script type="application/ld+json">
+        <Script id="ld-json-website" type="application/ld+json">
           {`
             {
               "@context": "https://schema.org",

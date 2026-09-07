@@ -144,7 +144,7 @@ const Footer = () => {
                 <FaFacebook className="w-6 h-6" />
               </a>
               <a 
-                href="https://www.tiktok.com/@everestkit?lang=en" 
+                href="https://www.tiktok.com/@everestkitcompanypvt.ltd"
                 target="_blank" 
                 rel="noopener noreferrer nofollow" 
                 aria-label="Follow us on TikTok"
@@ -153,7 +153,7 @@ const Footer = () => {
                 <FaTiktok className="w-6 h-6" />
               </a>
               <a 
-                href="https://youtube.com/@everestkit?si=HOzRe-5ao8ghh2C6" 
+                href="https://youtube.com/@everestkitcompany?si=AUE2Qp7m3tExS_cd"
                 target="_blank" 
                 rel="noopener noreferrer nofollow" 
                 aria-label="Subscribe to our YouTube channel"

@@ -5,6 +5,7 @@ import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import Script from 'next/script';
 import Head from 'next/head';
+import Link from 'next/link';
 import {
   FaDownload,
   FaRedo,
@@ -273,11 +274,11 @@ export default function HighQualityCropper() {
           <nav className="mb-6 sm:mb-8" aria-label="Breadcrumb">
             <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
               <li>
-                <a href="/" className="transition hover:text-[#3A9D44]">Home</a>
+                <Link href="/" className="transition hover:text-[#3A9D44]">Home</Link>
               </li>
               <li aria-hidden="true" className="text-gray-300">/</li>
               <li>
-                <a href="/tools" className="transition hover:text-[#3A9D44]">Tools</a>
+                <Link href="/tools" className="transition hover:text-[#3A9D44]">Tools</Link>
               </li>
               <li aria-hidden="true" className="text-gray-300">/</li>
               <li aria-current="page" className="font-semibold text-[#3A9D44]">
