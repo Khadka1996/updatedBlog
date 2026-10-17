@@ -247,7 +247,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
               <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
                 <div className="flex flex-col sm:flex-row gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePath} alt="Banner preview" className="max-h-44 max-w-full sm:max-w-[260px] object-contain rounded border border-gray-200 bg-white self-start" />
+                  <img src={imagePath} alt="Banner preview" className="max-h-44 max-w-full sm:max-w-[260px] object-contain rounded border border-gray-200 bg-[repeating-conic-gradient(#f3f4f6_0%_25%,#fff_0%_50%)] bg-[length:16px_16px] self-start" />
                   <div className="flex-1 min-w-0 text-sm">
                     <div className="flex items-center gap-2 font-medium text-gray-800">
                       <CheckCircleFilled className="text-green-600" /> {uploadInfo?.fileName || 'Banner image'}
