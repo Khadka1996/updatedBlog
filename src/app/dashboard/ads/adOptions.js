@@ -65,3 +65,17 @@ export const EMPTY_AD = {
   endDate: null,
   weight: 5,
 };
+
+/**
+ * Best placements for an image of width × height, best first.
+ * Wide banners go across the page, squarish/portrait images suit the popup
+ * and sidebar, and very tall "skyscrapers" only fit the desktop sidebar.
+ */
+export const suggestPlacements = (width, height) => {
+  const ratio = width / Math.max(1, height);
+  const s = (placement, size = 'responsive', devices = 'all') => ({ placement, size, devices });
+  if (ratio >= 2) return [s('top'), s('middle'), s('bottom'), s('sticky_footer')];
+  if (ratio >= 0.8) return [s('popup'), s('sidebar_top'), s('middle'), s('sidebar_bottom')];
+  if (ratio >= 0.5) return [s('popup'), s('sidebar_top'), s('sidebar_bottom')];
+  return [s('sidebar_bottom', 'responsive', 'desktop'), s('sidebar_top', 'responsive', 'desktop')];
+};

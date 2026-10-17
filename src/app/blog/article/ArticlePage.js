@@ -173,7 +173,6 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
           {/* ======================== SIDEBAR ======================== */}
           {recentBlogs?.length > 0 && (
             <aside className="w-full lg:w-80 shrink-0 order-2 lg:order-2 mt-3 lg:mt-0">
-              <div className="sticky top-20 sm:top-24">
               {renderAd('sidebar_top', 'mb-3')}
               <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
                 <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900">Latest Articles</h3>
@@ -207,7 +206,9 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
                   ))}
                 </ul>
               </div>
-              <AdSlot placement="sidebar_bottom" className="mt-3" withSidebarCode />
+              {/* Below "Latest Articles" the sidebar ad sticks while the reader scrolls. */}
+              <div className="lg:sticky lg:top-24">
+                <AdSlot placement="sidebar_bottom" className="mt-3" withSidebarCode />
               </div>
             </aside>
           )}

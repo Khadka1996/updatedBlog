@@ -81,7 +81,8 @@ function InlineCode({ ad }) {
   return <div ref={ref} className="w-full flex justify-center" />;
 }
 
-function ImageAd({ ad }) {
+function ImageAd({ ad, imgClassName = '' }) {
+  // The size only caps the width — the whole creative is always shown (no cropping).
   const dims = SIZE_DIMENSIONS[ad.size];
   return (
     <a
@@ -89,23 +90,22 @@ function ImageAd({ ad }) {
       target={ad.openInNewTab === false ? '_self' : '_blank'}
       rel="sponsored noopener noreferrer"
       onClick={() => trackClick(ad._id)}
-      className="block mx-auto"
-      style={{ maxWidth: dims ? `${dims[0]}px` : '100%' }}
+      className="block mx-auto w-fit max-w-full"
+      style={dims ? { maxWidth: `min(100%, ${dims[0]}px)` } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={ad.imagePath}
         alt={ad.altText || ad.name || 'Advertisement'}
         loading="lazy"
-        className="block w-full h-auto rounded-md"
-        style={dims ? { aspectRatio: `${dims[0]} / ${dims[1]}`, objectFit: 'cover' } : undefined}
+        className={`block max-w-full h-auto rounded-md ${imgClassName}`}
       />
     </a>
   );
 }
 
-export default function AdCreative({ ad }) {
+export default function AdCreative({ ad, imgClassName }) {
   if (!ad) return null;
-  if (ad.type === 'image') return <ImageAd ad={ad} />;
+  if (ad.type === 'image') return <ImageAd ad={ad} imgClassName={imgClassName} />;
   return ad.renderMode === 'inline' ? <InlineCode ad={ad} /> : <IframeCode ad={ad} />;
 }

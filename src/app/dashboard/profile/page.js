@@ -137,7 +137,7 @@ export default function ProfilePage() {
                 <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Enter a valid email' }]}>
                   <Input />
                 </Form.Item>
-                <Button type="primary" htmlType="submit" loading={savingProfile} className="bg-[#174fa2]">Save details</Button>
+                <Button type="primary" htmlType="submit" loading={savingProfile}>Save details</Button>
               </Form>
             </>
           ) : <Skeleton active />}
@@ -174,7 +174,7 @@ export default function ProfilePage() {
             >
               <Input.Password autoComplete="new-password" />
             </Form.Item>
-            <Button type="primary" htmlType="submit" loading={savingPassword} className="bg-[#174fa2]">Change password</Button>
+            <Button type="primary" htmlType="submit" loading={savingPassword}>Change password</Button>
           </Form>
         </Card>
       </div>

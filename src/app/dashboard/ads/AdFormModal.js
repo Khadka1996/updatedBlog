@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Modal, Form, Input, Select, Switch, Radio, Checkbox, DatePicker, Slider,
-  Upload, Button, Alert, Segmented, Divider, Tooltip, message,
+  Upload, Button, Alert, Segmented, Divider, Tooltip, Progress, Tag, message,
 } from 'antd';
 import {
-  PictureOutlined, CodeOutlined, UploadOutlined, EyeOutlined, InfoCircleOutlined,
+  PictureOutlined, CodeOutlined, EyeOutlined, InfoCircleOutlined, InboxOutlined,
+  CheckCircleFilled, DeleteOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
 import AdCreative from '../../components/ads/AdCreative';
-import { EMPTY_AD, NETWORKS, PAGES, PLACEMENTS, SIZES } from './adOptions';
+import { EMPTY_AD, NETWORKS, PAGES, PLACEMENTS, PLACEMENT_LABEL, SIZES, suggestPlacements } from './adOptions';
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -27,6 +28,8 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [uploadInfo, setUploadInfo] = useState(null);
   const [previewAd, setPreviewAd] = useState(null);
   const type = Form.useWatch('type', form);
   const placement = Form.useWatch('placement', form);
@@ -43,6 +46,8 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
       schedule: [source.startDate ? dayjs(source.startDate) : null, source.endDate ? dayjs(source.endDate) : null],
     });
     setPreviewAd(null);
+    setUploadInfo(null);
+    setProgress(0);
   }, [open, ad, form]);
 
   // Page scripts (popunder etc.) only make sense as inline code.
@@ -52,25 +57,68 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
     }
   }, [placement, form]);
 
-  const uploadImage = async ({ file, onSuccess, onError }) => {
+  const applySuggestion = (sug) => {
+    form.setFieldsValue({ placement: sug.placement, size: sug.size, devices: sug.devices });
+  };
+
+  // Upload with a progress bar (XHR — fetch can't report upload progress).
+  const uploadFile = (file) => {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      msg.error('Please choose a JPG, PNG, WEBP or GIF image');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      msg.error('Image must be 20MB or smaller');
+      return;
+    }
     const body = new FormData();
     body.append('image', file);
-    setUploading(true);
-    try {
-      const res = await fetch('/api/ads/upload-image', { method: 'POST', credentials: 'include', body });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.message || 'Upload failed');
-      form.setFieldsValue({ imagePath: data.imagePath });
-      form.validateFields(['imagePath']).catch(() => {});
-      msg.success('Image uploaded');
-      onSuccess?.(data);
-    } catch (err) {
-      msg.error(err.message);
-      onError?.(err);
-    } finally {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/ads/upload-image');
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => {
       setUploading(false);
-    }
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch {}
+      if (xhr.status === 413) { msg.error('That image is too large for the server. Try one under 20MB.'); return; }
+      if (xhr.status === 401 || xhr.status === 403) { msg.error('Your session expired — please sign in again.'); return; }
+      if (xhr.status >= 400 || !data.success) { msg.error(data.message || `Upload failed (${xhr.status})`); return; }
+
+      const info = { ...data, fileName: file.name };
+      setUploadInfo(info);
+      const updates = { imagePath: data.imagePath };
+      const current = form.getFieldsValue(['name', 'altText']);
+      const niceName = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+      if (!current.name) updates.name = niceName.charAt(0).toUpperCase() + niceName.slice(1);
+      if (!current.altText) updates.altText = updates.name || current.name || niceName;
+      form.setFieldsValue(updates);
+      form.validateFields(['imagePath']).catch(() => {});
+      // New ads: pre-select the best placement for this image's shape.
+      const sug = data.width ? suggestPlacements(data.width, data.height)[0] : null;
+      if (!isEdit && sug) applySuggestion(sug);
+      msg.success(data.finalBytes && data.originalBytes > data.finalBytes
+        ? `Uploaded and optimised (${(data.originalBytes / 1048576).toFixed(1)}MB → ${(data.finalBytes / 1048576).toFixed(1)}MB)`
+        : 'Image uploaded');
+    };
+    xhr.onerror = () => { setUploading(false); msg.error('Network error — check your connection and try again'); };
+    setUploading(true);
+    setProgress(0);
+    xhr.send(body);
   };
+
+  // Paste an image straight from the clipboard (Ctrl+V) while the form is open.
+  useEffect(() => {
+    if (!open || type !== 'image') return undefined;
+    const onPaste = (e) => {
+      const item = [...(e.clipboardData?.items || [])].find((i) => i.kind === 'file' && i.type.startsWith('image/'));
+      if (item) { e.preventDefault(); uploadFile(item.getAsFile()); }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, type]);
 
   const buildPayload = (values) => {
     const [start, end] = values.schedule || [];
@@ -151,7 +199,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
       footer={[
         <Button key="preview" icon={<EyeOutlined />} onClick={handlePreview}>Preview</Button>,
         <Button key="cancel" onClick={onClose}>Cancel</Button>,
-        <Button key="save" type="primary" loading={saving} onClick={handleSubmit} className="bg-[#174fa2]">
+        <Button key="save" type="primary" loading={saving} onClick={handleSubmit}>
           {isEdit ? 'Save changes' : 'Create ad'}
         </Button>,
       ]}
@@ -169,6 +217,76 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
           />
         </Form.Item>
 
+        {type === 'image' && (
+          <Form.Item label="Banner image" required className="mb-4">
+            <Form.Item
+              name="imagePath"
+              noStyle
+              rules={[
+                { required: true, message: 'Upload a banner image' },
+                { pattern: /^(\/uploads\/|https?:\/\/)/, message: 'Must be an uploaded image or an https:// URL' },
+              ]}
+            >
+              <Input type="hidden" />
+            </Form.Item>
+            {!imagePath ? (
+              <Upload.Dragger
+                accept=".jpg,.jpeg,.png,.webp,.gif"
+                showUploadList={false}
+                multiple={false}
+                disabled={uploading}
+                customRequest={({ file }) => uploadFile(file)}
+                className="!bg-blue-50/40"
+              >
+                <p className="ant-upload-drag-icon"><InboxOutlined className="!text-[#174fa2]" /></p>
+                <p className="ant-upload-text font-medium">Drop your banner here, or click to choose</p>
+                <p className="ant-upload-hint">You can also paste an image with Ctrl+V · JPG, PNG, WEBP or GIF (animated OK) up to 20MB — it&apos;s optimised automatically</p>
+                {uploading && <Progress percent={progress} size="small" className="!px-10 !mt-2" status={progress >= 100 ? 'active' : 'normal'} format={(p) => (p >= 100 ? 'Optimising…' : `${p}%`)} />}
+              </Upload.Dragger>
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePath} alt="Banner preview" className="max-h-44 max-w-full sm:max-w-[260px] object-contain rounded border border-gray-200 bg-white self-start" />
+                  <div className="flex-1 min-w-0 text-sm">
+                    <div className="flex items-center gap-2 font-medium text-gray-800">
+                      <CheckCircleFilled className="text-green-600" /> {uploadInfo?.fileName || 'Banner image'}
+                    </div>
+                    {uploadInfo?.width && (
+                      <div className="text-gray-500 mt-1">
+                        {uploadInfo.originalWidth} × {uploadInfo.originalHeight}px
+                        {uploadInfo.animated && <Tag color="purple" className="ml-2">Animated</Tag>}
+                        {uploadInfo.finalBytes && <span className="ml-1">· {(uploadInfo.finalBytes / 1024).toFixed(0)} KB</span>}
+                      </div>
+                    )}
+                    {uploadInfo?.width && (
+                      <div className="mt-3">
+                        <div className="text-xs font-medium text-gray-600 mb-1"><ThunderboltOutlined /> Best places for this image — click to use:</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {suggestPlacements(uploadInfo.width, uploadInfo.height).map((sug) => (
+                            <Button
+                              key={sug.placement}
+                              size="small"
+                              type={placement === sug.placement ? 'primary' : 'default'}
+                              onClick={() => applySuggestion(sug)}
+                            >
+                              {PLACEMENT_LABEL[sug.placement]}{sug.devices !== 'all' ? ` (${sug.devices})` : ''}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <Button size="small" type="link" danger icon={<DeleteOutlined />} className="!px-0 mt-2"
+                      onClick={() => { form.setFieldsValue({ imagePath: '' }); setUploadInfo(null); }}>
+                      Replace image
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Form.Item>
+        )}
+
         <Form.Item
           name="name"
           label="Ad name"
@@ -180,31 +298,6 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
 
         {type === 'image' ? (
           <>
-            <Form.Item
-              label="Banner image"
-              required
-              extra="JPG, PNG, WEBP or GIF, up to 5MB. You can also paste an https:// image URL."
-            >
-              <div className="flex flex-col sm:flex-row gap-3 items-start">
-                <Upload accept=".jpg,.jpeg,.png,.webp,.gif" showUploadList={false} customRequest={uploadImage}>
-                  <Button icon={<UploadOutlined />} loading={uploading}>Upload image</Button>
-                </Upload>
-                <Form.Item
-                  name="imagePath"
-                  noStyle
-                  rules={[
-                    { required: true, message: 'Upload a banner image' },
-                    { pattern: /^(\/uploads\/|https?:\/\/)/, message: 'Must be an uploaded image or an https:// URL' },
-                  ]}
-                >
-                  <Input placeholder="/uploads/ads/... or https://..." className="flex-1" />
-                </Form.Item>
-              </div>
-              {imagePath && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePath} alt="Banner preview" className="mt-3 max-h-40 rounded border border-gray-200" />
-              )}
-            </Form.Item>
             <Form.Item
               name="websiteLink"
               label="Link (where the banner goes when clicked)"

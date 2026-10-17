@@ -7,6 +7,10 @@ import Footer from '@/app/components/footer/footer';
 import BlogArticle from '@/app/blog/article/ArticlePage';
 import '@/app/globals.css';
 import MobileFooterNav from '@/app/components/footer/footerMobile';
+import Script from 'next/script';
+import AdSlot from '@/app/components/ads/AdSlot';
+import GlobalAds from '@/app/components/ads/GlobalAds';
+import { toolsAdsConfig } from '@/config/tools-adsense.config';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SITE_URL } from '@/config/site';
@@ -144,7 +148,8 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
 
             {/* SIDEBAR */}
             <aside className="w-full lg:w-72 shrink-0 order-2 mt-3 lg:mt-0">
-              <div className="bg-white rounded-xl shadow-sm p-1 sm:p-2 sticky top-24">
+              <AdSlot placement="sidebar_top" className="mb-3" />
+              <div className="bg-white rounded-xl shadow-sm p-1 sm:p-2">
                 
                 <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">
                   Latest Articles
@@ -192,6 +197,10 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
                   </ul>
                 )}
               </div>
+              {/* Sticks while the reader scrolls the article (desktop). */}
+              <div className="lg:sticky lg:top-24">
+                <AdSlot placement="sidebar_bottom" className="mt-3" withSidebarCode />
+              </div>
             </aside>
 
           </div>
@@ -200,6 +209,13 @@ const ServerBlogPage = ({ initialData, error, currentUrl, recentBlogs = [] }) =>
 
       <MobileFooterNav />
       <Footer />
+
+      {/* This page uses the Pages Router, so it doesn't get app/layout.js —
+          load the popup / sticky / page-script ads and AdSense here. */}
+      <GlobalAds />
+      {toolsAdsConfig.isConfigured() && (
+        <Script id="article-adsbygoogle" strategy="afterInteractive" src={toolsAdsConfig.getScriptUrl()} crossOrigin="anonymous" />
+      )}
     </>
   );
 };
