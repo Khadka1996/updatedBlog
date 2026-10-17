@@ -223,7 +223,7 @@ export default function GlobalAds() {
   return (
     <>
       {hiddenForAdmin && (
-        <div className="fixed bottom-20 left-3 md:bottom-4 z-[46] flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full bg-gray-900/90 py-1.5 pl-3 pr-1.5 text-xs text-white shadow-lg backdrop-blur">
+        <div className="fixed top-24 left-3 z-[61] flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full bg-gray-900/90 py-1.5 pl-3 pr-1.5 text-xs text-white shadow-lg backdrop-blur">
           <span>Ads are hidden because you&apos;re signed in as admin</span>
           <button
             type="button"
