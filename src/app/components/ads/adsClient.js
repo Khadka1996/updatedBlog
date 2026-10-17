@@ -63,12 +63,23 @@ const isAdminBrowser = () => {
   try { return localStorage.getItem(ADMIN_FLAG) === '1'; } catch { return false; }
 };
 
+// An admin can choose to see ads in this browser for the rest of the visit.
+const ADMIN_PREVIEW = 'ek_admin_show_ads';
+export const showAdsToAdminThisVisit = () => {
+  try { sessionStorage.setItem(ADMIN_PREVIEW, '1'); } catch {}
+};
+/** True when ads are hidden only because an admin is signed in on this browser. */
+export const adsHiddenForAdmin = (settings) => {
+  if (!settings?.hideForAdmins || !isAdminBrowser()) return false;
+  try { return sessionStorage.getItem(ADMIN_PREVIEW) !== '1'; } catch { return true; }
+};
+
 /** Should any ad render on this path, given the global ad settings? */
 export const adsAllowed = (settings, pathname) => {
   if (!settings || settings.enabled === false) return false;
   if (isNoAdPath(pathname)) return false;
   if (settings.showOnMobile === false && isMobileDevice()) return false;
-  if (settings.hideForAdmins && isAdminBrowser()) return false;
+  if (adsHiddenForAdmin(settings)) return false;
   if ((settings.excludedPaths || []).some((p) => pathname === p || (p.endsWith('*') && pathname.startsWith(p.slice(0, -1))))) {
     return false;
   }

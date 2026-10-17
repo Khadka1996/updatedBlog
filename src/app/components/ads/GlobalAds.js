@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdCreative, { injectHtml } from './AdCreative';
 import {
-  adsAllowed, eligibleAds, fetchAdsFeed, fetchPublicSettings, isNoAdPath, pickWeighted, trackImpression,
+  adsAllowed, adsHiddenForAdmin, eligibleAds, fetchAdsFeed, fetchPublicSettings, isNoAdPath, pickWeighted,
+  showAdsToAdminThisVisit, trackImpression,
 } from './adsClient';
 
 const POPUP_KEY = 'ek_popup_seen';
@@ -216,8 +217,23 @@ export default function GlobalAds() {
   // Close popups when navigating away from the page that opened them.
   useEffect(() => { setPopup(null); setArticlePopup(null); }, [pathname]);
 
+  // Tell a signed-in admin why they see no ads (Settings > Ads > Hide ads from admins).
+  const hiddenForAdmin = Boolean(feed && !isNoAdPath(pathname) && adsHiddenForAdmin(feed.settings) && feed.ads?.length);
+
   return (
     <>
+      {hiddenForAdmin && (
+        <div className="fixed bottom-20 left-3 md:bottom-4 z-[46] flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full bg-gray-900/90 py-1.5 pl-3 pr-1.5 text-xs text-white shadow-lg backdrop-blur">
+          <span>Ads are hidden because you&apos;re signed in as admin</span>
+          <button
+            type="button"
+            onClick={() => { showAdsToAdminThisVisit(); window.location.reload(); }}
+            className="rounded-full bg-white px-2.5 py-1 font-semibold text-gray-900 hover:bg-gray-100"
+          >
+            Show ads
+          </button>
+        </div>
+      )}
       {popup && <PopupAd ad={popup} onClose={() => setPopup(null)} />}
       {articlePopup && <PopupAd ad={articlePopup} countdown={5} onClose={() => setArticlePopup(null)} />}
       {sticky && (
