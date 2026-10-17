@@ -4,6 +4,7 @@ import Script from "next/script";
 import WhatsAppButton from './components/WhatsAppButton.js';
 import MobileFooterNav from './components/footer/footerMobile';
 import AdsInit from './components/ads/AdsInit';
+import GlobalAds from './components/ads/GlobalAds';
 import CookieConsent from './components/CookieConsent';
 import { SITE_URL } from '../config/site';
 import { toolsAdsConfig } from '@/config/tools-adsense.config';
@@ -152,6 +153,7 @@ export default function RootLayout({ children }) {
       <body className={inter.className} suppressHydrationWarning>
         {children}
         <AdsInit publisherId={toolsAdsConfig.getPublisherId()} />
+        <GlobalAds />
         <CookieConsent />
         
         {/* Additional scripts that need to load after the page is interactive */}

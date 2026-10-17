@@ -1,30 +1,32 @@
 'use client'
 import { useState, useRef, useEffect } from 'react';
 import { FaFilePdf, FaFileWord, FaDownload, FaExchangeAlt } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
+import { convertOnServer, swapExtension, MAX_CONVERT_BYTES } from '@/app/tools/convertFile';
 
 export default function PdfToWord() {
   const [file, setFile] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
-  const [comingSoon, setComingSoon] = useState(false);
+  const [error, setError] = useState('');
+  const [progress, setProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState('');
-  const [conversionOptions, setConversionOptions] = useState({
-    format: 'docx',
-    preserveLayout: true,
-    includeImages: true
-  });
-  const [adsLoaded, setAdsLoaded] = useState(false); // Track AdSense script loading
   const fileInputRef = useRef(null);
 
   // Handle file selection
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
+    e.target.value = '';
+    if (selectedFile.size > MAX_CONVERT_BYTES) {
+      setError('File is too large. Maximum size is 50MB.');
+      return;
+    }
+    setError('');
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
 
     setFile({
       file: selectedFile,
@@ -35,45 +37,24 @@ export default function PdfToWord() {
     setDownloadUrl('');
   };
 
-  // Handle option changes
-  const handleOptionChange = (option, value) => {
-    setConversionOptions(prev => ({
-      ...prev,
-      [option]: value
-    }));
-  };
 
-  // Simulate conversion process
+  // Upload to the server and get the converted file back
   const handleConvert = async () => {
-    if (!file) {
-      alert('Please select a PDF file first');
-      return;
-    }
-
+    if (!file) return;
     setIsConverting(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Real server-side conversion is not available yet - surface a clear
-    // "coming soon" state instead of returning a placeholder file.
-    setComingSoon(true);
-    setIsConverting(false);
+    setError('');
+    setProgress(0);
+    try {
+      const blob = await convertOnServer('pdf-to-word', file.file, setProgress);
+      setDownloadUrl(URL.createObjectURL(blob));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsConverting(false);
+    }
   };
 
-  // Initialize all ad units
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({}); // Top ad
-        window.adsbygoogle.push({}); // Bottom ad
-        if (file) {
-          window.adsbygoogle.push({}); // Middle ad
-        }
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, file]);
+
 
   // Clean up object URLs
   useEffect(() => {
@@ -90,32 +71,11 @@ export default function PdfToWord() {
       <Head>
         <title>PDF to Word Converter - PDF Tools</title>
         <meta name="description" content="Convert PDF files to editable Word documents with high accuracy" />
-        {/* Google AdSense Script */}
-        
       </Head>
-      {toolsAdsConfig.isConfigured() && (
-          <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
       <div className="mx-3 md:mx-10 lg:mx-18">
         {/* Top Ad Unit - Responsive Leaderboard */}
-        <div className="mb-8">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-            data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-        </div>
+        <AdSlot placement="top" className="mb-8" />
         
         <div className="flex items-center mb-6">
           <ToolBreadcrumbs label="PDF to Word" />
@@ -167,6 +127,7 @@ export default function PdfToWord() {
                   onClick={() => {
                     URL.revokeObjectURL(file.preview);
                     setFile(null);
+                    setError('');
                   }}
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Remove"
@@ -177,79 +138,42 @@ export default function PdfToWord() {
               
               {/* Middle Ad Unit - Responsive Rectangle */}
               {file && (
-                <div className="my-6">
-                  <ins
-                    className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-                    data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
-                    data-ad-format="auto"
-                    data-full-width-responsive="true"
-                  ></ins>
-                </div>
+                <AdSlot placement="middle" className="my-6" />
               )}
               
-              {/* Conversion Options */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Conversion Options</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="flex items-center mb-4">
-                      <input
-                        type="radio"
-                        checked={conversionOptions.format === 'docx'}
-                        onChange={() => handleOptionChange('format', 'docx')}
-                        className="mr-2"
-                      />
-                      <span>DOCX (Microsoft Word 2007+)</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={conversionOptions.format === 'doc'}
-                        onChange={() => handleOptionChange('format', 'doc')}
-                        className="mr-2"
-                      />
-                      <span>DOC (Older Word format)</span>
-                    </label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={conversionOptions.preserveLayout}
-                        onChange={(e) => handleOptionChange('preserveLayout', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span>Preserve original layout</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={conversionOptions.includeImages}
-                        onChange={(e) => handleOptionChange('includeImages', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span>Include images</span>
-                    </label>
-                  </div>
-                </div>
+              {/* What the conversion produces */}
+              <div className="mb-8 p-4 bg-blue-50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">What you&apos;ll get</h3>
+                <ul className="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                  <li>You get an editable .docx with text, images and tables rebuilt.</li>
+                  <li>Works best with PDFs that contain real text (not scanned photos).</li>
+                  <li>Very complex layouts may need small touch-ups in Word.</li>
+                </ul>
               </div>
             </div>
           )}
           
           {/* Convert Button */}
-          {comingSoon && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm text-center">
-              This converter is <strong>coming soon</strong>. High-quality Office conversion is being finished on our servers &mdash; please check back shortly.
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center" role="alert">
+              {error}
             </div>
           )}
-          {file && !downloadUrl && !comingSoon && (
+          {isConverting && (
+            <div className="mb-6 max-w-md mx-auto">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-[#4caf4f] transition-all" style={{ width: `${progress < 100 ? progress : 100}%` }} />
+              </div>
+              <p className="text-xs text-gray-500 text-center mt-2">
+                {progress < 100 ? `Uploading… ${progress}%` : 'Converting on our server — this can take up to a minute for large files…'}
+              </p>
+            </div>
+          )}
+          {file && !downloadUrl && (
             <div className="flex justify-center">
               <button
                 onClick={handleConvert}
-                disabled={isConverting || comingSoon}
+                disabled={isConverting}
                 className={`px-6 py-3 rounded-lg font-medium text-white bg-[#4caf4f] hover:bg-[#3e8e40] transition-colors flex items-center`}
               >
                 {isConverting ? (
@@ -275,7 +199,7 @@ export default function PdfToWord() {
             <div className="mt-6 text-center">
               <a 
                 href={downloadUrl} 
-                download={`${file.name.replace('.pdf', '')}.${conversionOptions.format}`}
+                download={swapExtension(file.name, 'docx')}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
               >
                 <FaDownload className="mr-2" />
@@ -286,6 +210,7 @@ export default function PdfToWord() {
                   onClick={() => {
                     URL.revokeObjectURL(file.preview);
                     setFile(null);
+                    setError('');
                     setDownloadUrl('');
                   }}
                   className="text-blue-600 hover:text-blue-800"
@@ -310,16 +235,7 @@ export default function PdfToWord() {
           )}
           
           {/* Bottom Ad Unit - Responsive Leaderboard */}
-          <div className="mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="bottom" className="mt-8" />
         </div>
       </div>
        <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">

@@ -2,10 +2,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { MdMergeType, MdDelete, MdArrowUpward, MdArrowDownward, MdCloudUpload, MdClose } from 'react-icons/md';
 import Head from 'next/head';
-import Script from 'next/script';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
@@ -15,7 +14,6 @@ export default function MergePDF() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false); // Initialize as false
   const fileInputRef = useRef(null);
@@ -223,20 +221,6 @@ export default function MergePDF() {
     }
   };
 
-  // Initialize all ad units when adsbygoogle is available
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        // Push ads only if they haven't been loaded yet
-        setTimeout(() => {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        }, 100);
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded]);
-
   // Check for mobile on client side only
   useEffect(() => {
     const checkIsMobile = () => {
@@ -271,17 +255,7 @@ export default function MergePDF() {
         <meta name="theme-color" content="#4caf4f" />
       </Head>
       
-      {/* Google AdSense Script */}
-      {toolsAdsConfig.isConfigured() && (
-        <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
       
       <NavBar />
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 lg:py-12">
@@ -289,18 +263,7 @@ export default function MergePDF() {
           <ToolBreadcrumbs label="Merge PDF" />
           
           {/* Top Ad Unit - Mobile responsive */}
-          {adsLoaded && (
-            <div className="mb-2 hidden md:block">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block', textAlign: 'center' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId("top")}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-2" />
           
           {/* Main Content Card */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -507,18 +470,7 @@ export default function MergePDF() {
                   </div>
                   
                   {/* Middle Ad Unit - Mobile responsive */}
-                  {adsLoaded && (
-                    <div className="my-3">
-                      <ins
-                        className="adsbygoogle"
-                        style={{ display: 'block', textAlign: 'center' }}
-                        data-ad-client={toolsAdsConfig.getPublisherId()}
-                        data-ad-slot={toolsAdsConfig.getSlotId("middle")}
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"
-                      ></ins>
-                    </div>
-                  )}
+                  <AdSlot placement="middle" className="my-3" />
                 </>
               )}
               
@@ -618,18 +570,7 @@ export default function MergePDF() {
           </div>
           
           {/* Bottom Ad Unit */}
-          {adsLoaded && (
-            <div className="mt-4">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block', textAlign: 'center' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          )}
+          <AdSlot placement="bottom" className="mt-4" />
           
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-8 rounded-2xl p-6 md:p-8 text-center text-white overflow-hidden">

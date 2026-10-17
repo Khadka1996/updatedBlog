@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Script from 'next/script';
 import JSZip from 'jszip';
 import {
   FaCompressAlt,
@@ -19,7 +18,7 @@ import {
 } from 'react-icons/fa';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 const PRESET_GROUPS = [
   {
@@ -147,7 +146,6 @@ export default function PhotoSizeReducer() {
 
   const [isDragOverDropzone, setIsDragOverDropzone] = useState(false);
   const [error, setError] = useState('');
-  const [hasMounted, setHasMounted] = useState(false);
 
   const fileInputRef = useRef(null);
   const imgRef = useRef(null);
@@ -156,13 +154,6 @@ export default function PhotoSizeReducer() {
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
-  useEffect(() => setHasMounted(true), []);
-
-  useEffect(() => {
-    if (hasMounted && window.adsbygoogle) {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    }
-  }, [hasMounted]);
 
   // Revoke every compressed blob URL on unmount
   useEffect(() => {
@@ -478,18 +469,7 @@ export default function PhotoSizeReducer() {
           content="Crop and compress photos in your browser, one at a time or in batches. Named presets for Instagram, YouTube, and more. Nothing uploads to a server."
         />
       </Head>
-      {toolsAdsConfig.isConfigured() && (
-        <Script
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          crossOrigin="anonymous"
-          onLoad={() => {
-            if (window.adsbygoogle) (window.adsbygoogle = window.adsbygoogle || []).push({});
-          }}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
 
       <div className="min-h-screen bg-[#F6F7F9]">
         <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
@@ -509,18 +489,7 @@ export default function PhotoSizeReducer() {
             </ol>
           </nav>
 
-          {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('TOP_SLOT') && (
-            <div className="mb-6 flex justify-center">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'inline-block', width: '100%', height: 'auto' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('TOP_SLOT')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          )}
+          <AdSlot placement="TOP_SLOT" className="mb-6 flex justify-center" />
 
           <div className="mb-8 flex items-start gap-4">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#4DB154]/10">

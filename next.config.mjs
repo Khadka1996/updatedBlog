@@ -4,6 +4,9 @@
 //   api.exchangerate-api.com - Currency Converter
 //   ndt.amitgaru.com.np      - Nepali Date Converter
 //   docs.opencv.org          - Photo Stretcher (loads opencv.js + its wasm)
+// Ads managed in Dashboard > Manage Ads (Adsterra, PropellerAds, Monetag, ...)
+// and Settings > Code Injection load scripts/frames from hosts we can't list
+// in advance, so script/frame/connect also allow any https: origin.
 const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
@@ -15,10 +18,11 @@ const CSP_DIRECTIVES = {
     'https://ep1.adtrafficquality.google',
     'https://ep2.adtrafficquality.google',
     'https://docs.opencv.org',
+    'https:',
   ],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  'style-src': ["'self'", "'unsafe-inline'", 'https:'],
   'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
+  'font-src': ["'self'", 'data:', 'https:'],
   'connect-src': [
     "'self'", 'blob:',
     'https://api.everestkit.com',
@@ -32,6 +36,7 @@ const CSP_DIRECTIVES = {
     'https://api.exchangerate-api.com',
     'https://ndt.amitgaru.com.np',
     'https://docs.opencv.org',
+    'https:',
   ],
   'frame-src': [
     "'self'",
@@ -39,6 +44,7 @@ const CSP_DIRECTIVES = {
     'https://googleads.g.doubleclick.net',
     'https://ep1.adtrafficquality.google',
     'https://ep2.adtrafficquality.google',
+    'https:',
   ],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],

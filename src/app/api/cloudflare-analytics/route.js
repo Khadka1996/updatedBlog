@@ -1,21 +1,52 @@
 // app/api/cloudflare-analytics/route.js
 import { NextResponse } from 'next/server';
 
+import { API_URL } from '@/config/site';
+
+// Only signed-in admins/moderators may read analytics. The backend owns the
+// session logic, so ask it who the caller is (forwarding their cookie).
+async function isStaff(request) {
+  const backend = (process.env.API_PROXY_TARGET || API_URL).replace(/\/$/, '');
+  try {
+    const res = await fetch(`${backend}/api/users/me`, {
+      headers: {
+        cookie: request.headers.get('cookie') || '',
+        'user-agent': request.headers.get('user-agent') || '',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return false;
+    const json = await res.json();
+    return ['admin', 'moderator'].includes(json?.data?.user?.role);
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request) {
+  if (!(await isStaff(request))) {
+    return NextResponse.json({ success: false, errors: ['Authentication required'] }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const since = searchParams.get('since');
   const until = searchParams.get('until');
 
-  // Cloudflare API credentials
-  const zoneId = "fc35ce70ac2fac0ffd7fe7266f2f9d85";
-  const authEmail = "mnzkhadka1996@gmail.com";
-  const authKey = "905471a598cebdbd85a6b9d391db21396990f";
+  // Cloudflare API credentials — set in the frontend .env, never in code.
+  const zoneId = process.env.CLOUDFLARE_ZONE_ID;
+  const authEmail = process.env.CLOUDFLARE_AUTH_EMAIL;
+  const authKey = process.env.CLOUDFLARE_AUTH_KEY;
+  if (!zoneId || !authEmail || !authKey) {
+    return NextResponse.json(
+      { success: false, errors: ['Cloudflare analytics is not configured (CLOUDFLARE_ZONE_ID / CLOUDFLARE_AUTH_EMAIL / CLOUDFLARE_AUTH_KEY)'] },
+      { status: 503 }
+    );
+  }
 
   try {
     // Use provided dates or default to last 7 days
     const endDate = until ? new Date(until) : new Date();
-    const startDate = since ? new Date(since) : new Date();
-    startDate.setDate(startDate.getDate() - 7);
+    const startDate = since ? new Date(since) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     // Format dates as YYYY-MM-DD
     const formatDate = (date) => {
@@ -34,7 +65,7 @@ export async function GET(request) {
         viewer {
           zones(filter: { zoneTag: "${zoneId}" }) {
             httpRequests1dGroups(
-              limit: 10,
+              limit: 100,
               orderBy: [date_ASC],
               filter: {
                 date_geq: "${querySince}",

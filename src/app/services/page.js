@@ -28,10 +28,9 @@ import {
   // UI Icons
   FaCheck, FaSpinner, FaTimes, FaCheckCircle, FaArrowDown
 } from 'react-icons/fa';
-import Script from 'next/script';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 // Icon mapping component
 const IconComponent = ({ iconName, className }) => {
@@ -245,18 +244,6 @@ export default function ServicesPage() {
       <NavBar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Google Ads Script — single load for the whole page, matching all
-            three ad units below. Previously this pointed at a different,
-            undefined env var (NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID) than every
-            other page uses, so ads here never actually loaded. */}
-        {toolsAdsConfig.isConfigured() && (
-          <Script
-            id="services-adsbygoogle"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-          />
-        )}
 
         {/* Hero Section with Scroll Indicator */}
         <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] text-white py-4 relative overflow-hidden">
@@ -299,18 +286,7 @@ export default function ServicesPage() {
         )}
 
         {/* Google Ad - Top Banner (Hidden on mobile) */}
-        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('top') && (
-          <div className="max-w-6xl mx-auto px-4 py-8 hidden md:block" data-ad-container>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('top')}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
-        )}
+        <AdSlot placement="top" className="max-w-6xl mx-auto px-4 py-8" />
 
         {/* Services Section */}
         <div id="services-section" className="scroll-mt-20">
@@ -378,16 +354,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Google Ad - Middle Rectangle (Hidden on mobile) */}
-        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('middle') && (
-          <div className="max-w-6xl mx-auto px-4 py-8 text-center hidden md:block" data-ad-container>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'inline-block', width: '728px', height: '90px' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-            ></ins>
-          </div>
-        )}
+        <AdSlot placement="middle" className="max-w-6xl mx-auto px-4 py-8 text-center" />
 
         {/* Contact Modal */}
         {isModalOpen && (
@@ -518,18 +485,7 @@ export default function ServicesPage() {
         )}
 
         {/* Google Ad - Bottom Banner (Hidden on mobile) */}
-        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('bottom') && (
-          <div className="max-w-6xl mx-auto px-4 py-8 hidden md:block" data-ad-container>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
-        )}
+        <AdSlot placement="bottom" className="max-w-6xl mx-auto px-4 py-8" />
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-8 rounded-xl p-8 text-center text-white">

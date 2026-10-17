@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import { API_URL } from '@/config/site';
 
 async function getTopArticle() {
@@ -188,18 +188,7 @@ export default async function TopArticle() {
         )}
 
         {/* Top article ad (client-initialized) */}
-        {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('top') && (
-          <div className="mt-8 max-w-6xl mx-auto" data-ad-container>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('top')}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
-        )}
+        <AdSlot placement="top" className="mt-8 max-w-6xl mx-auto" />
       </div>
     </section>
   );

@@ -2,13 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { FaFilePdf, FaImage, FaFont, FaDownload, FaUndo, FaArrowsAlt, FaTimes } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Link from 'next/link';
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 const FONTS = [
   { label: 'Helvetica', value: StandardFonts.Helvetica },
@@ -123,14 +122,12 @@ export default function WatermarkPDF() {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [fileDragOver, setFileDragOver] = useState(false);
   const [imageDragOver, setImageDragOver] = useState(false);
-  const [adsLoaded, setAdsLoaded] = useState(false);
 
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const containerRef = useRef(null);
   const dragStartRef = useRef({ pointerX: 0, pointerY: 0, anchor: { x: 0.5, y: 0.5 }, size: 0 });
 
-  const adsConfigured = toolsAdsConfig.isConfigured();
 
   // ---------- File handling ----------
 
@@ -455,18 +452,7 @@ export default function WatermarkPDF() {
 
   // ---------- Ads + cleanup ----------
 
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-        window.adsbygoogle.push({});
-        if (file) window.adsbygoogle.push({});
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, file]);
+
 
   useEffect(() => {
     return () => {
@@ -490,16 +476,6 @@ export default function WatermarkPDF() {
           <meta name="description" content="Add text or image watermarks to your PDF documents" />
         </Head>
 
-        {adsConfigured && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
 
         <div className="mx-3 md:mx-10 lg:mx-18">
           <nav className="mb-6" aria-label="Breadcrumb">
@@ -512,13 +488,7 @@ export default function WatermarkPDF() {
             </ol>
           </nav>
 
-          {adsConfigured && (
-            <div className="mb-8">
-              <ins className="adsbygoogle" style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()} data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto" data-full-width-responsive="true" />
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
             <div className="flex items-center mb-2">
@@ -571,13 +541,7 @@ export default function WatermarkPDF() {
                   </button>
                 </div>
 
-                {adsConfigured && (
-                  <div className="my-6">
-                    <ins className="adsbygoogle" style={{ display: 'block' }}
-                      data-ad-client={toolsAdsConfig.getPublisherId()} data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-                      data-ad-format="auto" data-full-width-responsive="true" />
-                  </div>
-                )}
+                <AdSlot placement="middle" className="my-6" />
 
                 {processError && (
                   <div role="alert" className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
@@ -863,13 +827,7 @@ export default function WatermarkPDF() {
               </div>
             )}
 
-            {adsConfigured && (
-              <div className="mt-8">
-                <ins className="adsbygoogle" style={{ display: 'block' }}
-                  data-ad-client={toolsAdsConfig.getPublisherId()} data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-                  data-ad-format="auto" data-full-width-responsive="true" />
-              </div>
-            )}
+            <AdSlot placement="bottom" className="mt-8" />
           </div>
         </div>
       </div>

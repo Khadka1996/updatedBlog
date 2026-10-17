@@ -8,9 +8,8 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 import CommentSection from './CommentSection.js';
 import Image from 'next/image';
-import Script from 'next/script';
 import { SITE_URL } from '../../../config/site';
-import { toolsAdsConfig } from '../../../config/tools-adsense.config';
+import AdSlot from '../../components/ads/AdSlot';
 
 const BlogArticle = ({ initialData, recentBlogs = [] }) => {
   const [copyStatus, setCopyStatus] = useState('idle');
@@ -57,27 +56,7 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
     instagram: `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`, // note: IG doesn't have direct web share
   };
 
-  const hasAd = (pos) => toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot(pos);
-
-  const renderAd = (position) => {
-    if (!hasAd(position)) {
-      return null;
-    }
-
-    const isHorizontal = position === 'top' || position === 'bottom';
-
-    return (
-      <div className="my-4" data-ad-container>
-        <ins
-          className="adsbygoogle block w-full"
-          data-ad-client={toolsAdsConfig.getPublisherId()}
-          data-ad-slot={toolsAdsConfig.getSlotId(position)}
-          data-ad-format={isHorizontal ? "auto" : "vertical"}
-          data-full-width-responsive="true"
-        />
-      </div>
-    );
-  };
+  const renderAd = (placement, className = 'my-4') => <AdSlot placement={placement} className={className} />;
 
   const renderContent = (html) => (
     <div
@@ -95,16 +74,6 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
 
   return (
     <>
-      {toolsAdsConfig.isConfigured() && (
-        <Script
-          id="blog-article-adsbygoogle"
-          async
-          src={toolsAdsConfig.getScriptUrl()}
-          strategy="afterInteractive"
-          onLoad={() => window.adsbygoogle?.push({})}
-        />
-      )}
-
       <div className="max-w-7xl mx-auto">
         
         {/* Top advertisement */}
@@ -204,7 +173,9 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
           {/* ======================== SIDEBAR ======================== */}
           {recentBlogs?.length > 0 && (
             <aside className="w-full lg:w-80 shrink-0 order-2 lg:order-2 mt-3 lg:mt-0">
-              <div className="bg-white rounded-lg p-2 sm:p-3 sticky top-20 sm:top-24 border border-gray-200">
+              <div className="sticky top-20 sm:top-24">
+              {renderAd('sidebar_top', 'mb-3')}
+              <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
                 <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900">Latest Articles</h3>
                 <ul className="space-y-1.5 sm:space-y-2">
                   {recentBlogs.map((post) => (
@@ -235,6 +206,8 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
                     </li>
                   ))}
                 </ul>
+              </div>
+              <AdSlot placement="sidebar_bottom" className="mt-3" withSidebarCode />
               </div>
             </aside>
           )}

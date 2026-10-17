@@ -19,11 +19,10 @@ import {
 } from 'react-icons/fa';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 export default function AdvancedDocumentCorrector() {
   const [imgSrc, setImgSrc] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [points, setPoints] = useState([]);
@@ -434,16 +433,7 @@ export default function AdvancedDocumentCorrector() {
 
   return (
     <>
-      {toolsAdsConfig.isConfigured() && (
-        <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
       <NavBar />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
         <Head>
@@ -467,22 +457,7 @@ export default function AdvancedDocumentCorrector() {
           </div>
 
           {/* Top Ad Unit */}
-          {toolsAdsConfig.isConfigured() ? (
-            <div className="mb-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          ) : (
-            <div className="mb-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-              <p className="text-gray-500">Advertisement Space</p>
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
@@ -752,22 +727,7 @@ export default function AdvancedDocumentCorrector() {
         
 
         {/* Bottom Ad Unit */}
-        {toolsAdsConfig.isConfigured() ? (
-          <div className="mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
-        ) : (
-          <div className="mt-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-            <p className="text-gray-500">Advertisement Space</p>
-          </div>
-        )}
+        <AdSlot placement="bottom" className="mt-8" />
 
         <Footer />
       </div>

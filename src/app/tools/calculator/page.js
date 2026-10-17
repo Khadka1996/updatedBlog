@@ -1,11 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { FaCalculator, FaBackspace, FaHistory, FaTrash } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 export default function ScientificCalculator() {
@@ -14,7 +13,6 @@ export default function ScientificCalculator() {
   const [history, setHistory] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [degreeMode, setDegreeMode] = useState(true); // true for degrees, false for radians
 
@@ -175,18 +173,7 @@ export default function ScientificCalculator() {
     setShowHistory(false);
   };
 
-  // Initialize ads
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({}); // Top ad
-        window.adsbygoogle.push({}); // Bottom ad
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded]);
+
 
   // Calculator buttons
   const basicButtons = [
@@ -213,31 +200,13 @@ export default function ScientificCalculator() {
           <meta name="description" content="Advanced scientific calculator with functions for math, science, and engineering" />
         </Head>
         
-      {toolsAdsConfig.isConfigured() && (
-          <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
         
         <div className="mx-0 sm:mx-3 md:mx-10 lg:mx-18">
           <ToolBreadcrumbs label="Scientific Calculator" />
 
           {/* Top Ad Unit */}
-          <div className="mb-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("top")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
@@ -413,16 +382,7 @@ export default function ScientificCalculator() {
             </div>
 
             {/* Middle Ad Unit */}
-            <div className="my-6">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId("middle")}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
+            <AdSlot placement="middle" className="my-6" />
 
             {/* Information Section */}
             <div className="mt-8 pt-6 border-t border-gray-200">
@@ -452,16 +412,7 @@ export default function ScientificCalculator() {
           </div>
 
           {/* Bottom Ad Unit */}
-          <div className="mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="bottom" className="mt-8" />
           
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
