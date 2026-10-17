@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import Script from 'next/script';
 import Head from 'next/head';
 import Link from 'next/link';
 import {
@@ -16,7 +15,7 @@ import {
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
 import FileDropzone from '@/app/components/tools/FileDropzone';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 // ─── Design tokens ──────────────────────────────────────────────────────
 // A "darkroom" concept: a dark canvas stage (the light table) framed by a
@@ -257,18 +256,7 @@ export default function HighQualityCropper() {
       </Head>
       <NavBar />
       <div className="bg-gray-50 min-h-screen">
-        {toolsAdsConfig.isConfigured() && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => {
-              if (window.adsbygoogle) (window.adsbygoogle = window.adsbygoogle || []).push({});
-            }}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
+        
 
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12">
           <nav className="mb-6 sm:mb-8" aria-label="Breadcrumb">
@@ -287,18 +275,7 @@ export default function HighQualityCropper() {
             </ol>
           </nav>
 
-          {toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('TOP_SLOT') && (
-            <div className="mb-8 flex justify-center">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'inline-block', width: '100%', height: 'auto' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('TOP_SLOT')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          )}
+          <AdSlot placement="TOP_SLOT" className="mb-8 flex justify-center" />
 
           <div className="mb-8">
             <span className="text-xs font-semibold tracking-widest text-[#4DB154] uppercase">Image tool</span>

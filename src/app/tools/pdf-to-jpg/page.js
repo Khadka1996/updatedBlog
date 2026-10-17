@@ -2,11 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { FaFilePdf, FaFileImage, FaDownload, FaTrash, FaPlus, FaTimes, FaCheck, FaInfoCircle, FaImages, FaCheckSquare, FaSquare, FaCheckDouble } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
@@ -19,7 +18,6 @@ export default function PdfToJpg() {
   const [pdfPages, setPdfPages] = useState([]); // All pages from PDF
   const [selectedPages, setSelectedPages] = useState([]); // Selected page indices
   const [quality, setQuality] = useState(90);
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const fileInputRef = useRef(null);
@@ -228,21 +226,7 @@ export default function PdfToJpg() {
     }
   };
 
-  // Initialize all ad units
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({}); // Top ad
-        window.adsbygoogle.push({}); // Bottom ad
-        if (file) {
-          window.adsbygoogle.push({}); // Middle ad
-        }
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, file]);
+
 
   // Clean up object URLs
   useEffect(() => {
@@ -260,31 +244,11 @@ export default function PdfToJpg() {
         <meta name="description" content="Convert PDF pages to high-quality JPG images" />
       </Head>
 
-       {/* Google AdSense Script */}
-      {toolsAdsConfig.isConfigured() && (
-          <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
       
       <div className="max-w-6xl mx-auto">
         {/* Top Ad Unit - Responsive Leaderboard */}
-        <div className="mb-8">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-            data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-        </div>
+        <AdSlot placement="top" className="mb-8" />
 
         <div className="flex items-center mb-6">
           <ToolBreadcrumbs label="PDF to JPG" />
@@ -334,16 +298,7 @@ export default function PdfToJpg() {
 
             {/* Middle Ad Unit - Responsive Rectangle */}
             {file && (
-              <div className="my-6">
-                <ins
-                  className="adsbygoogle"
-                  style={{ display: 'block' }}
-                  data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-                  data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"
-                ></ins>
-              </div>
+              <AdSlot placement="middle" className="my-6" />
             )}
 
             {/* Selected File Info */}
@@ -558,16 +513,7 @@ export default function PdfToJpg() {
         </div>
 
         {/* Bottom Ad Unit - Responsive Leaderboard */}
-        <div className="mt-8">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block' }}
-            data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-            data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
-        </div>
+        <AdSlot placement="bottom" className="mt-8" />
       </div>
 
       {/* Download Ready Modal */}

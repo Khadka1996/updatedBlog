@@ -1,259 +1,202 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { FaSearch, FaBell, FaUserCircle, FaTimes, FaChevronRight } from 'react-icons/fa';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { FaUserCircle, FaChevronRight, FaEnvelope, FaComments, FaFlag } from 'react-icons/fa';
 import { MdNotifications } from 'react-icons/md';
-import { SettingOutlined, LogoutOutlined } from '@ant-design/icons';
-import { Breadcrumb, Dropdown, Badge, Avatar } from 'antd';
+import { SettingOutlined, LogoutOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Breadcrumb, Dropdown, Badge, Avatar, AutoComplete, Input, Popover, Empty, Button } from 'antd';
+import { markAdminBrowser } from '../components/ads/adsClient';
+import useDashboardNotifications, { getSeenAt, markAllSeen, refreshNotifications } from './useDashboardNotifications';
+
+// Pages the header search can jump to.
+const PAGES = [
+  { label: 'Dashboard overview', href: '/dashboard', keywords: 'home stats overview' },
+  { label: 'All users', href: '/dashboard/user-management', keywords: 'users accounts roles', adminOnly: true },
+  { label: 'Moderators', href: '/dashboard/mod-management', keywords: 'moderators staff', adminOnly: true },
+  { label: 'Add blog post', href: '/dashboard/blog/add', keywords: 'write new article post blog' },
+  { label: 'Edit blog posts', href: '/dashboard/blog/edit', keywords: 'articles posts blog edit' },
+  { label: 'Messages', href: '/dashboard/messages', keywords: 'contact inbox enquiries' },
+  { label: 'Live chat', href: '/dashboard/chat', keywords: 'chat visitors support' },
+  { label: 'All comments', href: '/dashboard/comments', keywords: 'comments moderation' },
+  { label: 'Reported comments', href: '/dashboard/comments/reported', keywords: 'reported spam flags' },
+  { label: 'Comment settings', href: '/dashboard/comments/settings', keywords: 'comments settings' },
+  { label: 'Services', href: '/dashboard/services', keywords: 'services offers' },
+  { label: 'Client management', href: '/dashboard/client-management', keywords: 'clients projects customers' },
+  { label: 'Manage ads', href: '/dashboard/ads', keywords: 'ads advertising adsterra banner popup monetization', adminOnly: true },
+  { label: 'Analytics', href: '/dashboard/analytics', keywords: 'traffic cloudflare visitors' },
+  { label: 'Audit log', href: '/dashboard/audit-logs', keywords: 'audit history activity security log', adminOnly: true },
+  { label: 'Settings – code injection', href: '/dashboard/settings?tab=code', keywords: 'header footer script css javascript code', adminOnly: true },
+  { label: 'Settings – ads', href: '/dashboard/settings?tab=ads', keywords: 'ads.txt popup sticky ad settings', adminOnly: true },
+  { label: 'Settings – system status', href: '/dashboard/settings?tab=system', keywords: 'libreoffice converter tools system', adminOnly: true },
+  { label: 'My profile', href: '/dashboard/profile', keywords: 'profile password account sessions' },
+];
+
+const ICONS = { message: <FaEnvelope className="text-blue-600" />, chat: <FaComments className="text-green-600" />, comment: <FaFlag className="text-red-500" /> };
+
+const timeAgo = (date) => {
+  const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+};
 
 const Header = ({ user }) => {
   const pathname = usePathname();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const router = useRouter();
+  const [search, setSearch] = useState('');
+  const [bellOpen, setBellOpen] = useState(false);
+  const { items, loading } = useDashboardNotifications();
+  const seenAt = getSeenAt();
+  const unread = items.filter((i) => new Date(i.time).getTime() > seenAt).length;
+  const displayName = user?.name || user?.username || 'Admin';
 
-  // Generate breadcrumbs from pathname
-  const getBreadcrumbs = () => {
-    const paths = pathname.split('/').filter(Boolean);
-    const breadcrumbs = [];
-    
-    // Skip the first 'dashboard' part
-    for (let i = 1; i < paths.length; i++) {
-      const path = paths[i];
-      const href = `/${paths.slice(0, i + 1).join('/')}`;
-      const name = path
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      breadcrumbs.push({
-        title: i === paths.length - 1 ? (
-          <span className="text-primary font-medium">{name}</span>
-        ) : (
-          <a href={href} className="hover:text-primary transition-colors">{name}</a>
-        )
-      });
-    }
-    
-    return breadcrumbs;
+  const breadcrumbs = useMemo(() => {
+    const parts = pathname.split('/').filter(Boolean);
+    return parts.slice(1).map((part, i) => {
+      const href = `/${parts.slice(0, i + 2).join('/')}`;
+      const isId = /^[a-f0-9]{24}$/i.test(part);
+      const name = isId ? 'Details' : part.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      return {
+        title: i === parts.length - 2
+          ? <span className="text-[#174fa2] font-medium">{name}</span>
+          : <Link href={href} className="hover:text-[#174fa2]">{name}</Link>,
+        name,
+      };
+    });
+  }, [pathname]);
+
+  const searchOptions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return PAGES
+      .filter((p) => !p.adminOnly || user?.role === 'admin')
+      .filter((p) => !q || `${p.label} ${p.keywords}`.toLowerCase().includes(q))
+      .map((p) => ({ value: p.href, label: p.label }));
+  }, [search, user?.role]);
+
+  const goTo = (href) => {
+    setSearch('');
+    router.push(href);
   };
 
-  // Fetch notifications data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const logsResponse = await fetch('/api/users/admin/audit-logs');
-        const logsData = await logsResponse.json();
-        setNotifications(logsData.logs || []);
-        setUnreadCount(logsData.unread || 0);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-    // Add your search logic here
-  };
-
-  const markNotificationsAsRead = async () => {
-    try {
-      await fetch('/api/users/admin/audit-logs/mark-read', { method: 'POST' });
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking notifications as read:', error);
-    }
-  };
-
-  const toggleNotifications = () => {
-    if (!showNotifications && unreadCount > 0) {
-      markNotificationsAsRead();
-    }
-    setShowNotifications(!showNotifications);
+  const logout = () => {
+    markAdminBrowser(false);
+    fetch('/api/users/logout', { method: 'POST', credentials: 'include' })
+      .finally(() => { window.location.href = '/login'; });
   };
 
   const userMenuItems = [
-    {
-      key: 'profile',
-      label: (
-        <a href="/dashboard/profile" className="flex items-center gap-2">
-          <FaUserCircle className="text-gray-500" />
-          My Profile
-        </a>
-      ),
-    },
-    {
-      key: 'settings',
-      label: (
-        <a href="/dashboard/settings" className="flex items-center gap-2">
-          <SettingOutlined />
-          Settings
-        </a>
-      ),
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'logout',
-      label: (
-        <button 
-          onClick={() => {
-            fetch('/api/users/logout', { method: 'POST', credentials: 'include' })
-              .then(() => window.location.href = '/login');
-          }}
-          className="flex items-center gap-2 text-red-500 w-full"
-        >
-          <LogoutOutlined />
-          Logout
-        </button>
-      ),
-    },
+    { key: 'profile', label: <Link href="/dashboard/profile" className="flex items-center gap-2"><FaUserCircle className="text-gray-500" />My Profile</Link> },
+    ...(user?.role === 'admin'
+      ? [{ key: 'settings', label: <Link href="/dashboard/settings" className="flex items-center gap-2"><SettingOutlined />Settings</Link> }]
+      : []),
+    { type: 'divider' },
+    { key: 'logout', label: <button type="button" onClick={logout} className="flex items-center gap-2 text-red-500 w-full"><LogoutOutlined />Logout</button> },
   ];
 
+  const bellContent = (
+    <div className="w-80 max-w-[85vw]">
+      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+        <span className="font-semibold text-gray-800">Notifications</span>
+        <div className="flex items-center gap-1">
+          <Button size="small" type="text" icon={<ReloadOutlined />} onClick={() => refreshNotifications()} aria-label="Refresh" />
+          {unread > 0 && <Button size="small" type="link" onClick={markAllSeen}>Mark all read</Button>}
+        </div>
+      </div>
+      <div className="max-h-80 overflow-y-auto -mx-1">
+        {loading ? (
+          <div className="p-4 text-center text-gray-500 text-sm">Loading…</div>
+        ) : items.length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="You're all caught up" />
+        ) : (
+          items.map((n) => {
+            const isNew = new Date(n.time).getTime() > seenAt;
+            return (
+              <Link
+                key={n.id}
+                href={n.href}
+                onClick={() => setBellOpen(false)}
+                className={`flex gap-3 px-2 py-2.5 rounded-md hover:bg-gray-50 ${isNew ? 'bg-blue-50/60' : ''}`}
+              >
+                <div className="mt-1">{ICONS[n.type]}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{n.title}</p>
+                  {n.description && <p className="text-xs text-gray-500 truncate">{n.description}</p>}
+                  <p className="text-[11px] text-gray-400 mt-0.5">{timeAgo(n.time)}</p>
+                </div>
+              </Link>
+            );
+          })
+        )}
+      </div>
+      {user?.role === 'admin' && (
+        <div className="pt-2 border-t border-gray-100 text-center">
+          <Link href="/dashboard/audit-logs" onClick={() => setBellOpen(false)} className="text-sm text-[#174fa2] hover:underline">
+            View audit log
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+
+  const searchBox = (className) => (
+    <AutoComplete
+      className={className}
+      options={searchOptions}
+      value={search}
+      onChange={setSearch}
+      onSelect={goTo}
+      popupMatchSelectWidth={280}
+    >
+      <Input
+        prefix={<SearchOutlined className="text-gray-400" />}
+        placeholder="Go to page…"
+        allowClear
+        onPressEnter={() => searchOptions[0] && goTo(searchOptions[0].value)}
+      />
+    </AutoComplete>
+  );
+
   return (
-    <header className="bg-white shadow-sm p-4 flex flex-col sticky top-0 z-50">
-      {/* Top Row - Search and User Controls */}
-      <div className="flex items-center justify-between w-full">
-        {/* Breadcrumbs - Hidden on mobile, shown on desktop */}
-        <div className="hidden md:block">
-          <Breadcrumb 
-            separator={<FaChevronRight className="text-gray-400 text-xs" />}
-            items={[
-              {
-                title: <a href="/dashboard" className="hover:text-primary transition-colors">Dashboard</a>,
-              },
-              ...getBreadcrumbs()
-            ]}
+    <header className="bg-white shadow-sm px-4 py-3 flex flex-col sticky top-0 z-50">
+      <div className="flex items-center justify-between w-full gap-3">
+        <div className="hidden md:block min-w-0">
+          <Breadcrumb
+            separator={<FaChevronRight className="text-gray-400 text-xs mt-1" />}
+            items={[{ title: <Link href="/dashboard" className="hover:text-[#174fa2]">Dashboard</Link> }, ...breadcrumbs.map(({ title }) => ({ title }))]}
             className="text-sm"
           />
         </div>
-
-        {/* Mobile Title - Shown only on mobile */}
-        <h1 className="text-lg font-semibold text-gray-800 md:hidden">
-          {getBreadcrumbs().slice(-1)[0]?.title || 'Dashboard'}
+        <h1 className="text-lg font-semibold text-gray-800 md:hidden truncate">
+          {breadcrumbs.slice(-1)[0]?.name || 'Dashboard'}
         </h1>
 
-        {/* Right Side Controls */}
-        <div className="flex items-center space-x-4">
-          {/* Search Bar - Hidden on mobile */}
-          <form 
-            onSubmit={handleSearch} 
-            className="hidden md:flex items-center bg-gray-100 px-4 py-2 rounded-lg transition-all duration-300 focus-within:ring-2 focus-within:ring-primary focus-within:bg-white focus-within:shadow-sm"
+        <div className="flex items-center gap-3">
+          {searchBox('hidden md:block w-56 lg:w-72')}
+
+          <Popover
+            content={bellContent}
+            trigger="click"
+            placement="bottomRight"
+            open={bellOpen}
+            onOpenChange={setBellOpen}
+            arrow={false}
           >
-            <input
-              type="text"
-              className="bg-transparent outline-none text-gray-800 w-40 lg:w-64 text-sm"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button 
-              type="submit" 
-              className="text-gray-500 hover:text-primary transition-colors"
-              aria-label="Search"
-            >
-              <FaSearch size={16} />
-            </button>
-          </form>
-          
-          {/* Notification Icon */}
-          <div className="relative">
-            <button 
-              onClick={toggleNotifications}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
-              aria-label="Notifications"
-            >
-              <Badge count={unreadCount} size="small">
-                <MdNotifications 
-                  size={20} 
-                  className={unreadCount > 0 ? "text-primary" : "text-gray-500"} 
-                />
+            <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Notifications">
+              <Badge count={unread} size="small" overflowCount={99}>
+                <MdNotifications size={22} className={unread > 0 ? 'text-[#174fa2]' : 'text-gray-500'} />
               </Badge>
             </button>
+          </Popover>
 
-            {/* Notification Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-800">Notifications</h3>
-                  <button 
-                    onClick={toggleNotifications}
-                    className="p-1 hover:bg-gray-100 rounded-full"
-                    aria-label="Close notifications"
-                  >
-                    <FaTimes size={14} className="text-gray-500" />
-                  </button>
-                </div>
-                
-                <div className="max-h-80 overflow-y-auto" style={{ maxHeight: '320px' }}>
-                  {loading ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">Loading...</div>
-                  ) : notifications.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">No notifications</div>
-                  ) : (
-                    notifications.map((log) => (
-                      <div 
-                        key={log._id} 
-                        className="p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start">
-                          <div className="mr-3 text-primary">
-                            <FaBell size={14} />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-800">{log.action}</p>
-                            <p className="text-sm text-gray-600">{log.description}</p>
-                            <div className="flex justify-between mt-1">
-                              <span className="text-xs text-gray-500">{log.user}</span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(log.timestamp).toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="p-2 border-t border-gray-200 text-center bg-gray-50">
-                  <a 
-                    href="/dashboard/audit-logs" 
-                    className="text-sm text-primary hover:underline"
-                  >
-                    View All Notifications
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Profile */}
-          <Dropdown
-            menu={{ items: userMenuItems }}
-            trigger={['click']}
-            placement="bottomRight"
-          >
-            <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 rounded-full p-1 transition-colors">
-              <Avatar 
-                size="default" 
-                src={user?.avatar} 
-                icon={<FaUserCircle />}
-                className="border border-gray-200"
-              />
-              <div className="hidden md:block">
-                <div className="text-sm font-medium text-gray-700">{user?.name}</div>
+          <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+            <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded-full p-1 pr-2 transition-colors">
+              <Avatar size="default" src={user?.avatar} className="bg-[#174fa2]">
+                {displayName.charAt(0).toUpperCase()}
+              </Avatar>
+              <div className="hidden md:block leading-tight">
+                <div className="text-sm font-medium text-gray-700">{displayName}</div>
                 <div className="text-xs text-gray-500 capitalize">{user?.role}</div>
               </div>
             </div>
@@ -261,28 +204,7 @@ const Header = ({ user }) => {
         </div>
       </div>
 
-      {/* Mobile Search - Shown only on mobile when needed */}
-      <div className="md:hidden mt-2">
-        <form 
-          onSubmit={handleSearch} 
-          className="flex items-center bg-gray-100 px-4 py-2 rounded-lg w-full"
-        >
-          <input
-            type="text"
-            className="bg-transparent outline-none text-gray-800 flex-grow text-sm"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button 
-            type="submit" 
-            className="text-gray-500 hover:text-primary transition-colors ml-2"
-            aria-label="Search"
-          >
-            <FaSearch size={16} />
-          </button>
-        </form>
-      </div>
+      <div className="md:hidden mt-2">{searchBox('w-full')}</div>
     </header>
   );
 };

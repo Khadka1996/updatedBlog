@@ -9,6 +9,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import AuthGuard from '../contexts/AuthGuard.js';
 import SessionLoader from './SessionLoader';
+import { markAdminBrowser } from '../components/ads/adsClient';
 
 const { Content } = Layout;
 
@@ -90,6 +91,11 @@ const DashboardShell = ({ children }) => {
   useEffect(() => {
     verifySession();
   }, [verifySession]);
+
+  // Lets the public site hide ads from admins on this browser (Settings > Ads).
+  useEffect(() => {
+    if (authState.user) markAdminBrowser(authState.user.role === 'admin');
+  }, [authState.user]);
 
   if (authState.loading) {
     return <SessionLoader />;

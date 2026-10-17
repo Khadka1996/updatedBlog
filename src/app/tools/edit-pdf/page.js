@@ -5,12 +5,11 @@ import {
   FaFilePdf, FaFont, FaImage, FaShapes, FaTrash, FaDownload, FaUndo, FaRedo,
   FaHighlighter, FaSearch, FaCopy, FaPlus, FaMinus, FaArrowUp, FaArrowDown,
 } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Link from 'next/link';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
 import API_URL from '@/app/config';
 
@@ -183,7 +182,6 @@ export default function EditPDF() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [activeTool, setActiveTool] = useState(null);
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [pdfPages, setPdfPages] = useState([]);
   const [pageThumbnails, setPageThumbnails] = useState([]);
@@ -1002,22 +1000,8 @@ export default function EditPDF() {
     }
   };
 
-  const adsConfigured = isHydrated && toolsAdsConfig.isConfigured();
 
-  // Initialize ad units
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        const unfilledAds = document.querySelectorAll(
-          'ins.adsbygoogle:not([data-adsbygoogle-status])'
-        );
-        unfilledAds.forEach(() => window.adsbygoogle.push({}));
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, file]);
+
 
   // Clean up object URLs
   useEffect(() => {
@@ -1043,16 +1027,6 @@ export default function EditPDF() {
           <meta name="description" content="Edit your PDF documents by adding text, images, and annotations" />
         </Head>
 
-        {adsConfigured && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
 
         <div className="mx-3 md:mx-10 lg:mx-18">
           <nav className="mb-6" aria-label="Breadcrumb">
@@ -1066,18 +1040,7 @@ export default function EditPDF() {
           </nav>
 
           {/* Top Ad Unit */}
-          {adsConfigured && (
-            <div className="mb-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="bg-white p-8 rounded-lg shadow-md">
             <div className="flex items-center mb-6">
@@ -1126,18 +1089,7 @@ export default function EditPDF() {
                   </button>
                 </div>
 
-                {adsConfigured && (
-                  <div className="my-6">
-                    <ins
-                      className="adsbygoogle"
-                      style={{ display: 'block' }}
-                      data-ad-client={toolsAdsConfig.getPublisherId()}
-                      data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-                      data-ad-format="auto"
-                      data-full-width-responsive="true"
-                    ></ins>
-                  </div>
-                )}
+                <AdSlot placement="middle" className="my-6" />
 
                 {/* Editor Area */}
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -1527,18 +1479,7 @@ export default function EditPDF() {
               </div>
             )}
 
-            {adsConfigured && (
-              <div className="mt-8">
-                <ins
-                  className="adsbygoogle"
-                  style={{ display: 'block' }}
-                  data-ad-client={toolsAdsConfig.getPublisherId()}
-                  data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"
-                ></ins>
-              </div>
-            )}
+            <AdSlot placement="bottom" className="mt-8" />
           </div>
         </div>
 

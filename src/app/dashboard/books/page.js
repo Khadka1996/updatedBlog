@@ -1,11 +1,6 @@
-import React from 'react'
+import { redirect } from 'next/navigation';
 
-const page = () => {
-  return (
-    <div>
-      E-Books
-    </div>
-  )
+// Unused placeholder route (not linked from the menu) — send visitors to the overview.
+export default function Page() {
+  redirect('/dashboard');
 }
-
-export default page

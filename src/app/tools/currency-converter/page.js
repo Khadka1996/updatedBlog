@@ -5,11 +5,10 @@ import Select from 'react-select';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, TimeScale, Tooltip } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 ChartJS.register(LineElement, PointElement, LinearScale, TimeScale, Tooltip);
@@ -24,7 +23,6 @@ export default function CurrencyConverter() {
   const [lastUpdated, setLastUpdated] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [historicalRates, setHistoricalRates] = useState([]);
   const [showMore, setShowMore] = useState(false);
   const [apiStatus, setApiStatus] = useState('loading');
@@ -176,18 +174,7 @@ export default function CurrencyConverter() {
     fetchExchangeRates();
   }, [fromCurrency, selectedCurrencies, timeframe]);
 
-  // AdSense initialization
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-        window.adsbygoogle.push({});
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded]);
+
 
   // Currency symbol
   const getCurrencySymbol = (code) => currencies.find(c => c.code === code)?.symbol || '';
@@ -262,16 +249,7 @@ export default function CurrencyConverter() {
           <title>Currency Converter - Real-Time Exchange Rates</title>
           <meta name="description" content="Convert currencies with real-time exchange rates" />
         </Head>
-      {toolsAdsConfig.isConfigured() && (
-          <Script 
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          src={toolsAdsConfig.getScriptUrl()}
-          crossOrigin="anonymous"
-          onLoad={() => setAdsLoaded(true)}
-          onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -283,16 +261,7 @@ export default function CurrencyConverter() {
           </div>
 
           {/* Top Ad */}
-          <div className="mb-6 md:mb-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("top")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="top" className="mb-6 md:mb-8" />
 
           <div className="bg-white p-4 md:p-6 rounded-lg shadow-lg border border-gray-200">
             <div className="flex items-center mb-4 md:mb-6 border-b border-gray-200 pb-4">
@@ -650,16 +619,7 @@ export default function CurrencyConverter() {
           </div>
 
           {/* Bottom Ad */}
-          <div className="mt-6 md:mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="bottom" className="mt-6 md:mt-8" />
 
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-4 md:mt-5 rounded-xl p-6 md:p-8 text-center text-white">
             <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Ready to Grow Your Business?</h2>

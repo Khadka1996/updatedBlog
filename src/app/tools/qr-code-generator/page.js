@@ -14,11 +14,10 @@ import {
   FaSms,
   FaAddressCard,
 } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 // ── Content types ───────────────────────────────────────────────────────
@@ -66,7 +65,6 @@ export default function QrCodeGenerator() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const logoInputRef = useRef(null);
 
@@ -269,22 +267,8 @@ export default function QrCodeGenerator() {
     }
   };
 
-  // Ads
-  useEffect(() => {
-    if (adsLoaded && typeof window !== 'undefined' && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        const unfilled = document.querySelectorAll(
-          'ins.adsbygoogle:not([data-adsbygoogle-status])'
-        );
-        unfilled.forEach(() => window.adsbygoogle.push({}));
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded]);
 
-  const adsConfigured = isHydrated && toolsAdsConfig.isConfigured();
+
 
   const field =
     'w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4caf4f]/50 focus:border-[#4caf4f]';
@@ -303,37 +287,12 @@ export default function QrCodeGenerator() {
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
 
-        {adsConfigured && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
 
         <div className="mx-0 sm:mx-3 md:mx-10 lg:mx-18">
           <ToolBreadcrumbs label="QR Code Generator" />
 
           {/* Top Ad */}
-          {adsConfigured ? (
-            <div className="mb-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          ) : (
-            <div className="mb-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-              <p className="text-gray-500">Advertisement Space</p>
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
             <div className="flex items-center gap-3 mb-6">
@@ -766,22 +725,7 @@ export default function QrCodeGenerator() {
             </div>
 
             {/* Middle Ad */}
-            {adsConfigured ? (
-              <div className="my-8">
-                <ins
-                  className="adsbygoogle"
-                  style={{ display: 'block' }}
-                  data-ad-client={toolsAdsConfig.getPublisherId()}
-                  data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"
-                ></ins>
-              </div>
-            ) : (
-              <div className="my-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-                <p className="text-gray-500">Advertisement Space</p>
-              </div>
-            )}
+            <AdSlot placement="middle" className="my-8" />
 
             {/* Info */}
             <div className="mt-8 pt-6 border-t border-gray-200">
@@ -802,22 +746,7 @@ export default function QrCodeGenerator() {
           </div>
 
           {/* Bottom Ad */}
-          {adsConfigured ? (
-            <div className="mt-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              ></ins>
-            </div>
-          ) : (
-            <div className="mt-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-              <p className="text-gray-500">Advertisement Space</p>
-            </div>
-          )}
+          <AdSlot placement="bottom" className="mt-8" />
 
           <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>

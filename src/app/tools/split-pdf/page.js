@@ -1,11 +1,10 @@
 'use client'
 import { useState, useRef, useEffect } from 'react';
 import { FaFilePdf, FaCut, FaDownload } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 import API_URL from '@/app/config';
 
@@ -16,7 +15,6 @@ export default function SplitPDF() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [error, setError] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false); // Track AdSense script loading
   const fileInputRef = useRef(null);
 
   // Handle file selection
@@ -164,21 +162,7 @@ export default function SplitPDF() {
     }
   };
 
-  // Initialize all ad units
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({}); // Top ad
-        window.adsbygoogle.push({}); // Bottom ad
-        if (file) {
-          window.adsbygoogle.push({}); // Middle ad
-        }
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, file]);
+
 
   // Clean up
   useEffect(() => {
@@ -195,19 +179,8 @@ export default function SplitPDF() {
         <Head>
           <title>Split PDF - PDF Tools</title>
           <meta name="description" content="Extract pages from PDF documents" />
-          {/* Google AdSense Script */}
         </Head>
-      {toolsAdsConfig.isConfigured() && (
-            <Script 
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            // Replace 'ca-pub-XXXXXXXXXXXXXXXX' with your actual AdSense publisher ID from your AdSense account
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-        />
-      )}
+      
       <div className="mx-3 md:mx-10 lg:mx-18">
 
            <div className="flex items-center mb-6">
@@ -215,16 +188,7 @@ export default function SplitPDF() {
         </div>
 
           {/* Top Ad Unit - Responsive Leaderboard */}
-          <div className="mb-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-              data-ad-slot={toolsAdsConfig.getSlotId("top")} // Replace with your actual top ad unit slot ID
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-6">
@@ -309,16 +273,7 @@ export default function SplitPDF() {
 
                 {/* Middle Ad Unit - Responsive Rectangle */}
                 {file && (
-                  <div className="my-6">
-                    <ins
-                      className="adsbygoogle"
-                      style={{ display: 'block' }}
-                      data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-                      data-ad-slot={toolsAdsConfig.getSlotId("middle")} // Replace with your actual middle ad unit slot ID
-                      data-ad-format="auto"
-                      data-full-width-responsive="true"
-                    ></ins>
-                  </div>
+                  <AdSlot placement="middle" className="my-6" />
                 )}
               </div>
             )}
@@ -365,16 +320,7 @@ export default function SplitPDF() {
           </div>
 
           {/* Bottom Ad Unit - Responsive Leaderboard */}
-          <div className="mt-8">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()} // Replace with your actual AdSense publisher ID
-              data-ad-slot={toolsAdsConfig.getSlotId("bottom")} // Replace with your actual bottom ad unit slot ID
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-          </div>
+          <AdSlot placement="bottom" className="mt-8" />
           
         </div>
          <div className="bg-gradient-to-r from-[#25609A] to-[#52aa4d] mt-5 rounded-xl p-8 text-center text-white">

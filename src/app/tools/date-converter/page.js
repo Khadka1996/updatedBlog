@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import Head from 'next/head'
 import NavBar from '@/app/components/header/navbar'
 import Footer from '@/app/components/footer/footer'
-import { toolsAdsConfig } from '@/config/tools-adsense.config'
+import AdSlot from '@/app/components/ads/AdSlot';
 import {
   FaCalendarAlt,
   FaCopy,
@@ -98,7 +97,6 @@ export default function NepaliDateConverter() {
   const [result, setResult] = useState(null) // { adISO, bsISO, weekday }
   const [loading, setLoading] = useState(false)
   const [quickInput, setQuickInput] = useState('')
-  const [adsLoaded, setAdsLoaded] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -189,11 +187,7 @@ export default function NepaliDateConverter() {
     }
   }, [direction, adDate.year, adDate.month])
 
-  useEffect(() => {
-    if (adsLoaded && typeof window !== 'undefined' && window.adsbygoogle) {
-      try { (window.adsbygoogle = window.adsbygoogle || []).push({}) } catch { /* ignore */ }
-    }
-  }, [adsLoaded])
+
 
   // ─── Calendar grid: fetch accurate first-weekday + day-count ─────────
   useEffect(() => {
@@ -371,8 +365,6 @@ export default function NepaliDateConverter() {
   const isSaturday = result?.weekday === 6
 
   // ─── Render ─────────────────────────────────────────────────────────
-  const topAdsConfigured = isHydrated && toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('top')
-  const bottomAdsConfigured = isHydrated && toolsAdsConfig.isConfigured() && toolsAdsConfig.hasSlot('bottom')
 
   return (
     <>
@@ -388,15 +380,6 @@ export default function NepaliDateConverter() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-sky-50 py-6 sm:py-10 px-3 sm:px-6">
         <div className="max-w-5xl mx-auto">
 
-        {topAdsConfigured && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-          />
-        )}
 
         <nav className="mb-6 sm:mb-8" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
@@ -435,14 +418,7 @@ export default function NepaliDateConverter() {
           </p>
         </div>
 
-        {topAdsConfigured && (
-          <div className="mb-6">
-            <ins className="adsbygoogle" style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('top')}
-              data-ad-format="auto" data-full-width-responsive="true"></ins>
-          </div>
-        )}
+        <AdSlot placement="top" className="mb-6" />
 
         {/* Direction toggle */}
         <div className="flex justify-center mb-6 sm:mb-10 px-2">
@@ -689,14 +665,7 @@ export default function NepaliDateConverter() {
         </div>
 
 
-        {bottomAdsConfigured && (
-          <div className="mt-8">
-            <ins className="adsbygoogle" style={{ display: 'block' }}
-              data-ad-client={toolsAdsConfig.getPublisherId()}
-              data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-              data-ad-format="auto" data-full-width-responsive="true"></ins>
-          </div>
-        )}
+        <AdSlot placement="bottom" className="mt-8" />
         </div>
       </div>
       <Footer />

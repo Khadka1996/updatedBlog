@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { FaFont, FaCopy, FaDownload, FaLanguage, FaSyncAlt } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Footer from '@/app/components/footer/footer';
 import NavBar from '@/app/components/header/navbar';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import ToolBreadcrumbs from '@/app/tools/ToolBreadcrumbs';
 
 /* ------------------------------------------------------------------ *
@@ -129,7 +128,6 @@ export default function NepaliFontTool() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [copied, setCopied] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const outRef = useRef(null);
 
@@ -170,21 +168,8 @@ export default function NepaliFontTool() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  useEffect(() => {
-    if (adsLoaded && typeof window !== 'undefined' && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        const unfilled = document.querySelectorAll(
-          'ins.adsbygoogle:not([data-adsbygoogle-status])'
-        );
-        unfilled.forEach(() => window.adsbygoogle.push({}));
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, outputText]);
 
-  const adsConfigured = isHydrated && toolsAdsConfig.isConfigured();
+
 
   return (
     <>
@@ -204,37 +189,12 @@ export default function NepaliFontTool() {
           }
         `}</style>
 
-        {adsConfigured && (
-          <Script
-            id="ads-script"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
 
         <div className="py-8 sm:py-10">
           <ToolBreadcrumbs label="Nepali Fonts Tool" />
 
           {/* Top Ad */}
-          {adsConfigured ? (
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-          ) : (
-            <div className="mb-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-              <p className="text-gray-500">Advertisement Space</p>
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8 rounded-lg overflow-hidden" />
 
           <div className="bg-white rounded-xl shadow-md">
             <div className="p-4 sm:p-6 border-b-2 border-gray-100">
@@ -336,17 +296,8 @@ export default function NepaliFontTool() {
               </div>
 
               {/* Middle Ad */}
-              {adsConfigured && outputText ? (
-                <div className="my-6 rounded-lg overflow-hidden">
-                  <ins
-                    className="adsbygoogle"
-                    style={{ display: 'block' }}
-                    data-ad-client={toolsAdsConfig.getPublisherId()}
-                    data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-                    data-ad-format="auto"
-                    data-full-width-responsive="true"
-                  />
-                </div>
+              {outputText ? (
+                <AdSlot placement="middle" className="my-6 rounded-lg overflow-hidden" />
               ) : null}
 
               <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
@@ -377,22 +328,7 @@ export default function NepaliFontTool() {
           </div>
 
           {/* Bottom Ad */}
-          {adsConfigured ? (
-            <div className="mt-8 rounded-lg overflow-hidden">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-          ) : (
-            <div className="mt-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded text-center">
-              <p className="text-gray-500">Advertisement Space</p>
-            </div>
-          )}
+          <AdSlot placement="bottom" className="mt-8 rounded-lg overflow-hidden" />
         </div>
       </div>
       <Footer />

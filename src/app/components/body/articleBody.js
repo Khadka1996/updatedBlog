@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 import { API_URL } from '@/config/site';
 
 const BlogPage = async ({ searchParams }) => {
@@ -19,32 +19,7 @@ const BlogPage = async ({ searchParams }) => {
     const blogData = await res.json();
     const blogs = blogData.data || [];
 
-    // Only render a real ad unit when AdSense is genuinely configured with
-    // valid, real credentials (checked via regex, not just "is it truthy") —
-    // never a visible "Advertisement Space" placeholder box shown to real
-    // visitors, which looks broken and risks rendering an <ins> against an
-    // invalid client ID.
-    const renderAdUnit = () => {
-      if (!toolsAdsConfig.isConfigured() || !toolsAdsConfig.hasSlot('bottom')) {
-        return null;
-      }
-
-      return (
-        <div className="ad-wrapper min-h-[200px] sm:min-h-[250px]" data-ad-container>
-          <ins
-            className="adsbygoogle"
-            style={{
-              display: 'block',
-              width: '100%',
-              height: '100%'
-            }}
-            data-ad-client={toolsAdsConfig.getPublisherId()}
-            data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-            data-ad-format="horizontal"
-          />
-        </div>
-      );
-    };
+    const renderAdUnit = () => <AdSlot placement="bottom" className="ad-wrapper" />;
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

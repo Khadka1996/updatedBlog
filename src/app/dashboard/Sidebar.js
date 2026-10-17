@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import useDashboardNotifications from './useDashboardNotifications';
 import { 
   HomeOutlined,
   UserOutlined,
@@ -22,11 +24,15 @@ import {
   NotificationOutlined,
   DownOutlined,
   RightOutlined,
-  BellOutlined
+  BellOutlined,
+  FundProjectionScreenOutlined,
+  FileSearchOutlined
 } from '@ant-design/icons';
 import { Badge, Avatar, Modal } from 'antd';
+import { markAdminBrowser } from '../components/ads/adsClient';
 
 const Sidebar = ({ user, collapsed, setCollapsed }) => {
+  const pathname = usePathname() || '/dashboard';
   const [selectedKey, setSelectedKey] = useState('dashboard');
   const [openSubmenus, setOpenSubmenus] = useState({
     'user-management': true,
@@ -40,12 +46,9 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
   const [isMobile, setIsMobile] = useState(false);
   const contentRef = useRef(null);
 
-  // Mock data for notifications
-  const [notificationCounts] = useState({
-    messages: 5,
-    reportedComments: 3,
-    liveChats: 2
-  });
+  // Live counts for the badges (shared poll with the header bell)
+  const { counts: notificationCounts } = useDashboardNotifications();
+  const displayName = user?.name || user?.username || 'Admin';
 
   // Check mobile device
   useEffect(() => {
@@ -74,6 +77,7 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
   };
 
   const confirmLogout = async () => {
+    markAdminBrowser(false);
     try {
       await fetch('/api/users/logout', { 
         method: 'POST', 
@@ -213,18 +217,48 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
       href: '/dashboard/client-management'
     },
     {
+      key: 'manage-ads',
+      adminOnly: true,
+      icon: <FundProjectionScreenOutlined className="text-lg" />,
+      label: 'Manage Ads',
+      href: '/dashboard/ads'
+    },
+    {
       key: 'analytics',
       icon: <BarChartOutlined className="text-lg" />,
       label: 'Analytics',
       href: '/dashboard/analytics'
     },
     {
+      key: 'audit-logs',
+      icon: <FileSearchOutlined className="text-lg" />,
+      label: 'Audit Log',
+      href: '/dashboard/audit-logs',
+      adminOnly: true
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined className="text-lg" />,
       label: 'Settings',
-      href: '/dashboard/settings'
+      href: '/dashboard/settings',
+      adminOnly: true
     },
   ];
+
+  // Highlight the menu entry for the current URL (longest matching href wins).
+  useEffect(() => {
+    let best = null;
+    const visit = (items) => items.forEach((it) => {
+      if (it.href && (pathname === it.href || pathname.startsWith(`${it.href}/`)) && (!best || it.href.length > best.href.length)) best = it;
+      if (it.children) visit(it.children);
+    });
+    visit(menuItems);
+    if (best) setSelectedKey(best.key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const visibleMenuItems = menuItems.filter((it) => !it.adminOnly || user?.role === 'admin');
+  const badgeText = (n) => (n > 99 ? '99+' : n);
 
   const MenuItem = ({ item, level = 0 }) => {
     const hasChildren = item.children && item.children.length > 0;
@@ -278,9 +312,9 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
             </div>
           )}
           
-          {!collapsed && item.badge && (
-            <span className="flex-shrink-0 bg-[#d92026] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">
-              {item.badge}
+          {!collapsed && item.badge > 0 && (
+            <span className="flex-shrink-0 bg-[#d92026] text-white text-xs rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center ml-2">
+              {badgeText(item.badge)}
             </span>
           )}
         </div>
@@ -315,9 +349,9 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
                     )}
                     <span className="truncate text-sm">{child.label}</span>
                   </div>
-                  {child.badge && (
-                    <span className="flex-shrink-0 bg-[#d92026] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {child.badge}
+                  {child.badge > 0 && (
+                    <span className="flex-shrink-0 bg-[#d92026] text-white text-xs rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                      {badgeText(child.badge)}
                     </span>
                   )}
                 </div>
@@ -374,14 +408,14 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
                   {user?.avatar ? (
                     <Avatar
                       src={user.avatar}
-                      alt={user.name}
+                      alt={displayName}
                       size={32}
                       className="border-2 border-[#174fa2]"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full border-2 border-[#174fa2] bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
                       <span className="text-[#174fa2] font-semibold text-sm">
-                        {getUserInitials(user?.name)}
+                        {getUserInitials(displayName)}
                       </span>
                     </div>
                   )}
@@ -395,14 +429,14 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
                   {user?.avatar ? (
                     <Avatar
                       src={user.avatar}
-                      alt={user.name}
+                      alt={displayName}
                       size={40}
                       className="border-2 border-[#174fa2] mr-3"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full border-2 border-[#174fa2] bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mr-3">
                       <span className="text-[#174fa2] font-semibold text-sm">
-                        {getUserInitials(user?.name)}
+                        {getUserInitials(displayName)}
                       </span>
                     </div>
                   )}
@@ -411,7 +445,7 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-gray-900 font-semibold text-sm truncate">
-                    {user?.name || 'Admin User'}
+                    {displayName}
                   </div>
                   <div className="text-gray-600 text-xs flex items-center space-x-2 mt-1">
                     <span className="bg-[#174fa2] text-white px-2 py-0.5 rounded-full">
@@ -439,7 +473,7 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
         >
           <div className="py-4">
             <div className="space-y-1 px-3">
-              {menuItems.map((item) => (
+              {visibleMenuItems.map((item) => (
                 <div key={item.key} className="group">
                   {item.href && !item.children ? (
                     <Link href={item.href}>
@@ -484,7 +518,7 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
           }}
         >
           <div className="font-medium">{hoveredItem.label}</div>
-          {hoveredItem.badge && (
+          {hoveredItem.badge > 0 && (
             <div className="absolute -top-2 -right-2 bg-[#d92026] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               {hoveredItem.badge}
             </div>
@@ -542,7 +576,7 @@ const Sidebar = ({ user, collapsed, setCollapsed }) => {
                     )}
                     <span className="truncate">{child.label}</span>
                   </div>
-                  {child.badge && (
+                  {child.badge > 0 && (
                     <span className="bg-[#d92026] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
                       {child.badge}
                     </span>

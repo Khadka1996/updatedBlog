@@ -1,12 +1,11 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react';
 import { FaClock, FaSyncAlt, FaCopy, FaCheck, FaGlobe, FaPlus, FaTrash } from 'react-icons/fa';
-import Script from 'next/script';
 import Head from 'next/head';
 import Link from 'next/link';
 import NavBar from '@/app/components/header/navbar';
 import Footer from '@/app/components/footer/footer';
-import { toolsAdsConfig } from '@/config/tools-adsense.config';
+import AdSlot from '@/app/components/ads/AdSlot';
 
 const TIMEZONES = [
   'UTC', 'GMT',
@@ -61,7 +60,6 @@ export default function TimeZoneConverter() {
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [adsLoaded, setAdsLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
@@ -160,21 +158,7 @@ export default function TimeZoneConverter() {
     }
   };
 
-  // Ads
-  useEffect(() => {
-    if (adsLoaded && window.adsbygoogle) {
-      try {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-        window.adsbygoogle.push({});
-        if (convertedTimezones.some((tz) => tz.time)) {
-          window.adsbygoogle.push({});
-        }
-      } catch (e) {
-        console.error('AdSense ad push failed:', e);
-      }
-    }
-  }, [adsLoaded, convertedTimezones]);
+
 
   return (
     <>
@@ -185,16 +169,7 @@ export default function TimeZoneConverter() {
           <meta name="description" content="Convert times between different time zones around the world" />
         </Head>
 
-        {toolsAdsConfig.isConfigured() && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            src={toolsAdsConfig.getScriptUrl()}
-            crossOrigin="anonymous"
-            onLoad={() => setAdsLoaded(true)}
-            onError={(e) => console.error('AdSense script failed to load', e)}
-          />
-        )}
+        
 
         <div className="mx-3 md:mx-10 lg:mx-18">
           <nav className="mb-6" aria-label="Breadcrumb">
@@ -233,18 +208,7 @@ export default function TimeZoneConverter() {
             </div>
           </section>
 
-          {toolsAdsConfig.isConfigured() && (
-            <div className="mb-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('top')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-          )}
+          <AdSlot placement="top" className="mb-8" />
 
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -398,17 +362,8 @@ export default function TimeZoneConverter() {
               </div>
             </div>
 
-            {toolsAdsConfig.isConfigured() && convertedTimezones.some((tz) => tz.time) && (
-              <div className="my-6">
-                <ins
-                  className="adsbygoogle"
-                  style={{ display: 'block' }}
-                  data-ad-client={toolsAdsConfig.getPublisherId()}
-                  data-ad-slot={toolsAdsConfig.getSlotId('middle')}
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"
-                />
-              </div>
+            {convertedTimezones.some((tz) => tz.time) && (
+              <AdSlot placement="middle" className="my-6" />
             )}
 
             {/* About */}
@@ -426,18 +381,7 @@ export default function TimeZoneConverter() {
             </div>
           </div>
 
-          {toolsAdsConfig.isConfigured() && (
-            <div className="mt-8">
-              <ins
-                className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client={toolsAdsConfig.getPublisherId()}
-                data-ad-slot={toolsAdsConfig.getSlotId('bottom')}
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-              />
-            </div>
-          )}
+          <AdSlot placement="bottom" className="mt-8" />
         </div>
       </div>
       <Footer />
