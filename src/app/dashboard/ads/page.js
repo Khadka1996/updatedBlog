@@ -76,8 +76,9 @@ export default function ManageAdsPage() {
     {
       title: 'Ad',
       key: 'ad',
+      width: 290,
       render: (_, ad) => (
-        <div className="flex items-center gap-3 min-w-[220px]">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-20 h-12 shrink-0 rounded border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
             {ad.type === 'image' && ad.imagePath ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -86,9 +87,9 @@ export default function ManageAdsPage() {
               <CodeOutlined className="text-xl text-gray-400" />
             )}
           </div>
-          <div className="min-w-0">
-            <div className="font-semibold text-gray-800 truncate max-w-[220px]">{ad.name}</div>
-            <div className="text-xs text-gray-500">
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-gray-800 truncate" title={ad.name}>{ad.name}</div>
+            <div className="text-xs text-gray-500 truncate">
               {ad.type === 'image' ? 'Image banner' : `${ad.network || 'Network'} code · ${ad.renderMode === 'inline' ? 'on page' : 'isolated'}`}
             </div>
           </div>
@@ -98,6 +99,7 @@ export default function ManageAdsPage() {
     {
       title: 'Placement',
       key: 'placement',
+      width: 150,
       render: (_, ad) => (
         <div>
           <div className="text-gray-800">{PLACEMENT_LABEL[ad.placement] || ad.placement}</div>
@@ -238,7 +240,8 @@ export default function ManageAdsPage() {
           columns={columns}
           dataSource={visible}
           loading={loading}
-          scroll={{ x: 980 }}
+          scroll={{ x: 1100 }}
+          tableLayout="fixed"
           pagination={{ pageSize: 10, hideOnSinglePage: true }}
           locale={{
             emptyText: (
