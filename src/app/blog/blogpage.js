@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React, { Fragment, Suspense } from 'react';
+import AdSlot from '../components/ads/AdSlot';
 import Link from 'next/link';
 import { FaArrowRight, FaArrowDown, FaHeart, FaEye, FaComments } from 'react-icons/fa';
 import BlogSearch from './BlogSearch';
@@ -40,6 +41,7 @@ const BlogPage = async ({ searchParams = {} }) => {
 
         {/* Content Container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <AdSlot placement="top" className="mb-2" />
           {/* Search Bar */}
           <div className="mt-8">
             <BlogSearch />
@@ -78,8 +80,16 @@ const BlogPage = async ({ searchParams = {} }) => {
             ) : (
               <>
                 <div id="blog" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-                  {blogs.map((blog) => (
-                    <BlogCard key={blog._id} blog={blog} />
+                  {blogs.map((blog, i) => (
+                    <Fragment key={blog._id}>
+                      <BlogCard blog={blog} />
+                      {/* In-feed ad after the 3rd card (one full row on desktop) */}
+                      {i === 2 && blogs.length > 3 && (
+                        <div className="col-span-full">
+                          <AdSlot placement="in_feed" className="" />
+                        </div>
+                      )}
+                    </Fragment>
                   ))}
                 </div>
                 {blogs.length > 0 && (

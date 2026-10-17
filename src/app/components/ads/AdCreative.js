@@ -81,7 +81,7 @@ function InlineCode({ ad }) {
   return <div ref={ref} className="w-full flex justify-center" />;
 }
 
-function ImageAd({ ad, imgClassName = '' }) {
+function ImageAd({ ad, imgClassName = '', eager = false }) {
   // The size only caps the width — the whole creative is always shown (no cropping).
   const dims = SIZE_DIMENSIONS[ad.size];
   return (
@@ -93,19 +93,23 @@ function ImageAd({ ad, imgClassName = '' }) {
       className="block mx-auto w-fit max-w-full"
       style={dims ? { maxWidth: `min(100%, ${dims[0]}px)` } : undefined}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={ad.imagePath}
-        alt={ad.altText || ad.name || 'Advertisement'}
-        loading="lazy"
-        className={`block max-w-full h-auto rounded-md ${imgClassName}`}
-      />
+      <picture>
+        {/* Phones get a ~480px copy — a fraction of the download. */}
+        {ad.imageMobilePath && <source media="(max-width: 767px)" srcSet={ad.imageMobilePath} type="image/webp" />}
+        <img
+          src={ad.imagePath}
+          alt={ad.altText || ad.name || 'Advertisement'}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          className={`block max-w-full h-auto rounded-md ${imgClassName}`}
+        />
+      </picture>
     </a>
   );
 }
 
-export default function AdCreative({ ad, imgClassName }) {
+export default function AdCreative({ ad, imgClassName, eager }) {
   if (!ad) return null;
-  if (ad.type === 'image') return <ImageAd ad={ad} imgClassName={imgClassName} />;
+  if (ad.type === 'image') return <ImageAd ad={ad} imgClassName={imgClassName} eager={eager} />;
   return ad.renderMode === 'inline' ? <InlineCode ad={ad} /> : <IframeCode ad={ad} />;
 }

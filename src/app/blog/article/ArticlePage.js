@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   FaFacebook, FaWhatsapp, FaPinterest, FaInstagram, FaLink, 
   FaCheck, FaExclamationTriangle 
@@ -10,6 +11,46 @@ import CommentSection from './CommentSection.js';
 import Image from 'next/image';
 import { SITE_URL } from '../../../config/site';
 import AdSlot from '../../components/ads/AdSlot';
+
+// Paragraphs that are real reading text (not empty spacers or image-only <p>).
+const isTextParagraph = (el) => el.textContent.trim().length > 40 && !el.closest('li, table, blockquote');
+
+/**
+ * Renders the article HTML, then mounts ad slots after the 1st and 2nd
+ * paragraphs and after the last one (React portals into small host divs, so
+ * the article markup itself is never cut apart).
+ */
+function ArticleContent({ html }) {
+  const ref = useRef(null);
+  const [hosts, setHosts] = useState([]);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return undefined;
+    const paragraphs = [...root.querySelectorAll('p')].filter(isTextParagraph);
+    const spots = [];
+    if (paragraphs[0]) spots.push(['in_article_1', paragraphs[0]]);
+    if (paragraphs[1]) spots.push(['in_article_2', paragraphs[1]]);
+    const last = paragraphs[paragraphs.length - 1];
+    if (last && paragraphs.length > 3) spots.push(['in_article_end', last]);
+
+    const created = spots.map(([placement, p]) => {
+      const host = document.createElement('div');
+      host.className = 'not-prose ek-in-article-ad';
+      p.after(host);
+      return { placement, host };
+    });
+    setHosts(created);
+    return () => created.forEach(({ host }) => host.remove());
+  }, [html]);
+
+  return (
+    <>
+      <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />
+      {hosts.map(({ placement, host }) => createPortal(<AdSlot placement={placement} className="my-6" />, host, placement))}
+    </>
+  );
+}
 
 const BlogArticle = ({ initialData, recentBlogs = [] }) => {
   const [copyStatus, setCopyStatus] = useState('idle');
@@ -59,16 +100,14 @@ const BlogArticle = ({ initialData, recentBlogs = [] }) => {
   const renderAd = (placement, className = 'my-4') => <AdSlot placement={placement} className={className} />;
 
   const renderContent = (html) => (
-    <div
-      dangerouslySetInnerHTML={{
-        __html: html
-          .replace(/&nbsp;/g, ' ')
-          .replace(/\s+/g, ' ')
-          .replace(/<img([^>]+)>/g, '<img$1 style="max-width:100%;height:auto;display:block;margin:1.5rem auto;border-radius:0.75rem;" />')
-          .replace(/<iframe/g, '<iframe style="width:100%;aspect-ratio:16/9;" ')
-          .replace(/<table/g, '<div style="overflow-x:auto;"><table')
-          .replace(/<\/table>/g, '</table></div>')
-      }}
+    <ArticleContent
+      html={html
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/<img([^>]+)>/g, '<img$1 style="max-width:100%;height:auto;display:block;margin:1.5rem auto;border-radius:0.75rem;" />')
+        .replace(/<iframe/g, '<iframe style="width:100%;aspect-ratio:16/9;" ')
+        .replace(/<table/g, '<div style="overflow-x:auto;"><table')
+        .replace(/<\/table>/g, '</table></div>')}
     />
   );
 
