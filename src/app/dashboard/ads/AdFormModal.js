@@ -88,7 +88,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
 
       const info = { ...data, fileName: file.name };
       setUploadInfo(info);
-      const updates = { imagePath: data.imagePath };
+      const updates = { imagePath: data.imagePath, imageMobilePath: data.imageMobilePath || '' };
       const current = form.getFieldsValue(['name', 'altText']);
       const niceName = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
       if (!current.name) updates.name = niceName.charAt(0).toUpperCase() + niceName.slice(1);
@@ -137,6 +137,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
     if (values.type === 'image') {
       Object.assign(payload, {
         imagePath: values.imagePath,
+        imageMobilePath: values.imageMobilePath || '',
         websiteLink: values.websiteLink,
         altText: values.altText || '',
         openInNewTab: values.openInNewTab,
@@ -229,6 +230,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
             >
               <Input type="hidden" />
             </Form.Item>
+            <Form.Item name="imageMobilePath" noStyle><Input type="hidden" /></Form.Item>
             {!imagePath ? (
               <Upload.Dragger
                 accept=".jpg,.jpeg,.png,.webp,.gif"
@@ -277,7 +279,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
                       </div>
                     )}
                     <Button size="small" type="link" danger icon={<DeleteOutlined />} className="!px-0 mt-2"
-                      onClick={() => { form.setFieldsValue({ imagePath: '' }); setUploadInfo(null); }}>
+                      onClick={() => { form.setFieldsValue({ imagePath: '', imageMobilePath: '' }); setUploadInfo(null); }}>
                       Replace image
                     </Button>
                   </div>

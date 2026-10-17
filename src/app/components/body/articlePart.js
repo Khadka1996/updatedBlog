@@ -188,7 +188,7 @@ export default async function TopArticle() {
         )}
 
         {/* Top article ad (client-initialized) */}
-        <AdSlot placement="top" className="mt-8 max-w-6xl mx-auto" />
+        <AdSlot placement="bottom" className="mt-8 max-w-6xl mx-auto" />
       </div>
     </section>
   );

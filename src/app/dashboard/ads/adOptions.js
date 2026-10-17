@@ -6,7 +6,12 @@ export const PLACEMENTS = [
   { value: 'bottom', label: 'Bottom banner', hint: 'Bottom of tool, blog, services and home pages' },
   { value: 'sidebar_top', label: 'Sidebar (top)', hint: 'Blog article sidebar, above “Latest Articles”' },
   { value: 'sidebar_bottom', label: 'Sidebar (bottom)', hint: 'Blog article sidebar, below “Latest Articles”' },
+  { value: 'in_article_1', label: 'In article — after 1st paragraph', hint: 'Inside every blog post, right after the first paragraph' },
+  { value: 'in_article_2', label: 'In article — after 2nd paragraph', hint: 'Inside every blog post, right after the second paragraph' },
+  { value: 'in_article_end', label: 'In article — end of post', hint: 'Inside every blog post, after the last paragraph' },
+  { value: 'in_feed', label: 'In feed', hint: 'Between sections on the home page and between blog cards on /blog' },
   { value: 'sticky_footer', label: 'Sticky footer', hint: 'Bar fixed to the bottom of the screen on every page' },
+  { value: 'article_popup', label: 'Article popup (5s countdown)', hint: 'Opens with every blog post and closes itself after a 5-4-3-2-1 countdown' },
   { value: 'popup', label: 'Popup', hint: 'Modal shown after a delay (frequency set in Settings > Ads)' },
   { value: 'global_script', label: 'Page script', hint: 'Runs once per visit: popunder, social bar, push, interstitial' },
 ];
@@ -50,6 +55,7 @@ export const EMPTY_AD = {
   name: '',
   type: 'image',
   imagePath: '',
+  imageMobilePath: '',
   websiteLink: '',
   altText: '',
   openInNewTab: true,
@@ -74,8 +80,8 @@ export const EMPTY_AD = {
 export const suggestPlacements = (width, height) => {
   const ratio = width / Math.max(1, height);
   const s = (placement, size = 'responsive', devices = 'all') => ({ placement, size, devices });
-  if (ratio >= 2) return [s('top'), s('middle'), s('bottom'), s('sticky_footer')];
-  if (ratio >= 0.8) return [s('popup'), s('sidebar_top'), s('middle'), s('sidebar_bottom')];
-  if (ratio >= 0.5) return [s('popup'), s('sidebar_top'), s('sidebar_bottom')];
+  if (ratio >= 2) return [s('top'), s('in_article_1'), s('in_article_2'), s('middle'), s('in_feed'), s('bottom'), s('sticky_footer')];
+  if (ratio >= 0.8) return [s('article_popup'), s('popup'), s('sidebar_top'), s('in_article_end'), s('sidebar_bottom')];
+  if (ratio >= 0.5) return [s('article_popup'), s('popup'), s('sidebar_top'), s('sidebar_bottom')];
   return [s('sidebar_bottom', 'responsive', 'desktop'), s('sidebar_top', 'responsive', 'desktop')];
 };

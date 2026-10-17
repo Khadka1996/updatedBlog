@@ -67,12 +67,30 @@ function useGlobalScripts(feed, pathname) {
   }, [feed, pathname]);
 }
 
-function PopupAd({ ad, onClose }) {
+function PopupAd({ ad, onClose, countdown = 0 }) {
+  const [left, setLeft] = useState(countdown);
+  const [bar, setBar] = useState(100);
+  useEffect(() => {
+    if (!countdown) return undefined;
+    const raf = requestAnimationFrame(() => setBar(0)); // drain smoothly over `countdown` seconds
+    return () => cancelAnimationFrame(raf);
+  }, [countdown]);
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // 5 → 4 → 3 → 2 → 1 → close
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    if (!countdown) return undefined;
+    if (left <= 0) { closeRef.current(); return undefined; }
+    const t = setTimeout(() => setLeft((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [left, countdown]);
 
   return (
     <div
@@ -91,10 +109,22 @@ function PopupAd({ ad, onClose }) {
         >
           ×
         </button>
-        <div className="text-[10px] uppercase tracking-wider text-gray-400 text-center mb-1">Advertisement</div>
-        <div className="min-w-[260px] max-h-[80vh] overflow-auto">
-          <AdCreative ad={ad} imgClassName="max-h-[72vh] w-auto max-w-[min(86vw,560px)]" />
+        <div className="flex items-center justify-between gap-3 mb-1.5 px-0.5">
+          <span className="text-[10px] uppercase tracking-wider text-gray-400">Advertisement</span>
+          {countdown > 0 && (
+            <span className="text-xs font-medium text-gray-600 tabular-nums" aria-live="polite">
+              Closes in <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#174fa2] text-white text-[11px]">{Math.max(left, 1)}</span>
+            </span>
+          )}
         </div>
+        <div className="min-w-[260px] max-h-[80vh] overflow-auto">
+          <AdCreative ad={ad} eager imgClassName="max-h-[68vh] w-auto max-w-[min(86vw,560px)]" />
+        </div>
+        {countdown > 0 && (
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="h-full bg-[#174fa2]" style={{ width: `${bar}%`, transition: `width ${countdown}s linear` }} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -124,6 +154,7 @@ export default function GlobalAds() {
   const pathname = usePathname() || '/';
   const [feed, setFeed] = useState(null);
   const [popup, setPopup] = useState(null);
+  const [articlePopup, setArticlePopup] = useState(null);
   const [sticky, setSticky] = useState(null);
 
   useCodeInjection(pathname);
@@ -147,9 +178,28 @@ export default function GlobalAds() {
     if (sticky?._id) trackImpression(sticky._id, `sticky|${pathname}`);
   }, [sticky, pathname]);
 
-  // Popup — after a delay, at most once per `popupFrequencyHours`.
+  const isArticle = /^\/blogs\/[^/]+$/.test(pathname);
+  const hasArticlePopup = Boolean(feed && isArticle && eligibleAds(feed, 'article_popup', pathname).length);
+
+  // Article popup — opens with every blog post (once per post per visit)
+  // and closes itself after a 5-second countdown.
   useEffect(() => {
-    if (!feed || !adsAllowed(feed.settings, pathname)) return undefined;
+    if (!hasArticlePopup || !adsAllowed(feed.settings, pathname)) return undefined;
+    const key = `ek_article_popup|${pathname}`;
+    if (readStore(sessionStorage, key)) return undefined;
+    const ad = pickWeighted(eligibleAds(feed, 'article_popup', pathname));
+    const timer = setTimeout(() => {
+      setArticlePopup(ad);
+      writeStore(sessionStorage, key, '1');
+      trackImpression(ad._id, `article_popup|${pathname}`);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [feed, pathname, hasArticlePopup]);
+
+  // Popup — after a delay, at most once per `popupFrequencyHours`.
+  // Skipped on articles that already show the article popup.
+  useEffect(() => {
+    if (!feed || hasArticlePopup || !adsAllowed(feed.settings, pathname)) return undefined;
     const ad = pickWeighted(eligibleAds(feed, 'popup', pathname));
     if (!ad) return undefined;
     const hours = Number(feed.settings.popupFrequencyHours ?? 24);
@@ -161,14 +211,15 @@ export default function GlobalAds() {
       trackImpression(ad._id, `popup|${pathname}`);
     }, Math.max(0, Number(feed.settings.popupDelaySeconds ?? 8)) * 1000);
     return () => clearTimeout(timer);
-  }, [feed, pathname]);
+  }, [feed, pathname, hasArticlePopup]);
 
-  // Close the popup when navigating away from the page that opened it.
-  useEffect(() => { setPopup(null); }, [pathname]);
+  // Close popups when navigating away from the page that opened them.
+  useEffect(() => { setPopup(null); setArticlePopup(null); }, [pathname]);
 
   return (
     <>
       {popup && <PopupAd ad={popup} onClose={() => setPopup(null)} />}
+      {articlePopup && <PopupAd ad={articlePopup} countdown={5} onClose={() => setArticlePopup(null)} />}
       {sticky && (
         <StickyAd
           ad={sticky}

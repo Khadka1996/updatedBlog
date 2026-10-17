@@ -5,6 +5,7 @@ import OurClients from './components/body/ourClients';
 import OurTools from './components/body/ourTools';
 import TopBody from './components/body/topbody';
 import Footer from './components/footer/footer';
+import AdSlot from './components/ads/AdSlot';
 import NavBar from './components/header/navbar';
 import { createPageMetadata } from './seo';
 
@@ -27,8 +28,14 @@ const Page = () => {
       {/* Add padding-top to the first section to prevent content from being hidden behind the NavBar */}
       <div className="pt-20">
         <TopBody />
+        <div className="max-w-6xl mx-auto px-4">
+          <AdSlot placement="top" className="my-6" />
+        </div>
         <OurClients />
         <OurTools />
+        <div className="max-w-6xl mx-auto px-4">
+          <AdSlot placement="in_feed" className="my-8" />
+        </div>
         <ArticleBody />
         <ArticlePart />
         <ContactUs />
