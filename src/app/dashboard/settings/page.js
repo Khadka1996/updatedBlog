@@ -159,7 +159,7 @@ function SettingsInner() {
     <div className="sticky bottom-0 z-10 -mx-1 mt-4 flex items-center justify-end gap-3 border-t border-gray-200 bg-white/95 px-1 py-3 backdrop-blur">
       {dirty && <span className="text-sm text-orange-600">You have unsaved changes</span>}
       <Button onClick={load} disabled={saving}>Discard</Button>
-      <Button type="primary" icon={<SaveOutlined />} loading={saving} disabled={!dirty} onClick={save} className="bg-[#174fa2]">
+      <Button type="primary" icon={<SaveOutlined />} loading={saving} disabled={!dirty} onClick={save}>
         Save settings
       </Button>
     </div>

@@ -92,8 +92,8 @@ function PopupAd({ ad, onClose }) {
           ×
         </button>
         <div className="text-[10px] uppercase tracking-wider text-gray-400 text-center mb-1">Advertisement</div>
-        <div className="min-w-[280px] max-h-[80vh] overflow-auto">
-          <AdCreative ad={ad} />
+        <div className="min-w-[260px] max-h-[80vh] overflow-auto">
+          <AdCreative ad={ad} imgClassName="max-h-[72vh] w-auto max-w-[min(86vw,560px)]" />
         </div>
       </div>
     </div>
@@ -114,7 +114,7 @@ function StickyAd({ ad, dismissible, onClose }) {
             ×
           </button>
         )}
-        <AdCreative ad={ad} />
+        <AdCreative ad={ad} imgClassName="max-h-[56px] md:max-h-[90px] w-auto" />
       </div>
     </div>
   );

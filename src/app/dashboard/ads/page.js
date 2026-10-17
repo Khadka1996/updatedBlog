@@ -199,7 +199,7 @@ export default function ManageAdsPage() {
         <Space wrap>
           <Link href="/dashboard/settings?tab=ads"><Button icon={<SettingOutlined />}>Ad settings</Button></Link>
           <Button icon={<ReloadOutlined />} onClick={load} loading={loading}>Refresh</Button>
-          <Button type="primary" icon={<PlusOutlined />} className="bg-[#174fa2]" onClick={() => setModal({ open: true, ad: null })}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal({ open: true, ad: null })}>
             New ad
           </Button>
         </Space>
@@ -244,7 +244,7 @@ export default function ManageAdsPage() {
             emptyText: (
               <Empty description={ads.length ? 'No ads match these filters' : 'No ads yet'}>
                 {!ads.length && (
-                  <Button type="primary" className="bg-[#174fa2]" icon={<PlusOutlined />} onClick={() => setModal({ open: true, ad: null })}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal({ open: true, ad: null })}>
                     Create your first ad
                   </Button>
                 )}

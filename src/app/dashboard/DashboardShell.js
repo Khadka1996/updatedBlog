@@ -159,6 +159,11 @@ const DashboardShell = ({ children }) => {
   return (
     <ConfigProvider
       theme={{
+        token: {
+          colorPrimary: '#174fa2',
+          colorLink: '#174fa2',
+          borderRadius: 8,
+        },
         components: {
           Layout: {
             headerBg: '#ffffff',
@@ -166,8 +171,11 @@ const DashboardShell = ({ children }) => {
             headerHeight: 64,
           },
           Button: {
-            primaryColor: '#0f766e',
-            primaryHoverColor: '#115e59',
+            // primaryColor is the TEXT colour of primary buttons.
+            primaryColor: '#ffffff',
+            colorPrimaryHover: '#1d5fc0',
+            colorPrimaryActive: '#123f82',
+            fontWeight: 500,
           },
         },
       }}

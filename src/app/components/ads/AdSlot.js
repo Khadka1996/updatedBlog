@@ -117,7 +117,7 @@ export default function AdSlot({ placement, className = 'my-6', withSidebarCode 
           </div>
         )}
         {state.ad ? (
-          <AdCreative ad={state.ad} />
+          <AdCreative ad={state.ad} imgClassName={placement.startsWith('sidebar') ? 'max-h-[calc(100vh-8rem)] w-auto' : ''} />
         ) : (
           <AdSenseUnit position={fallbackPosition} vertical={placement.startsWith('sidebar')} />
         )}

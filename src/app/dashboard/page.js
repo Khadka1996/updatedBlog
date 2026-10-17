@@ -259,7 +259,7 @@ export default function DashboardHome() {
                     );
                   })}
                 </ol>
-              ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No posts yet"><Link href="/dashboard/blog/add"><Button type="primary" className="bg-[#174fa2]">Write the first post</Button></Link></Empty>}
+              ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No posts yet"><Link href="/dashboard/blog/add"><Button type="primary">Write the first post</Button></Link></Empty>}
             </Panel>
 
             <Panel title="Latest posts">
