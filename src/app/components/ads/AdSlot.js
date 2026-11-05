@@ -53,6 +53,7 @@ function SidebarCode({ code }) {
 export default function AdSlot({ placement, className = 'my-6', withSidebarCode = false }) {
   const pathname = usePathname() || '/';
   const [state, setState] = useState({ ready: false, ad: null, settings: null, sidebarCode: '' });
+  const [empty, setEmpty] = useState(false); // network sent nothing -> collapse the slot
   const boxRef = useRef(null);
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function AdSlot({ placement, className = 'my-6', withSidebarCode 
       const settings = feed?.settings || null;
       const allowed = adsAllowed(settings, pathname);
       const ad = allowed ? pickWeighted(eligibleAds(feed, placement, pathname)) : null;
+      setEmpty(false);
       setState({
         ready: true,
         ad,
@@ -110,14 +112,20 @@ export default function AdSlot({ placement, className = 'my-6', withSidebarCode 
 
   return (
     <>
-      <div ref={boxRef} className={`w-full ${className}`} data-ad-container data-ad-placement={placement}>
+      <div
+        ref={boxRef}
+        className={empty ? 'w-full h-0 overflow-hidden' : `w-full ${className}`}
+        data-ad-container
+        data-ad-placement={placement}
+        data-ad-empty={empty ? 'true' : undefined}
+      >
         {state.settings?.showAdLabel !== false && (
           <div className="text-[10px] uppercase tracking-wider text-gray-400 text-center mb-1 select-none">
             Advertisement
           </div>
         )}
         {state.ad ? (
-          <AdCreative ad={state.ad} imgClassName={placement.startsWith('sidebar') ? 'max-h-[calc(100vh-8rem)] w-auto' : ''} />
+          <AdCreative ad={state.ad} onEmptyChange={setEmpty} imgClassName={placement.startsWith('sidebar') ? 'max-h-[calc(100vh-8rem)] w-auto' : ''} />
         ) : (
           <AdSenseUnit position={fallbackPosition} vertical={placement.startsWith('sidebar')} />
         )}
