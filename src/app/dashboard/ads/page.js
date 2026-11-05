@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dayjs from 'dayjs';
 import {
   Table, Button, Tag, Switch, Input, Select, Space, Popconfirm, Tooltip, Card, Statistic,
-  Empty, Collapse, message,
+  Empty, Collapse, Alert, message,
 } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, CopyOutlined, ReloadOutlined, CodeOutlined,
@@ -22,6 +22,7 @@ export default function ManageAdsPage() {
   const [ads, setAds] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [scriptAdsOnly, setScriptAdsOnly] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [modal, setModal] = useState({ open: false, ad: null });
   const [filters, setFilters] = useState({ search: '', placement: undefined, type: undefined, status: undefined });
@@ -29,12 +30,15 @@ export default function ManageAdsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listRes, statsRes] = await Promise.all([
+      const [listRes, statsRes, settingsRes] = await Promise.all([
         fetch('/api/ads', { credentials: 'include', cache: 'no-store' }),
         fetch('/api/ads/stats', { credentials: 'include', cache: 'no-store' }),
+        fetch('/api/settings', { credentials: 'include', cache: 'no-store' }),
       ]);
       const list = await listRes.json().catch(() => ({}));
       const summary = await statsRes.json().catch(() => ({}));
+      const siteSettings = await settingsRes.json().catch(() => ({}));
+      setScriptAdsOnly(siteSettings?.settings?.ads?.scriptAdsOnly === true);
       if (!listRes.ok) throw new Error(list.message || 'Could not load ads');
       setAds(list.advertisements || []);
       setStats(summary.stats || null);
@@ -149,7 +153,13 @@ export default function ManageAdsPage() {
       key: 'status',
       render: (_, ad) => (
         <Space direction="vertical" size={4}>
-          <Tag color={STATUS_META[ad.status]?.color}>{STATUS_META[ad.status]?.label || ad.status}</Tag>
+          {scriptAdsOnly && ad.type === 'image' && ad.status === 'live' ? (
+            <Tooltip title="Script ads only is on — this image ad is kept but not shown on the website.">
+              <Tag color="default">Hidden (script ads only)</Tag>
+            </Tooltip>
+          ) : (
+            <Tag color={STATUS_META[ad.status]?.color}>{STATUS_META[ad.status]?.label || ad.status}</Tag>
+          )}
           <Switch
             size="small"
             checked={ad.isActive}
@@ -206,6 +216,21 @@ export default function ManageAdsPage() {
           </Button>
         </Space>
       </div>
+
+      {scriptAdsOnly && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Image ads can't be used for the moment — ad network script ads are running"
+          description={
+            <span>
+              <b>Script ads only</b> is on, so the website shows only ad network code (Adsterra). Your image banners are kept and
+              marked “Hidden”; they come back automatically when you turn this off in{' '}
+              <Link href="/dashboard/settings?tab=ads" className="text-[#174fa2]">Settings → Ads</Link>.
+            </span>
+          }
+        />
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Card size="small"><Statistic title="Live ads" value={stats?.live ?? 0} valueStyle={{ color: '#16a34a' }} /></Card>
@@ -275,6 +300,7 @@ export default function ManageAdsPage() {
       />
 
       <AdFormModal
+        scriptAdsOnly={scriptAdsOnly}
         open={modal.open}
         ad={modal.ad}
         onClose={() => setModal({ open: false, ad: null })}

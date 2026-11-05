@@ -54,6 +54,7 @@ const CODE_BLOCKS = [
 
 const AD_SWITCHES = [
   { key: 'enabled', label: 'Show ads on the website', help: 'Master switch. Off hides every ad (managed ads and AdSense) instantly.' },
+  { key: 'scriptAdsOnly', label: 'Script ads only (ad networks)', help: 'Only ad network code (Adsterra, Monetag …) runs on the website. Image banners stay saved but are not shown until you turn this off.' },
   { key: 'showOnMobile', label: 'Show ads on mobile', help: 'Turn off to keep the mobile experience ad-free.' },
   { key: 'hideForAdmins', label: 'Hide ads from admins', help: 'Browsers where an admin is signed in to the dashboard see no ads and don’t inflate view counts.' },
   { key: 'showAdLabel', label: 'Show “Advertisement” label', help: 'Small label above each ad — recommended by most networks.' },
