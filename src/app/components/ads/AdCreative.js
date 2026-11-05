@@ -25,33 +25,53 @@ const frameDocument = (code, frameId) => `<!doctype html><html><head><meta chars
 <base target="_blank">
 <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body{display:flex;justify-content:center;align-items:flex-start}</style>
 </head><body>${code}
-<script>(function(){var last=0;function post(){var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);if(h!==last){last=h;parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},'*');}}
+<script>(function(){var last=-1;function post(){var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);if(h!==last){last=h;parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},'*');}}
 window.addEventListener('load',post);if(window.ResizeObserver){new ResizeObserver(post).observe(document.body);}setInterval(post,1000);setTimeout(post,50);})();</script>
 </body></html>`;
 
 let frameCounter = 0;
 
-function IframeCode({ ad }) {
+// How long a network gets to put something in its frame before the slot collapses.
+const EMPTY_AFTER_MS = 10000;
+
+function IframeCode({ ad, onEmptyChange }) {
   const ref = useRef(null);
   const [frameId] = useState(() => `ekad-${++frameCounter}-${ad._id}`);
   const dims = SIZE_DIMENSIONS[ad.size];
   const [height, setHeight] = useState(dims ? dims[1] : 90);
+  const filledRef = useRef(false);
+  const timerRef = useRef(null);
+  const emptyCb = useRef(onEmptyChange);
+  emptyCb.current = onEmptyChange;
 
   useEffect(() => {
     const onMessage = (event) => {
-      if (event.source !== ref.current?.contentWindow) return;
+      if (event.source !== ref.current?.contentWindow || event.data?.ekAdFrame !== frameId) return;
       const h = Number(event.data?.height);
-      if (event.data?.ekAdFrame === frameId && h > 0 && h < 2000) setHeight(dims ? dims[1] : h);
+      if (!(h >= 0 && h < 2000)) return;
+      if (h > 10) {
+        setHeight(dims ? dims[1] : h);
+        if (!filledRef.current) { filledRef.current = true; emptyCb.current?.(false); }
+      }
     };
     window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    return () => { window.removeEventListener('message', onMessage); clearTimeout(timerRef.current); };
   }, [frameId, dims]);
+
+  // The frame is lazy-loaded, so start the clock when it actually loads.
+  // No ad by then (unfilled, blocked, or a script that can't run in a frame):
+  // collapse the slot instead of leaving an empty "Advertisement" box.
+  const onFrameLoad = () => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => { if (!filledRef.current) emptyCb.current?.(true); }, EMPTY_AFTER_MS);
+  };
 
   return (
     <iframe
       ref={ref}
       title={ad.name || 'Advertisement'}
       srcDoc={frameDocument(ad.code, frameId)}
+      onLoad={onFrameLoad}
       sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
       loading="lazy"
       scrolling="no"
@@ -108,8 +128,8 @@ function ImageAd({ ad, imgClassName = '', eager = false }) {
   );
 }
 
-export default function AdCreative({ ad, imgClassName, eager }) {
+export default function AdCreative({ ad, imgClassName, eager, onEmptyChange }) {
   if (!ad) return null;
   if (ad.type === 'image') return <ImageAd ad={ad} imgClassName={imgClassName} eager={eager} />;
-  return ad.renderMode === 'inline' ? <InlineCode ad={ad} /> : <IframeCode ad={ad} />;
+  return ad.renderMode === 'inline' ? <InlineCode ad={ad} /> : <IframeCode ad={ad} onEmptyChange={onEmptyChange} />;
 }
