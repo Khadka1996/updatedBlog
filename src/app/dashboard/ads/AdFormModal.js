@@ -23,7 +23,7 @@ const CODE_PLACEHOLDER = `Paste the code your ad network gives you, for example:
 </script>
 <script type="text/javascript" src="https://www.highperformanceformat.com/xxxxxxxx/invoke.js"></script>`;
 
-export default function AdFormModal({ open, ad, onClose, onSaved }) {
+export default function AdFormModal({ open, ad, onClose, onSaved, scriptAdsOnly = false }) {
   const [msg, msgHolder] = message.useMessage();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
@@ -39,7 +39,8 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
 
   useEffect(() => {
     if (!open) return;
-    const source = { ...EMPTY_AD, ...(ad || {}) };
+    // While "Script ads only" is on, new ads start as ad network code.
+    const source = { ...EMPTY_AD, ...(!ad && scriptAdsOnly ? { type: 'code' } : {}), ...(ad || {}) };
     form.resetFields();
     form.setFieldsValue({
       ...source,
@@ -48,7 +49,7 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
     setPreviewAd(null);
     setUploadInfo(null);
     setProgress(0);
-  }, [open, ad, form]);
+  }, [open, ad, form, scriptAdsOnly]);
 
   // Page scripts (popunder etc.) only make sense as inline code.
   useEffect(() => {
@@ -207,12 +208,20 @@ export default function AdFormModal({ open, ad, onClose, onSaved }) {
     >
       {msgHolder}
       <Form form={form} layout="vertical" requiredMark="optional" initialValues={EMPTY_AD}>
+        {scriptAdsOnly && (
+          <Alert
+            type="warning"
+            showIcon
+            className="mb-4"
+            message="Image ads can't be used for the moment — ad network script ads are running. Use “Ad network code”."
+          />
+        )}
         <Form.Item name="type" label="Ad type">
           <Segmented
             block
             disabled={placement === 'global_script'}
             options={[
-              { value: 'image', label: 'Image banner', icon: <PictureOutlined /> },
+              { value: 'image', label: 'Image banner', icon: <PictureOutlined />, disabled: scriptAdsOnly && ad?.type !== 'image' },
               { value: 'code', label: 'Ad network code (3rd party)', icon: <CodeOutlined /> },
             ]}
           />
