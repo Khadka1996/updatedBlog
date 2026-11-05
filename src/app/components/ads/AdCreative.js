@@ -19,13 +19,14 @@ export const injectHtml = (container, html, { prepend = false } = {}) => {
 
 // Sandboxed frame document. Scripts run while the frame document is still
 // parsing, so network snippets that rely on document.write (Adsterra,
-// PropellerAds banners, ...) work. The frame reports its height to the parent.
+// PropellerAds banners, ...) work. The frame reports the height of what the
+// network actually rendered (0 = nothing) to the parent.
 const frameDocument = (code, frameId) => `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <base target="_blank">
 <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body{display:flex;justify-content:center;align-items:flex-start}</style>
 </head><body>${code}
-<script>(function(){var last=-1;function post(){var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);if(h!==last){last=h;parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},'*');}}
+<script>(function(){var last=-1;function post(){var h=0,k=document.body.children;for(var i=0;i<k.length;i++){if(k[i].tagName==='SCRIPT'||k[i].tagName==='STYLE')continue;var r=k[i].getBoundingClientRect();if(r.width>0&&r.bottom>h)h=Math.ceil(r.bottom);}if(h!==last){last=h;parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},'*');}}
 window.addEventListener('load',post);if(window.ResizeObserver){new ResizeObserver(post).observe(document.body);}setInterval(post,1000);setTimeout(post,50);})();</script>
 </body></html>`;
 
