@@ -17,7 +17,7 @@ export const injectHtml = (container, html, { prepend = false } = {}) => {
   return nodes;
 };
 
-// Sandboxed frame document. Scripts run while the frame document is still
+// Sandboxed frame document for unsaved previews. Scripts run while the frame document is still
 // parsing, so network snippets that rely on document.write (Adsterra,
 // PropellerAds banners, ...) work. The frame reports the height of what the
 // network actually rendered (0 = nothing) to the parent.
@@ -59,6 +59,18 @@ function IframeCode({ ad, onEmptyChange }) {
     return () => { window.removeEventListener('message', onMessage); clearTimeout(timerRef.current); };
   }, [frameId, dims]);
 
+  // Saved ads load from /ad-frame/<id>: a real page on our domain, because
+  // banner networks (Adsterra, ...) need cookies and the real site address,
+  // which a sandboxed srcdoc frame can't give them. Unsaved previews in the
+  // dashboard still run sandboxed.
+  const isSaved = /^[a-f0-9]{24}$/i.test(String(ad._id || ''));
+  const frameSource = isSaved
+    ? { src: `/ad-frame/${ad._id}?f=${encodeURIComponent(frameId)}` }
+    : {
+        srcDoc: frameDocument(ad.code, frameId),
+        sandbox: 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation',
+      };
+
   // The frame is lazy-loaded, so start the clock when it actually loads.
   // No ad by then (unfilled, blocked, or a script that can't run in a frame):
   // collapse the slot instead of leaving an empty "Advertisement" box.
@@ -71,9 +83,8 @@ function IframeCode({ ad, onEmptyChange }) {
     <iframe
       ref={ref}
       title={ad.name || 'Advertisement'}
-      srcDoc={frameDocument(ad.code, frameId)}
+      {...frameSource}
       onLoad={onFrameLoad}
-      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
       loading="lazy"
       scrolling="no"
       style={{
