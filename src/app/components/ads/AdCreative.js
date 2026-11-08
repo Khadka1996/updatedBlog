@@ -38,6 +38,7 @@ const EMPTY_AFTER_MS = 10000;
 function IframeCode({ ad, onEmptyChange }) {
   const ref = useRef(null);
   const [frameId] = useState(() => `ekad-${++frameCounter}-${ad._id}`);
+  const isSaved = /^[a-f0-9]{24}$/i.test(String(ad._id || ''));
   const dims = SIZE_DIMENSIONS[ad.size];
   const [height, setHeight] = useState(dims ? dims[1] : 90);
   const filledRef = useRef(false);
@@ -51,19 +52,19 @@ function IframeCode({ ad, onEmptyChange }) {
       const h = Number(event.data?.height);
       if (!(h >= 0 && h < 2000)) return;
       if (h > 10) {
-        setHeight(dims ? dims[1] : h);
+        // Saved ads report their real (possibly scaled-down) height; previews keep the chosen size.
+        setHeight(dims && !isSaved ? dims[1] : h);
         if (!filledRef.current) { filledRef.current = true; emptyCb.current?.(false); }
       }
     };
     window.addEventListener('message', onMessage);
     return () => { window.removeEventListener('message', onMessage); clearTimeout(timerRef.current); };
-  }, [frameId, dims]);
+  }, [frameId, dims, isSaved]);
 
   // Saved ads load from /ad-frame/<id>: a real page on our domain, because
   // banner networks (Adsterra, ...) need cookies and the real site address,
   // which a sandboxed srcdoc frame can't give them. Unsaved previews in the
   // dashboard still run sandboxed.
-  const isSaved = /^[a-f0-9]{24}$/i.test(String(ad._id || ''));
   const frameSource = isSaved
     ? { src: `/ad-frame/${ad._id}?f=${encodeURIComponent(frameId)}` }
     : {

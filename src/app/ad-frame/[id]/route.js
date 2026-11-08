@@ -26,8 +26,14 @@ const page = (code, frameId) => `<!doctype html>
 <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body{display:flex;justify-content:center;align-items:flex-start}</style>
 </head><body>
 ${code}
-<script>(function(){var last=-1;function post(){var h=0,k=document.body.children;for(var i=0;i<k.length;i++){if(k[i].tagName==='SCRIPT'||k[i].tagName==='STYLE')continue;var r=k[i].getBoundingClientRect();if(r.width>0&&r.bottom>h)h=Math.ceil(r.bottom);}if(h!==last){last=h;if(parent!==window)parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},location.origin);}}
-window.addEventListener('load',post);if(window.ResizeObserver){new ResizeObserver(post).observe(document.body);}setInterval(post,1000);setTimeout(post,50);})();</script>
+<script>(function(){
+// Report the rendered ad's height to the page; if the ad is wider than this
+// frame (e.g. a 728x90 banner on a phone), scale it down so it shows whole.
+var last=-1,b=document.body;b.style.transformOrigin='top center';
+function post(){var w=0,h=0,k=b.children;for(var i=0;i<k.length;i++){var el=k[i];if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||!el.offsetWidth)continue;w=Math.max(w,el.offsetWidth);h=Math.max(h,el.offsetTop+el.offsetHeight);}
+var s=w>window.innerWidth+1?window.innerWidth/w:1;b.style.transform=s<1?'scale('+s+')':'';h=Math.ceil(h*s);
+if(h!==last){last=h;if(parent!==window)parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},location.origin);}}
+window.addEventListener('load',post);window.addEventListener('resize',post);if(window.ResizeObserver){new ResizeObserver(post).observe(b);}setInterval(post,1000);setTimeout(post,50);})();</script>
 </body></html>`;
 
 export async function GET(request, { params }) {
