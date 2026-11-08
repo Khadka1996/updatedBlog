@@ -29,9 +29,13 @@ ${code}
 <script>(function(){
 // Report the rendered ad's height to the page; if the ad is wider than this
 // frame (e.g. a 728x90 banner on a phone), scale it down so it shows whole.
-var last=-1,b=document.body;b.style.transformOrigin='top center';
-function post(){var w=0,h=0,k=b.children;for(var i=0;i<k.length;i++){var el=k[i];if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||!el.offsetWidth)continue;w=Math.max(w,el.offsetWidth);h=Math.max(h,el.offsetTop+el.offsetHeight);}
-var s=w>window.innerWidth+1?window.innerWidth/w:1;b.style.transform=s<1?'scale('+s+')':'';h=Math.ceil(h*s);
+// Banner snippets declare their real size (atOptions.width); some networks
+// size their frame to the screen but still draw the full-width creative
+// inside it, so lay it out at its declared width and scale that down.
+var last=-1,b=document.body,aw=+((window.atOptions||{}).width)||0;
+function post(){var vw=window.innerWidth,fixed=aw&&aw>vw+1;b.style.width=fixed?aw+'px':'';b.style.transformOrigin=fixed?'top left':'top center';
+var w=fixed?aw:0,h=0,k=b.children;for(var i=0;i<k.length;i++){var el=k[i];if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||!el.offsetWidth)continue;w=Math.max(w,el.offsetWidth);h=Math.max(h,el.offsetTop+el.offsetHeight);}
+var s=w>vw+1?vw/w:1;b.style.transform=s<1?'scale('+s+')':'';h=Math.ceil(h*s);
 if(h!==last){last=h;if(parent!==window)parent.postMessage({ekAdFrame:${JSON.stringify(frameId)},height:h},location.origin);}}
 window.addEventListener('load',post);window.addEventListener('resize',post);if(window.ResizeObserver){new ResizeObserver(post).observe(b);}setInterval(post,1000);setTimeout(post,50);})();</script>
 </body></html>`;
