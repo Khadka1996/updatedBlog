@@ -33,7 +33,7 @@ window.addEventListener('load',post);if(window.ResizeObserver){new ResizeObserve
 let frameCounter = 0;
 
 // How long a network gets to put something in its frame before the slot collapses.
-const EMPTY_AFTER_MS = 10000;
+const EMPTY_AFTER_MS = 25000; // some network ads take 15-20s on slow connections
 
 function IframeCode({ ad, onEmptyChange }) {
   const ref = useRef(null);

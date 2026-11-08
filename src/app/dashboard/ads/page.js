@@ -12,7 +12,7 @@ import {
   SettingOutlined, UndoOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import AdFormModal from './AdFormModal';
-import { PAGES, PLACEMENTS, PLACEMENT_LABEL, STATUS_META } from './adOptions';
+import { PAGES, PLACEMENTS, PLACEMENT_LABEL, STATUS_META, looksLikePageScript } from './adOptions';
 
 const PAGE_LABEL = Object.fromEntries(PAGES.map((p) => [p.value, p.label]));
 const fmt = (n) => Number(n || 0).toLocaleString();
@@ -107,6 +107,11 @@ export default function ManageAdsPage() {
       render: (_, ad) => (
         <div>
           <div className="text-gray-800">{PLACEMENT_LABEL[ad.placement] || ad.placement}</div>
+          {ad.type === 'code' && ad.placement !== 'global_script' && looksLikePageScript(ad.code) && (
+            <Tooltip title="This is a Social Bar / Popunder style script. It shows nothing in a banner slot — edit it and choose “Page script”.">
+              <Tag color="red" className="mt-1">Should be Page script</Tag>
+            </Tooltip>
+          )}
           <div className="text-xs text-gray-500">{ad.size === 'responsive' ? 'Responsive' : ad.size}</div>
         </div>
       ),
@@ -234,7 +239,7 @@ export default function ManageAdsPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Card size="small"><Statistic title="Live ads" value={stats?.live ?? 0} valueStyle={{ color: '#16a34a' }} /></Card>
-        <Card size="small"><Statistic title="Paused / scheduled" value={`${stats?.paused ?? 0} / ${stats?.scheduled ?? 0}`} /></Card>
+        <Card size="small"><Statistic title={stats?.hidden ? "Paused / hidden" : "Paused / scheduled"} value={stats?.hidden ? `${stats?.paused ?? 0} / ${stats.hidden}` : `${stats?.paused ?? 0} / ${stats?.scheduled ?? 0}`} /></Card>
         <Card size="small"><Statistic title="Total views" value={stats?.impressions ?? 0} /></Card>
         <Card size="small"><Statistic title="Banner clicks" value={stats?.clicks ?? 0} /></Card>
         <Card size="small"><Statistic title="Click-through rate" value={stats?.ctr ?? 0} suffix="%" precision={2} /></Card>

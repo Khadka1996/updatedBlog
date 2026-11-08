@@ -8,14 +8,45 @@ import { API_URL } from '@/config/site';
 // 'allow-same-origin' flag"), so <AdSlot> loads this page in its iframe.
 export const dynamic = 'force-dynamic';
 
-const backend = () => (process.env.API_PROXY_TARGET || API_URL).replace(/\/$/, '');
+// API_INTERNAL_URL (e.g. http://127.0.0.1:5000) skips the round trip through
+// Cloudflare when the frontend and backend run on the same server.
+const backend = () => (process.env.API_INTERNAL_URL || process.env.API_PROXY_TARGET || API_URL).replace(/\/$/, '');
+
+// One page view opens several ad frames; keep the ad list in memory for 30s
+// (serving the previous copy while refreshing) instead of asking the backend
+// once per frame.
+const FEED_TTL_MS = 30 * 1000;
+let feedCache = { ads: null, at: 0, pending: null };
+
+async function loadFeed() {
+  const res = await fetch(`${backend()}/api/ads/public`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`feed ${res.status}`);
+  const data = await res.json();
+  feedCache = { ads: data.ads || [], at: Date.now(), pending: null };
+  return feedCache.ads;
+}
+
+async function getAds() {
+  const fresh = feedCache.ads && Date.now() - feedCache.at < FEED_TTL_MS;
+  if (fresh) return feedCache.ads;
+  if (!feedCache.pending) {
+    feedCache.pending = loadFeed().catch((err) => { feedCache.pending = null; throw err; });
+  }
+  // Stale copy available: answer now, refresh in the background.
+  if (feedCache.ads) { feedCache.pending.catch(() => {}); return feedCache.ads; }
+  return feedCache.pending;
+}
 
 async function findCodeAd(id) {
-  const res = await fetch(`${backend()}/api/ads/public`, { next: { revalidate: 30 } });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return (data.ads || []).find((ad) => ad._id === id && ad.type === 'code') || null;
+  const ads = await getAds();
+  return ads.find((ad) => ad._id === id && ad.type === 'code') || null;
 }
+
+// Open connections to the ad network's servers before its script asks for them.
+const preconnects = (code) => [...new Set([...(code || '').matchAll(/src=["'](?:https?:)?\/\/([^/"']+)/g)].map((m) => m[1]))]
+  .slice(0, 4)
+  .map((host) => `<link rel="preconnect" href="https://${host}" crossorigin><link rel="dns-prefetch" href="//${host}">`)
+  .join('');
 
 // Width declared in an Adsterra-style snippet: atOptions = { ..., 'width' : 728 }.
 // Read on the server because the network script removes atOptions once it runs.
@@ -31,6 +62,7 @@ const page = (code, frameId) => `<!doctype html>
 <meta name="robots" content="noindex,nofollow">
 <base target="_blank">
 <title>Advertisement</title>
+${preconnects(code)}
 <style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body{display:flex;justify-content:center;align-items:flex-start}</style>
 </head><body>
 ${code}
