@@ -17,6 +17,14 @@ async function findCodeAd(id) {
   return (data.ads || []).find((ad) => ad._id === id && ad.type === 'code') || null;
 }
 
+// Width declared in an Adsterra-style snippet: atOptions = { ..., 'width' : 728 }.
+// Read on the server because the network script removes atOptions once it runs.
+const declaredWidth = (code) => {
+  const block = /atOptions\s*=\s*\{([\s\S]*?)\}/.exec(code || '');
+  const m = block && /['"]?width['"]?\s*:\s*(\d{2,4})/.exec(block[1]);
+  return m ? Number(m[1]) : 0;
+};
+
 const page = (code, frameId) => `<!doctype html>
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -32,7 +40,7 @@ ${code}
 // Banner snippets declare their real size (atOptions.width); some networks
 // size their frame to the screen but still draw the full-width creative
 // inside it, so lay it out at its declared width and scale that down.
-var last=-1,b=document.body,aw=+((window.atOptions||{}).width)||0;
+var last=-1,b=document.body,aw=${declaredWidth(code)};
 function post(){var vw=window.innerWidth,fixed=aw&&aw>vw+1;b.style.width=fixed?aw+'px':'';b.style.transformOrigin=fixed?'top left':'top center';
 var w=fixed?aw:0,h=0,k=b.children;for(var i=0;i<k.length;i++){var el=k[i];if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||!el.offsetWidth)continue;w=Math.max(w,el.offsetWidth);h=Math.max(h,el.offsetTop+el.offsetHeight);}
 var s=w>vw+1?vw/w:1;b.style.transform=s<1?'scale('+s+')':'';h=Math.ceil(h*s);
