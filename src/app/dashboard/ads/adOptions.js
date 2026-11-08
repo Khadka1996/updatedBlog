@@ -85,3 +85,17 @@ export const suggestPlacements = (width, height) => {
   if (ratio >= 0.5) return [s('article_popup'), s('popup'), s('sidebar_top'), s('sidebar_bottom')];
   return [s('sidebar_bottom', 'responsive', 'desktop'), s('sidebar_top', 'responsive', 'desktop')];
 };
+
+/**
+ * True when ad code is a bare page-level script (Social Bar, Popunder,
+ * In-Page Push): one external <script> with no banner settings (atOptions)
+ * and no container element. Those must run as a "Page script", not in a
+ * banner slot, where they render nothing useful.
+ */
+export const looksLikePageScript = (code = '') => {
+  const c = String(code).trim();
+  if (!c || /atOptions|<div|<ins|<iframe|<img|<a\s/i.test(c)) return false;
+  const scripts = c.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || [];
+  const rest = c.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').trim();
+  return scripts.length === 1 && /\bsrc\s*=/.test(scripts[0]) && !rest;
+};

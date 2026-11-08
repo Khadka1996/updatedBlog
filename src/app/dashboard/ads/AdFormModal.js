@@ -11,7 +11,7 @@ import {
   CheckCircleFilled, DeleteOutlined, ThunderboltOutlined,
 } from '@ant-design/icons';
 import AdCreative from '../../components/ads/AdCreative';
-import { EMPTY_AD, NETWORKS, PAGES, PLACEMENTS, PLACEMENT_LABEL, SIZES, suggestPlacements } from './adOptions';
+import { EMPTY_AD, NETWORKS, PAGES, PLACEMENTS, PLACEMENT_LABEL, SIZES, looksLikePageScript, suggestPlacements } from './adOptions';
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -35,6 +35,8 @@ export default function AdFormModal({ open, ad, onClose, onSaved, scriptAdsOnly 
   const placement = Form.useWatch('placement', form);
   const imagePath = Form.useWatch('imagePath', form);
   const renderMode = Form.useWatch('renderMode', form);
+  const code = Form.useWatch('code', form);
+  const misplacedPageScript = type === 'code' && placement !== 'global_script' && looksLikePageScript(code);
   const isEdit = Boolean(ad?._id);
 
   useEffect(() => {
@@ -359,6 +361,20 @@ export default function AdFormModal({ open, ad, onClose, onSaved, scriptAdsOnly 
                 <Radio value="inline">Directly on the page — popunder, social bar, push</Radio>
               </Radio.Group>
             </Form.Item>
+            {misplacedPageScript && (
+              <Alert
+                type="error"
+                showIcon
+                className="mb-4"
+                message="This looks like a page-level script (Social Bar, Popunder or In-Page Push)"
+                description="These don't show anything inside a banner slot. Run them as a Page script instead."
+                action={
+                  <Button size="small" type="primary" onClick={() => form.setFieldsValue({ placement: 'global_script', renderMode: 'inline' })}>
+                    Use Page script
+                  </Button>
+                }
+              />
+            )}
             {renderMode === 'inline' && (
               <Alert
                 type="warning"
